@@ -2,16 +2,28 @@
 
 namespace airace {
 
-	/// <summary>
-	/// Script controlling the car, acceleration, braking and turning.
-	/// The player controller or ANN can call the control function with an intensity optional parameter:
-	/// The intensity is 0.75 by default for a simple integration and can be between 0 and 1 for more complexity.
-	/// Available controls are Accelerate(), Brake(), Reverse(), TurnRight(), TurnLeft()
-	/// </summary>
+    /// <summary>
+    /// Static class proviting the direction constants.
+    /// </summary>
+    public static class Dir {
+        public const int Right = 1;
+        public const int Left = -1;
+        public const int Forward = 1;
+        public const int Reverse = -1;
+    }
+
+    // public enum Dir { Right = 1, Left = -1, Forward = 1, Reverse = -1 };
+
+    /// <summary>
+    /// Class controlling the car, acceleration, braking and turning.
+    /// The player controller or ANN can call the control function with an intensity optional parameter:
+    /// The intensity is 0.75 by default for a simple integration and can be between 0 and 1 for more complexity.
+    /// Available controls are Drive(), Turn(), Brake()
+    /// </summary>
     [RequireComponent(typeof(Rigidbody))]
     public class CarController : MonoBehaviour {
 
-		// car behavior related variables
+        // car behavior related variables
         private float steeringRate = 100f;
         private float brakingRate = 20f;
         private float acceleration = 30f;
@@ -79,18 +91,6 @@ namespace airace {
             car.MovePosition(transform.position + transform.forward * Speed * Time.deltaTime);
         }
 
-		// Is called from the control methods to update the speed value
-		private void UpdateSpeed(float dir, float amount) {
-            if (!reset)
-                Speed += dir * amount * Time.deltaTime;
-        }
-
-		// Is called from the control methods to turn the car
-		private void Turn(float dir, float amount) {
-            if (!reset)
-                transform.Rotate(0f, dir * amount * Time.deltaTime, 0f);
-        }
-
 		// called when there is a collision to reset the car
         private void OnTriggerEnter(Collider other) {
             reset = true;
@@ -101,9 +101,7 @@ namespace airace {
 				// reset = true;
 				// Destroy(gameObject);
 			}
-                
         }
-
 
 		// resets the car to the start state
         private void Reset() {
@@ -113,56 +111,40 @@ namespace airace {
             reset = false;
         }
 
+
 		// Public Control Intention Methods
 
-		/// <summary>
-		/// Raise the speed by the intensity and acceleration factor.
-		/// If the car is going in reverse it will first brake.
-		/// </summary>
-        public void Accelerate(float intensity = 0.75f) {
-            if (Speed >= 0f && Speed <= maxForwardSpeed)
-				UpdateSpeed(1, acceleration * Mathf.Clamp01(intensity));
-            else
-                Brake();
+		// Is called from the control methods to update the speed value
+		public void Drive(int dir, float intensity = 0.75f) {
+            if (!reset){
+                if((Speed < 0f && dir == Dir.Forward) || (Speed > 0f && dir == Dir.Reverse))
+                    Brake();
+                else
+                    Speed += dir * acceleration * Mathf.Clamp01(intensity) * Time.deltaTime;
+            }
         }
 
-		/// <summary>
-		/// Lower the speed to negative by the intensity and acceleration factor.
-		/// If the car is going forward it will first brake.
-		/// </summary>
-        public void Reverse(float intensity = 0.75f) {
-            if (Speed <= 0f && speed >= maxReverseSpeed)
-                UpdateSpeed(-1, acceleration * Mathf.Clamp01(intensity));
-            else
-                Brake();
+		// Is called from the control methods to turn the car
+		public void Turn(int dir, float intensity = 0.75f) {
+            if (!reset) {
+                float relativeSpeed = Speed >= 0 ? Speed / maxForwardSpeed : Speed / maxReverseSpeed;
+                float turnValue = dir * steeringRate * Mathf.Clamp01(intensity) * relativeSpeed * Time.deltaTime;
+                transform.Rotate(0f, turnValue, 0f);
+            }
         }
 
 		/// <summary>
 		/// Get the speed closer to 0 by the intensity and brake rate.
 		/// </summary>
         public void Brake(float intensity = 0.75f) {
-            float brakeValue = brakingRate * Mathf.Clamp01(intensity);
-
-            if (Mathf.Abs(Speed) < brakeValue)
+            float brakeValue = brakingRate * Mathf.Clamp01(intensity) * Time.deltaTime;
+            
+            if(Mathf.Abs(Speed) < aboutZero)
                 Speed = 0f;
-            else if (Speed > 0f)
-                UpdateSpeed(-1, brakeValue);
+            else if(speed > 0)
+                Speed -= brakeValue;
             else
-                UpdateSpeed(1, brakeValue);
-        }
-        
-		/// <summary>
-		/// Rotate the car by the intensity and steer rate.
-		/// </summary>
-        public void TurnRight(float intensity = 0.75f) {
-            Turn(1, steeringRate * Mathf.Clamp01(intensity));
-        }
-
-		/// <summary>
-		/// Rotate the car by the intensity and steer rate.
-		/// </summary>
-        public void TurnLeft(float intensity = 0.75f) {
-            Turn(-1, steeringRate * Mathf.Clamp01(intensity));
+                Speed += brakeValue;
         }
 
     }

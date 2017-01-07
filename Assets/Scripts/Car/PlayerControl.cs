@@ -16,16 +16,16 @@ namespace airace {
 		
 		void Update () {
 			if(Input.GetAxis("Vertical") > 0f)
-				car.Accelerate();
+				car.Drive(Dir.Forward);
 
-			if(Input.GetAxis("Vertical") < 0f)
-				car.Reverse();
+			else if(Input.GetAxis("Vertical") < 0f)
+				car.Drive(Dir.Reverse);
 
 			if(Input.GetAxis("Horizontal") > 0f)
-				car.TurnRight();
+				car.Turn(Dir.Right);
 
-			if(Input.GetAxis("Horizontal") < 0f)
-				car.TurnLeft();
+			else if(Input.GetAxis("Horizontal") < 0f)
+				car.Turn(Dir.Left);
 		}
 
 	}
