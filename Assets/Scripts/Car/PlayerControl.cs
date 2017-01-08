@@ -15,18 +15,13 @@ namespace airace {
 		}
 		
 		void Update () {
-			if(Input.GetAxis("Vertical") > 0f)
-				car.Drive(Dir.Forward);
+            if(Input.GetButton("Vertical"))
+				car.Drive(Input.GetAxis("Vertical"));
 
-			else if(Input.GetAxis("Vertical") < 0f)
-				car.Drive(Dir.Reverse);
+			if(Input.GetButton("Horizontal"))
+				car.Turn(Input.GetAxis("Horizontal"));
 
-			if(Input.GetAxis("Horizontal") > 0f)
-				car.Turn(Dir.Right);
-
-			else if(Input.GetAxis("Horizontal") < 0f)
-				car.Turn(Dir.Left);
-		}
+        }
 
 	}
 }
