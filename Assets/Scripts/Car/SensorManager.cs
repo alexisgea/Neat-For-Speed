@@ -6,7 +6,7 @@ namespace airace {
 	///<summary>
 	/// Car sensor manager.
 	/// Creates sensors, checks them each update and send signals with the distance.
-	/// There are a total of 17 sensors. 8 for the wall tag and 8 for the car tag and + for the car speed
+	/// There are a total of 19 sensors. 8 for the wall tag and 8 for the car tag and 3 for the car controls
 	/// The sensors default size is 5 from the center of the car.
 	/// The sensors are named as per the cardinal position to which they point (N, NE, E, SE, S, SW, W, NW).
 	/// To get the signal just register your function to any of the sensors.
@@ -17,12 +17,25 @@ namespace airace {
 
 		private int sensorLength = 5;
 
-        // Car speend sensor
+        // Car internal control sensors
         private CarController car;
+
         public event Action<float> SpeedSensor;
 		private void RaiseSpeedSensor(float speed) {
 			if(SpeedSensor != null)
 				SpeedSensor.Invoke(speed);
+		}
+
+		public event Action<float> SteerSensor;
+		private void RaiseSteerSensor(float turn) {
+			if(SteerSensor != null)
+				SteerSensor.Invoke(turn);
+		}
+
+		public event Action<float> DriveSnesor;
+		private void RaiseDriveSensor(float drive) {
+			if(DriveSnesor != null)
+				DriveSnesor.Invoke(drive);
 		}
 
 		// Wall sensors events
@@ -130,6 +143,8 @@ namespace airace {
 		// Update is called once per frame
 		private void Update () {
             RaiseSpeedSensor(car.NormalizedSpeed);
+			RaiseSteerSensor(car.TurnForce);
+			RaiseDriveSensor(car.DriveForce);
 
             NorthSensor();
 			NorthEastSensor();
