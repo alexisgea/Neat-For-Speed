@@ -15,11 +15,9 @@ namespace airace {
 		}
 		
 		void Update () {
-            if(Input.GetButton("Vertical"))
-				car.Drive(Input.GetAxis("Vertical"));
+			car.Drive(Input.GetAxis("Vertical"));
 
-			if(Input.GetButton("Horizontal"))
-				car.Turn(Input.GetAxis("Horizontal"));
+			car.Turn(Input.GetAxis("Horizontal"));
 
         }
 
