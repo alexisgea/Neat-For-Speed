@@ -17,12 +17,11 @@ namespace airace {
         private float acceleration = 30f;
         private float maxForwardSpeed = 30f;
         private float maxReverseSpeed = -10f;
-        private float frictionBrake = 10f;
         private float aboutZero = 0.01f;
         private float speed = 0f;
         private float Speed {
             set {
-                speed = Mathf.Clamp(value, maxReverseSpeed, maxForwardSpeed);
+                speed = value;
                 if ((Mathf.Abs(speed) - aboutZero) < aboutZero)
                     speed = 0f;
             }
@@ -70,18 +69,20 @@ namespace airace {
             }
 
             if (Speed != 0f) {
-                FrictionEffect();
                 MoveCar();
+                FrictionEffect();
             }
         }
 
-		// Default slow down effect running each frame
+		// Default friction slow down effect running each frame
+        // it will completly compensate acceleration toward max speed, enforcing it
         private void FrictionEffect() {
 			if(Speed > 0)
-            	Speed -= frictionBrake * Time.deltaTime;
+                Speed -= acceleration * Speed/maxForwardSpeed * Time.deltaTime;
 			else
-				Speed += frictionBrake * Time.deltaTime;
+				Speed += acceleration * Speed/maxReverseSpeed * Time.deltaTime;
         }
+
 
 		// Updates the car position each frame depending on speed.
         private void MoveCar() {
@@ -149,19 +150,29 @@ namespace airace {
                 if((Speed < 0f && force >= 0f) || (Speed > 0f && force < 0f))
                     Brake(force);
                 else
-                    Speed += Mathf.Clamp(force, -1f, 1f) * acceleration * Time.deltaTime;
+                    Speed += force * acceleration * Time.deltaTime;
             }
         }
 
 		// Is called from the control methods to turn the car
+        // TODO Need to somehow improve the function to not be just rotating on the axis but dependent on where the wheels are pointing
 		public void Turn(float targetForce) {
 
             // gets the actual force gradually changed toward the targetForce
             float force = GetForce(ref turnForce, targetForce);
 
-            if (!reset) {
+            // if the speed is about zero we can't turn
+            if (!reset && (Mathf.Abs(Speed)-aboutZero)> 0f) {
                 float relativeSpeed = Speed >= 0 ? Speed / maxForwardSpeed : Speed / maxReverseSpeed;
-                float turnValue = Mathf.Clamp(force, -1f, 1f) * steeringRate * relativeSpeed * Time.deltaTime;
+                
+                float turnValue = 0f;
+                // if the speed is high it wil be harder to turn due to coriolis effects
+                if(relativeSpeed > 0.5)
+                    turnValue = force * steeringRate * (1-relativeSpeed/2.5f) * Time.deltaTime;
+                // but if the speed is low we don't want the car to turn on it's axis
+                else
+                    turnValue = force * steeringRate * relativeSpeed * Time.deltaTime;
+
                 transform.Rotate(0f, turnValue, 0f);
             }
         }
@@ -170,7 +181,7 @@ namespace airace {
 		/// Get the speed closer to 0 by the force and brake rate.
 		/// </summary>
         public void Brake(float force = 0.75f) {
-            float brakeValue = brakingRate * Mathf.Clamp01(Mathf.Abs(force)) * Time.deltaTime;
+            float brakeValue = brakingRate * Mathf.Abs(force) * Time.deltaTime;
             
             if(Mathf.Abs(Speed) < aboutZero)
                 Speed = 0f;
