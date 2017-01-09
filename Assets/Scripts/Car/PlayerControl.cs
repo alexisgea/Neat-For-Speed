@@ -15,8 +15,11 @@ namespace airace {
 		}
 		
 		void Update () {
-			car.Drive(Input.GetAxis("Vertical"));
 
+			// axis input needs to go through every frame
+			// it will be the case for AI
+			// and it is important for the current implentation of the car controller
+			car.Drive(Input.GetAxis("Vertical"));
 			car.Turn(Input.GetAxis("Horizontal"));
 
         }
