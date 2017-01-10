@@ -183,12 +183,16 @@ namespace airace {
         public void Brake(float force = 0.75f) {
             float brakeValue = brakingRate * Mathf.Abs(force) * Time.deltaTime;
             
-            if(Mathf.Abs(Speed) < aboutZero)
-                Speed = 0f;
-            else if(speed > 0)
+            if(speed > 0){
                 Speed -= brakeValue;
-            else
+                if(Speed < 0f)
+                    Speed = 0f;
+            }
+            else{
                 Speed += brakeValue;
+                if(Speed > 0f)
+                    Speed = 0f;
+            }
         }
 
     }
