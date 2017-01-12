@@ -5,22 +5,18 @@ namespace airace {
 	///<summary>
 	/// Basic player input controller to drive a car.
 	///</summary>
-	[RequireComponent (typeof (CarController))]
-	public class PlayerControl : MonoBehaviour {
+	public class PlayerController : CarController {
 
-		private CarController car;
-
-		void Start () {
-			car = GetComponent<CarController>();
+		protected override void ChildStart () {
 		}
 		
-		void Update () {
+		protected override void ChildUpdate () {
 
 			// axis input needs to go through every frame
 			// it will be the case for AI
 			// and it is important for the current implentation of the car controller
-			car.Drive(Input.GetAxis("Vertical"));
-			car.Turn(Input.GetAxis("Horizontal"));
+			DriveInput = Input.GetAxis("Vertical").Normalized();
+			TurnInput = Input.GetAxis("Horizontal").Normalized();
 
         }
 

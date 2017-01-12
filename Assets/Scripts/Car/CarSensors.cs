@@ -12,13 +12,13 @@ namespace airace {
 	/// To get the signal just register your function to any of the sensors.
 	/// The function must take a float in parameter for the distance, as value from 0 to 1.
 	///</summary>
-	[RequireComponent (typeof (CarController))]
-	public class SensorManager : MonoBehaviour {
+	[RequireComponent (typeof (CarBehaviour))]
+	public class CarSensors : MonoBehaviour {
 
 		private int sensorLength = 5;
 
         // Car internal control sensors
-        private CarController car;
+        private CarBehaviour car;
 
         public event Action<float> SpeedSensor;
 		private void RaiseSpeedSensor(float speed) {
@@ -137,7 +137,7 @@ namespace airace {
 		}
 
 		private void Start() {
-            car = GetComponent<CarController>();
+            car = GetComponent<CarBehaviour>();
         }
 
 		// Update is called once per frame
