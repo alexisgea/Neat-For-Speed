@@ -32,6 +32,7 @@ namespace airace {
         private float forceChangeRate = 0.05f; // I made a script to check rate of value change of a keyboard axis and it was ~0.0495
         private float driveForce = 0f;
         private float turnForce = 0f;
+
         // public acces to the current values of the axis in case it is need for the AI
         public float DriveForce {
             get { return driveForce.Normalized(); }
@@ -39,13 +40,22 @@ namespace airace {
         public float TurnForce {
             get { return turnForce.Normalized(); }
         }
-
-		/// <summary>
-		/// Will return speed value from -1 to 1.
-		/// </summary>
 		public float NormalizedSpeed {
-			get { return Speed.Normalized(maxReverseSpeed, maxForwardSpeed); }
+			get { 
+                if(Speed >= 0f)
+                    return Speed / maxForwardSpeed;
+                else
+                    return Speed / maxReverseSpeed;
+            }
 		}
+        public float Direction {
+            get {
+                if(Speed >= 0f)
+                    return 1f;
+                else
+                    return 0f;
+            }
+        }
 
 		// bool use to initiate the rest car process
         private bool reset = false; // reset will block controls

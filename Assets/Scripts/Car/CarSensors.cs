@@ -26,7 +26,13 @@ namespace airace {
 				SpeedSensor.Invoke(speed);
 		}
 
-		public event Action<float> SteerSensor;
+        public event Action<float> DirectionSensor;
+		private void RaiseDirectionSensor(float dir) {
+			if (DirectionSensor != null)
+                DirectionSensor.Invoke(dir);
+        }
+
+        public event Action<float> SteerSensor;
 		private void RaiseSteerSensor(float turn) {
 			if(SteerSensor != null)
 				SteerSensor.Invoke(turn);
@@ -142,9 +148,11 @@ namespace airace {
 
 		// Update is called once per frame
 		private void Update () {
-            RaiseSpeedSensor(car.NormalizedSpeed);
+            
 			RaiseSteerSensor(car.TurnForce);
 			RaiseDriveSensor(car.DriveForce);
+			RaiseSpeedSensor(car.NormalizedSpeed);
+            RaiseDirectionSensor(car.Direction);
 
             NorthSensor();
 			NorthEastSensor();
