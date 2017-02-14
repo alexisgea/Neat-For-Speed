@@ -5,11 +5,21 @@ using UnityEngine;
 
 namespace airace {
 
+    ///<summary>
+	/// Standard math matrix class.
+    /// Can be multiplied with another matrix.
+    /// Can be set to different predefined matrix.
+    /// Can be randomized for synapse initialization.
+	///</summary>
     public class Matrix {
 
+        // the matrix itself as an array of array
         public float[][] Mtx { set; get; }
+        // the number of row
 		public int I { private set; get; }
+        // the number of column
 		public int J { private set; get; }
+
 
         public Matrix(int i, int j) {
             I = i;
@@ -21,7 +31,13 @@ namespace airace {
                 Mtx[k] = new float[j];
             }
         }
-		
+
+		///<summary>
+	    /// Standard matrix multiply.
+        /// Return a matrix of size I from original and J from other matrix.
+        /// Does a weighted sum of original lines times other colums.
+        /// IF there is a mismatch of size, the original matrix will be returned.
+	    ///</summary>
 		public Matrix Multiply (Matrix other) {
             if (J == other.I) { 
 				Matrix newMat = new Matrix(I, other.J);
@@ -31,7 +47,7 @@ namespace airace {
 
                         float weightedSum = 0f;
 						for(int k = 0; k < J; k ++) {
-                            weightedSum += Mtx[k][i] * other.Mtx[j][k];
+                            weightedSum += Mtx[i][k] * other.Mtx[k][j];
                         }
                         newMat.Mtx[i][j] = weightedSum;
                     }
@@ -43,7 +59,70 @@ namespace airace {
                 return this;
 			}
         }
-		
 
+        ///<summary>
+	    /// Set all values to 0.
+	    ///</summary>
+        public Matrix SetToZero() {
+            for (int i = 0; i < I; i++) {
+                for(int j = 0; j < J; j++) {
+                    Mtx[i][j] = 0f;
+                }
+            }
+            return this;
+        }
+
+        ///<summary>
+	    /// Set all values to 1.
+	    ///</summary>
+        public Matrix SetToOne() {
+            for (int i = 0; i < I; i++) {
+                for(int j = 0; j < J; j++) {
+                    Mtx[i][j] = 1f;
+                }
+            }
+            return this;
+        }
+
+        ///<summary>
+	    /// Set diagonal values to 1 and others to 0.
+	    ///</summary>
+        public Matrix SetToIdentiy() {
+            for (int i = 0; i < I; i++) {
+                for(int j = 0; j < J; j++) {
+                    if (i==j)
+                        Mtx[i][j] = 1f;
+                    else
+                        Mtx[i][j] = 0f;
+                }
+            }
+            return this;
+        }
+
+        ///<summary>
+	    /// Randomize all values.
+	    ///</summary>
+        public Matrix SetAsSynapse() {
+            for (int i = 0; i < I; i++) {
+                for(int j = 0; j < J; j++) {
+                    Mtx[i][j] = Random.Range(0f, 1f);
+                }
+            }
+            return this;
+        }
+
+        ///<summary>
+	    /// Return all values of the matrix as a string separated by comma and a space.
+	    ///</summary>
+        public string GetValuesAsString() {
+            string values = "";
+            for (int i = 0; i < I; i++) {
+                for(int j = 0; j < J; j++) {
+                    values += Mtx[i][j] + ", ";
+                }
+            }
+            return values.Substring(0, values.Length - 2);
+        }
+		
 	}
 }
