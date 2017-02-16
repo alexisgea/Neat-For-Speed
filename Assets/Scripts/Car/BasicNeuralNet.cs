@@ -10,6 +10,10 @@ namespace airace {
     // I guess the issue is that it implies they all have the same weights and thus probably the same exact output
     // although this mean we can probably run simultaneous race with one neural network driving multiple cars
     // even if the race track is different, thus we could maybe train it faster. We'll have to see.
+    // NOTES 2
+    // Make a seperate neural net class from the controller class
+    // Make it so it has the same basic as a Neat
+    // Make it so a visualiser would work in any case
 	public class BasicNeuralNet : CarController {
 
         [SerializeField] int inputLayerSize;
