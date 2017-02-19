@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
+using nfs.car;
 
-namespace airace {
+namespace nfs {
 
 	///<summary>
 	/// Basic player input controller to drive a car.

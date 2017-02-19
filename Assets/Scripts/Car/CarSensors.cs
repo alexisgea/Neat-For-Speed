@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace airace {
+namespace nfs.car {
 
 	///<summary>
 	/// Car sensor manager.
@@ -44,8 +44,10 @@ namespace airace {
 		public float Car_W {private set; get;}
 		public float Car_NW {private set; get;}
 
+		// fitness sensor
+		public float DistanceDriven { private set; get; }
 
-		private void Start() {
+        private void Start() {
             car = GetComponent<CarBehaviour>();
         }
 
@@ -65,7 +67,9 @@ namespace airace {
 			SouthWestSensor();
 			WestSensor();
 			NorthWestSensor();
-		}
+
+            DistanceDriven += car.DistanceDriven;
+        }
 
 		/// <summary>
 		/// The function creates a raycast from the transform center to the sensor direction.

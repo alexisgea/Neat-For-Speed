@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 
-namespace airace {
+
+namespace nfs.car {
 
 	[RequireComponent (typeof (CarBehaviour))]
 	public abstract class CarController : MonoBehaviour {

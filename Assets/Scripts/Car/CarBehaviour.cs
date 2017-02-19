@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace airace {
+namespace nfs.car {
 
     /// <summary>
     /// Class controlling the car, acceleration, braking and turning.
@@ -57,7 +57,10 @@ namespace airace {
             }
         }
 
-		// bool use to initiate the rest car process
+        public float DistanceDriven { private set; get; }
+
+
+        // bool use to initiate the rest car process
         private bool reset = false; // reset will block controls
 		
 		// reference to the car Rigidbody
@@ -65,6 +68,7 @@ namespace airace {
 
         private void Start() {
             car = GetComponent<Rigidbody>();
+            DistanceDriven = 0;
         }
 
         // Updates the car movement if speed not at 0 and reset the car if necessary
@@ -95,6 +99,8 @@ namespace airace {
 		// Updates the car position each frame depending on speed.
         private void MoveCar() {
             car.MovePosition(transform.position + transform.forward * Speed * Time.deltaTime);
+            if(!reset)
+                DistanceDriven += speed * Time.deltaTime;
         }
 
 		// called when there is a collision to reset the car
@@ -111,10 +117,10 @@ namespace airace {
 
 		// resets the car to the start state
         private void Reset() {
-            transform.position = new Vector3(0f, 0.5f, 0f);
-            transform.rotation = Quaternion.identity;
-            car.velocity = Vector3.zero;
-            reset = false;
+            // transform.position = new Vector3(0f, 0.5f, 0f);
+            // transform.rotation = Quaternion.identity;
+            // car.velocity = Vector3.zero;
+            // reset = false;
         }
 
         /// <summary>

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-namespace airace {
+namespace nfs.tools {
 
     ///<summary>
 	/// Standard math matrix class.
@@ -109,6 +109,36 @@ namespace airace {
                 }
             }
             return this;
+        }
+
+        public float[] GetLineValues(int line = 0) {
+            float[] lineValues = new float[line];
+
+            if(line <= I) {
+                for(int j=0; j<J; j++){
+                    lineValues[j] = Mtx[line][j];
+                }
+                return lineValues;
+
+            } else {
+                Debug.LogError("There is no line " + line + " in this matrix. Returning null.");
+                return null;
+            }
+        }
+
+        public float[] GetColumnValues(int col = 0) {
+            float[] colValues = new float[col];
+
+            if(col <= J) {
+                for(int i=0; i<I; i++){
+                    colValues[i] = Mtx[i][col];
+                }
+                return colValues;
+
+            } else {
+                Debug.LogError("There is no line " + col + " in this matrix. Returning null.");
+                return null;
+            }
         }
 
         ///<summary>

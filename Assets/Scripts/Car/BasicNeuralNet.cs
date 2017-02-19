@@ -1,8 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using nfs.tools;
+using nfs.car;
 
-namespace airace {
+namespace nfs {
 
     // NOTES TO MYSELF
     // potentially there could be one neural network piloting every car of the same type in the same time
