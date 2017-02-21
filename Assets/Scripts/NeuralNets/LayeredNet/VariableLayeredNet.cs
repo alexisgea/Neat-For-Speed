@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using nfs.tools;
+using nfs.car;
 
 namespace nfs.layered {
 
@@ -15,14 +16,33 @@ namespace nfs.layered {
     // Make a seperate neural net class from the controller class
     // Make it so it has the same basic as a Neat
     // Make it so a visualiser would work in any case
-    public class VariableLayeredNet {
+    [RequireComponent(typeof(CarSensors))]
+    public class VariableLayeredNet : CarController {
 
         private LayeredNetwork neuralNet;
+        private CarSensors sensors;
+        private float[] inputValues;
+        private float[] outputValues;
 
-        public void InitializeNeuralNetwork(int inputSize = 1, int outputSize = 1, int[] hiddenSizes = null) {
+
+        protected override void ChildStart() {
+            sensors = GetComponent<CarSensors>();
+            InitializeNeuralNetwork();
+        }
+
+        protected override void ChildUpdate() {
+            inputValues = new float[] {sensors.Wall_NE, sensors.Wall_N, sensors.Wall_NW};
+            outputValues = PingFwd(inputValues);
+            DriveInput = outputValues[0];
+            TurnInput = outputValues[1];
+        }
+
+        public void InitializeNeuralNetwork(int inputSize = 3, int outputSize = 2, int[] hiddenSizes = null) {
             if (hiddenSizes == null)
-                hiddenSizes = new int[] { 1 };
+                hiddenSizes = new int[] { 4 };
             neuralNet = new LayeredNetwork(inputSize, outputSize, hiddenSizes);
+            //inputValues = new float[inputSize];
+            //outputValues = new float[outputSize];
         }
 
         // this is to pass the activation function (sigmoid here) on the neuron value and on each layer

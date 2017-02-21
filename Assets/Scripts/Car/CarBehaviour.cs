@@ -1,4 +1,6 @@
 ﻿using UnityEngine;
+using System;
+using UnityEngine.Events;
 
 namespace nfs.car {
 
@@ -66,6 +68,10 @@ namespace nfs.car {
 		// reference to the car Rigidbody
         private Rigidbody car;
 
+        public bool Dead = false;
+        public event Action <CarBehaviour, string>HitSomething;
+        //public UnityEvent test2;
+
         private void Start() {
             car = GetComponent<Rigidbody>();
             DistanceDriven = 0;
@@ -105,14 +111,21 @@ namespace nfs.car {
 
 		// called when there is a collision to reset the car
         private void OnTriggerEnter(Collider other) {
-            reset = true;
+            RaiseHitSomething(other.gameObject.tag);
+
+            // reset = true;
             if(other.gameObject.tag == "wall"){
-				reset = true;
+				// reset = true;
 				// Destroy(gameObject);
 			} else if(other.gameObject.tag == "car"){
 				// reset = true;
 				// Destroy(gameObject);
 			}
+        }
+
+        private void RaiseHitSomething(string tag){
+            if(HitSomething != null && !Dead)
+                HitSomething.Invoke(this, tag);
         }
 
 		// resets the car to the start state
