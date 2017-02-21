@@ -126,8 +126,17 @@ namespace nfs.layered {
             }
         }
 
-        public LayeredNetwork GetLayeredNetwork () {
-            return neuralNet;
+        public LayeredNetwork GetLayeredNetworkCopy () {
+            int inputN = neuralNet.inputNeurons.J;
+            int outputN = neuralNet.outputNeurons.J;
+            int hiddenL = neuralNet.hiddenLayersNeurons.Length;
+            int[] hiddenN = new int[hiddenL];
+            for(int i=0; i<hiddenL; i++) {
+                hiddenN[i] = neuralNet.hiddenLayersNeurons[i].J;
+            }
+            LayeredNetwork neuralNetCopy = new LayeredNetwork(inputN, outputN, hiddenN);
+            neuralNetCopy.synapes = neuralNet.synapes;
+            return neuralNetCopy;
         }
 
         public void SetLayeredNework (LayeredNetwork newNetwork) {

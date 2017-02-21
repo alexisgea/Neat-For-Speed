@@ -6,7 +6,7 @@ using nfs.car;
 namespace nfs.layered {
     public class SmallFilter : MonoBehaviour {
 
-        [SerializeField] int numberOfGeneration;
+        [SerializeField] int numberOfGeneration = 100;
         public int Generation { private set; get; }
 
         [SerializeField] int numberOfCar = 20;
@@ -19,10 +19,10 @@ namespace nfs.layered {
         [SerializeField] bool hiddenNbMutation = false;
         [SerializeField] bool layerMutation = false;
 
-        private int[] theChoosenIdx;
         private GameObject[] carPopulation;
+        private Stack<CarBehaviour> deadCars;
         [SerializeField] Transform populationGroup;
-        [SerializeField] Vector3 startPosition;
+        [SerializeField] Vector3 startPosition = Vector3.zero;
         [SerializeField] GameObject carPrefab;
         
 
@@ -31,28 +31,54 @@ namespace nfs.layered {
             
         }
 
-        private void InitializePopulation () {
+        private void Update() {
+            if (CarAlive <= 0) {
+                // 
+            }
+        }
+
+        public void InitializePopulation () {
             carPopulation = new GameObject[numberOfCar];
 
             Generation = 1; // put that in a reset function
             CarAlive = numberOfCar; // put that in a reset function
 
             carPopulation[0] = GameObject.Instantiate(carPrefab, startPosition, Quaternion.identity);
-            carPopulation[0].transform.SetParent(populationGroup);
-            carPopulation[0].GetComponent<VariableLayeredNet>().InitializeNeuralNetwork();
-            carPopulation[0].GetComponent<CarBehaviour>().HitSomething += OnCarHit;
             
             for (int i=0; i <= numberOfCar; i++) {
-
+                carPopulation[i] = GameObject.Instantiate(carPrefab, startPosition, Quaternion.identity);
+                carPopulation[i].transform.SetParent(populationGroup);
+                carPopulation[i].GetComponent<VariableLayeredNet>().InitializeNeuralNetwork();
+                carPopulation[i].GetComponent<CarBehaviour>().HitSomething += OnCarHit;
             }
         }
 
-        // NOTE FOR LATER
-        // add the car to a list of dead object to have them in the order of death in advance
-        // just go from the last to have the best ones
+        private void NextGeneration () {
+
+        }
+
+        private void BreedCurrentGeneration() {
+            int survivorNb = (int)(numberOfCar*survivorRate);
+            LayeredNetwork[] survivorNets = new LayeredNetwork[survivorNb];
+            for (int i = 0; i < survivorNb; i++) {
+                survivorNets[i] = deadCars.Pop().GetComponent<VariableLayeredNet>().GetLayeredNetworkCopy();
+            }
+
+            // NOTE FOR LATER
+            // loop through all networks and insert a mutated net
+
+        } 
+
+        private LayeredNetwork Mutate(LayeredNetwork neuralNet) {
+
+
+            return neuralNet;
+        }
+
         private void OnCarHit (CarBehaviour who, string what) {
             if(what == "wall") {
-                CarAlive -= 1;                
+                CarAlive -= 1;
+                deadCars.Push(who);                
             }
         }
 
