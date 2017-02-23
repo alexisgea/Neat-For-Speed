@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 
 namespace nfs.tools {
@@ -44,7 +42,7 @@ namespace nfs.tools {
         /// Does a weighted sum of original lines times other colums.
         /// IF there is a mismatch of size, the original matrix will be returned.
 	    ///</summary>
-		public Matrix Multiply (Matrix other) {
+		public Matrix Multiply (Matrix other, bool clamp = false, float min = 0f, float max = 1f) {
             if (J == other.I) { 
 				Matrix newMat = new Matrix(I, other.J);
 
@@ -55,13 +53,32 @@ namespace nfs.tools {
 						for(int k = 0; k < J; k ++) {
                             weightedSum += Mtx[i][k] * other.Mtx[k][j];
                         }
-                        newMat.Mtx[i][j] = weightedSum;
+                        newMat.Mtx[i][j] = clamp? Mathf.Clamp(weightedSum, min, max) : weightedSum;
                     }
 				}
                 return newMat;
 
             } else {
                 Debug.LogWarning("Matrix multiplication error due to size missmatch. Base matrix returned.");
+                return this;
+			}
+        }
+
+        public Matrix Add (Matrix other, bool clamp = false, float min = 0f, float max = 1f) {
+            if (CheckDimention(other)) {
+                Matrix newMat = new Matrix(I, J);
+
+                for (int i = 0; i < I; i++) {
+					for(int j = 0; j < J; j++) {
+                        float sum = Mtx[i][j] + other.Mtx[i][j];
+                        newMat.Mtx[i][j] = clamp? Mathf.Clamp(sum, min, max) : sum;
+                    }
+				}
+
+                return newMat;
+
+            } else {
+                Debug.LogWarning("Matrix addition error due to size missmatch. Base matrix returned.");
                 return this;
 			}
         }
@@ -117,12 +134,27 @@ namespace nfs.tools {
             return this;
         }
 
+        ///<summary>
+	    /// Randomize all values.
+	    ///</summary>
+        public Matrix SetAsMutator(float probability, float range) {
+            for (int i = 0; i < I; i++) {
+                for(int j = 0; j < J; j++) {
+                    if(Random.value < probability)
+                        Mtx[i][j] = Random.Range(-range, +range);
+                    else
+                        Mtx[i][j] = 0f;
+                }
+            }
+            return this;
+        }
+
         public float[][] GetAllValues() {
             return Mtx;
         }
 
         public float[] GetLineValues(int line = 0) {
-            float[] lineValues = new float[line];
+            float[] lineValues = new float[J];
 
             if(line <= I) {
                 for(int j=0; j<J; j++){
@@ -137,7 +169,7 @@ namespace nfs.tools {
         }
 
         public float[] GetColumnValues(int col = 0) {
-            float[] colValues = new float[col];
+            float[] colValues = new float[I];
 
             if(col <= J) {
                 for(int i=0; i<I; i++){

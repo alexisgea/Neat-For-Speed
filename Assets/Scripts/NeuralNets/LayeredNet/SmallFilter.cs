@@ -1,7 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using nfs.car;
+using nfs.controllers;
 using nfs.tools;
 
 namespace nfs.layered {
@@ -13,9 +13,8 @@ namespace nfs.layered {
         [SerializeField] int numberOfCar = 20;
         public int CarAlive { private set; get; }
         [SerializeField] float survivorRate = 0.25f;
-        [SerializeField] float survivorDisparity = 0.5f;
-        [SerializeField] float mutationRate = 0.1f;
-        [SerializeField] float mutationRange = 0.1f;
+        [SerializeField] float synapsesMutationRate = 0.1f;
+        [SerializeField] float synapsesMutationRange = 0.1f;
         [SerializeField] bool inputNbMutation = false;
         [SerializeField] bool hiddenNbMutation = false;
         [SerializeField] float hiddenMbMutationRate = 0.01f;
@@ -23,7 +22,7 @@ namespace nfs.layered {
         [SerializeField] float hiddenLayerNbMutationRate = 0.001f;
 
         private GameObject[] carPopulation;
-        private Stack<CarBehaviour> deadCars;
+        private Stack<CarBehaviour> deadCars = new Stack<CarBehaviour>();
         [SerializeField] Transform populationGroup;
         [SerializeField] Vector3 startPosition = Vector3.zero;
         [SerializeField] GameObject carPrefab;
@@ -31,47 +30,102 @@ namespace nfs.layered {
 
         // Use this for initialization
         private void Start() {
-            
+            InitializePopulation();
         }
 
         private void Update() {
             if (CarAlive <= 0) {
-                // 
+                NextGeneration();
             }
         }
 
         public void InitializePopulation () {
             carPopulation = new GameObject[numberOfCar];
 
-            Generation = 1; // put that in a reset function
-            CarAlive = numberOfCar; // put that in a reset function
-
-            carPopulation[0] = GameObject.Instantiate(carPrefab, startPosition, Quaternion.identity);
+            Generation = 1;
+            CarAlive = numberOfCar;
             
-            for (int i=0; i <= numberOfCar; i++) {
+            for (int i=0; i < numberOfCar; i++) {
                 carPopulation[i] = GameObject.Instantiate(carPrefab, startPosition, Quaternion.identity);
                 carPopulation[i].transform.SetParent(populationGroup);
                 carPopulation[i].GetComponent<LayeredNetController>().InitializeNeuralNetwork();
                 carPopulation[i].GetComponent<CarBehaviour>().HitSomething += OnCarHit;
             }
+
+            Debug.Log("Generation " + Generation);            
         }
 
         private void NextGeneration () {
 
+            for (int i=0; i < numberOfCar; i++) {
+                carPopulation[i].GetComponent<CarBehaviour>().Stop = true;
+                carPopulation[i].GetComponent<CarBehaviour>().Reset(Vector3.zero, Quaternion.identity);
+            }
+
+            Generation += 1;
+            CarAlive = numberOfCar;
+
+            BreedCurrentGeneration();
+
+            deadCars.Clear();
+            
+            Debug.Log("Generation " + Generation);                        
         }
 
         private void BreedCurrentGeneration() {
             int survivorNb = (int)(numberOfCar*survivorRate);
+            survivorNb = survivorNb < 1 ? 1 : survivorNb;
+
             LayeredNetwork[] survivorNets = new LayeredNetwork[survivorNb];
             for (int i = 0; i < survivorNb; i++) {
                 survivorNets[i] = deadCars.Pop().GetComponent<LayeredNetController>().GetLayeredNetCopy();
             }
 
-            // NOTE FOR LATER
-            // loop through all networks and insert a mutated net
+            int[] survivorsOffsprings = new int[survivorNb];
+
+            int totalChecker = 0;
+            for(int i = 0; i<survivorNb; i++){
+
+                if (i+1 > survivorNb*0.5f){
+                    survivorsOffsprings[i] = (int)(Mathf.Floor(numberOfCar*0.1f)/Mathf.Ceil(survivorNb*0.5f));
+                    survivorsOffsprings[i] = survivorsOffsprings[i] < 1 ? 1 : survivorsOffsprings[i];
+                    totalChecker += survivorsOffsprings[i];
+
+                } else if (i+1 > survivorNb*0.3f){
+                    survivorsOffsprings[i] = (int)(Mathf.Floor(numberOfCar*0.2f)/Mathf.Ceil(survivorNb*0.3f));
+                    survivorsOffsprings[i] = survivorsOffsprings[i] < 1 ? 1 : survivorsOffsprings[i];
+                    totalChecker += survivorsOffsprings[i];
+
+                } else if (i+1 > survivorNb*0.2f){
+                    survivorsOffsprings[i] = (int)(Mathf.Floor(numberOfCar*0.3f)/Mathf.Ceil(survivorNb*0.2f));
+                    survivorsOffsprings[i] = survivorsOffsprings[i] < 1 ? 1 : survivorsOffsprings[i];
+                    totalChecker += survivorsOffsprings[i];
+
+                } else {
+                    survivorsOffsprings[i] = (int)(Mathf.Floor(numberOfCar*0.5f)/Mathf.Ceil(survivorNb*0.1f));
+                    survivorsOffsprings[i] = survivorsOffsprings[i] < 1 ? 1 : survivorsOffsprings[i];
+                    totalChecker += survivorsOffsprings[i];
+
+                }
+
+                //Debug.Log(survivorsOffsprings[i]);
+            }
+
+            if (numberOfCar - totalChecker < 0) {
+                Debug.LogError("BreedCurrentGeneration algorythm broken, too many offsprings assigned.");
+            } else {
+                survivorsOffsprings[0] += numberOfCar - totalChecker;
+            }
+
             int k = 0;
             for (int i=0; i < numberOfCar; i++) {
-                carPopulation[i].GetComponent<LayeredNetController>().SetLayeredNework(CreateMutatedOffspring(survivorNets[k])); // IS THIS PASS BY REFERENCE
+
+                carPopulation[i].GetComponent<LayeredNetController>().SetLayeredNework(CreateMutatedOffspring(survivorNets[k]));
+
+                survivorsOffsprings[k] -= 1;
+                if (survivorsOffsprings[k] == 0) {
+                    k += 1;
+                }
             }
 
         } 
@@ -81,6 +135,7 @@ namespace nfs.layered {
             int[] hiddenLayersSizes = neuralNet.GetHiddenLayersSizes();
             Matrix[] synapses = neuralNet.GetSynapsesCopy();
 
+            // TODO LATER
             // Implemenet here mutation for new input and output
 
             // mutate number of hidden layers
@@ -111,13 +166,20 @@ namespace nfs.layered {
                 }
             }
 
+            //Debug.Log("Mutation " + Generation);
+
             // mutate synapses values
             for (int i=0; i<synapses.Length; i++) {
-                //
+                Matrix mutationMat = new Matrix(synapses[i].I, synapses[i].J).SetAsMutator(synapsesMutationRate, synapsesMutationRange);
+                synapses[i] = synapses[i].Add(mutationMat, true);
+
+                //Debug.Log(synapses[i].GetValuesAsString());
             }
 
             LayeredNetwork mutadedOffspring = new LayeredNetwork(neuralNet.GetInputSize(), neuralNet.GetOutputSize(), hiddenLayersSizes);
             mutadedOffspring.InsertSynapes(synapses);
+
+            //Debug.Log(synapses[0].GetValuesAsString());
 
             return mutadedOffspring;
         }
@@ -132,26 +194,12 @@ namespace nfs.layered {
         }
 
         private void OnCarHit (CarBehaviour who, string what) {
-            if(what == "wall") {
+            if(what == "wall" && !deadCars.Contains(who)) {
                 CarAlive -= 1;
-                deadCars.Push(who);                
+                deadCars.Push(who);
+                who.Stop = true;
             }
         }
-
-        // create a list of registered car
-
-        // when all cars are dead (or simulation end) sort the cars by there fitness
-        // select the best 10% reistantiate a selection of all these cars to the max
-        // run the new lot throught the genetic algorythm
-        // increase generation counter and start the simulation again
-        // do this for the given number of generation
-        // NOTES
-        // best way for this is maybe to get a copy of the networks of these cars
-        // reinstantiate new blanc cars and copy the saved network in them
-        // like this we can also keep track of the generation evolution
-
-        // genertic algorythm, select a random number of weight and apply a random mutation
-
 
     }
 }

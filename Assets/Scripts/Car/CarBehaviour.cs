@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using System;
-using UnityEngine.Events;
 
 namespace nfs.car {
 
@@ -64,26 +63,26 @@ namespace nfs.car {
 
         // bool use to initiate the rest car process
         private bool reset = false; // reset will block controls
-		
-		// reference to the car Rigidbody
-        private Rigidbody car;
+        public bool Stop { set; get; }
 
-        public bool Dead = false;
+        // reference to the car Rigidbody
+        private Rigidbody car;
         public event Action <CarBehaviour, string>HitSomething;
         //public UnityEvent test2;
 
         private void Start() {
             car = GetComponent<Rigidbody>();
+            Stop = false;
             DistanceDriven = 0;
         }
 
         // Updates the car movement if speed not at 0 and reset the car if necessary
         private void Update() {
-            if (reset) {
+            if (Stop) {
                 Brake(1f);
 
-                if (Speed == 0f)
-                    Reset();
+                // if (Speed == 0f)
+                //     Reset();
             }
 
             if (Speed != 0f) {
@@ -112,28 +111,20 @@ namespace nfs.car {
 		// called when there is a collision to reset the car
         private void OnTriggerEnter(Collider other) {
             RaiseHitSomething(other.gameObject.tag);
-
-            // reset = true;
-            if(other.gameObject.tag == "wall"){
-				// reset = true;
-				// Destroy(gameObject);
-			} else if(other.gameObject.tag == "car"){
-				// reset = true;
-				// Destroy(gameObject);
-			}
         }
 
-        private void RaiseHitSomething(string tag){
-            if(HitSomething != null && !Dead)
+        public void RaiseHitSomething(string tag){
+            if(HitSomething != null)
                 HitSomething.Invoke(this, tag);
         }
 
 		// resets the car to the start state
-        private void Reset() {
-            // transform.position = new Vector3(0f, 0.5f, 0f);
-            // transform.rotation = Quaternion.identity;
-            // car.velocity = Vector3.zero;
-            // reset = false;
+        public void Reset(Vector3 position, Quaternion rotation) {
+            car.velocity = Vector3.zero;
+            transform.position = position;
+            transform.rotation = rotation;
+            DistanceDriven = 0;
+            Stop = false;
         }
 
         /// <summary>

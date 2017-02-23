@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using nfs.car;
 
-namespace nfs {
+namespace nfs.controllers {
 
 	///<summary>
 	/// Basic player input controller to drive a car.
@@ -18,6 +18,8 @@ namespace nfs {
 			// and it is important for the current implentation of the car controller
 			DriveInput = Input.GetAxis("Vertical").Normalized();
 			TurnInput = Input.GetAxis("Horizontal").Normalized();
+
+            //Debug.Log("normalized input " + TurnInput);
 
         }
 

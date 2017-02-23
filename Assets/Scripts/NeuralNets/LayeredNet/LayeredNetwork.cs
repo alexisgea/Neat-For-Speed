@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using nfs.tools;
 
 namespace nfs.layered {
@@ -73,13 +71,13 @@ namespace nfs.layered {
             // we ping the network
             for (int i = 0; i < hiddenLayersNeurons.Length + 1; i++) {
                     if (i == 0) {
-                        hiddenLayersNeurons[0] = inputNeurons.Multiply(synapses[0]);
+                        hiddenLayersNeurons[0] = inputNeurons.Multiply(synapses[0], true);
                         ProcessActivation(hiddenLayersNeurons[0]);
                     } else if (i == hiddenLayersNeurons.Length) {
-                        outputNeurons = hiddenLayersNeurons[i - 1].Multiply(synapses[i]);
+                        outputNeurons = hiddenLayersNeurons[i - 1].Multiply(synapses[i], true);
                         ProcessActivation(outputNeurons);
                     } else {
-                        hiddenLayersNeurons[i] = hiddenLayersNeurons[i - 1].Multiply(synapses[i]);
+                        hiddenLayersNeurons[i] = hiddenLayersNeurons[i - 1].Multiply(synapses[i], true);
                         ProcessActivation(hiddenLayersNeurons[i]);
                     }
                 }
@@ -100,7 +98,7 @@ namespace nfs.layered {
             for (int i = 0; i < hiddenLayersNeurons.Length; i++) {
                 hiddenLayerSizes[i] = hiddenLayersNeurons[i].J;
             }
-            
+
             return hiddenLayerSizes;
         }
 

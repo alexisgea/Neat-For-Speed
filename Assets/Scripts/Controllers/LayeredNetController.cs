@@ -1,10 +1,8 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using nfs.tools;
+﻿using UnityEngine;
 using nfs.car;
+using nfs.layered;
 
-namespace nfs.layered {
+namespace nfs.controllers {
 
     // NOTES TO MYSELF
     // potentially there could be one neural network piloting every car of the same type in the same time
@@ -24,7 +22,6 @@ namespace nfs.layered {
         private float[] inputValues;
         private float[] outputValues;
 
-
         protected override void ChildStart() {
             sensors = GetComponent<CarSensors>();
             InitializeNeuralNetwork();
@@ -35,14 +32,20 @@ namespace nfs.layered {
             outputValues = neuralNet.PingFwd(inputValues);
             DriveInput = outputValues[0];
             TurnInput = outputValues[1];
+
+            // if the car is not going forward or going backward, kill the car
+            if(DriveInput < 0.6f && !GetComponent<CarBehaviour>().Stop)
+                GetComponent<CarBehaviour>().RaiseHitSomething("wall");
+
+            // Debug.Log("drive: " + DriveInput);
+            // Debug.Log("turn: " + TurnInput);
+            
         }
 
         public void InitializeNeuralNetwork(int inputSize = 3, int outputSize = 2, int[] hiddenSizes = null) {
             if (hiddenSizes == null)
                 hiddenSizes = new int[] { 4 };
             neuralNet = new LayeredNetwork(inputSize, outputSize, hiddenSizes);
-            //inputValues = new float[inputSize];
-            //outputValues = new float[outputSize];
         }
 
         public LayeredNetwork GetLayeredNetCopy () {
