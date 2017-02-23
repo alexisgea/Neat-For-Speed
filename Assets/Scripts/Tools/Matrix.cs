@@ -32,6 +32,12 @@ namespace nfs.tools {
             }
         }
 
+        public Matrix GetClone() {
+            Matrix clone = new Matrix(this.I, this.J);
+            clone.SetAllValues(this);
+            return clone;
+        }
+
 		///<summary>
 	    /// Standard matrix multiply.
         /// Return a matrix of size I from original and J from other matrix.
@@ -111,6 +117,10 @@ namespace nfs.tools {
             return this;
         }
 
+        public float[][] GetAllValues() {
+            return Mtx;
+        }
+
         public float[] GetLineValues(int line = 0) {
             float[] lineValues = new float[line];
 
@@ -136,9 +146,92 @@ namespace nfs.tools {
                 return colValues;
 
             } else {
-                Debug.LogError("There is no line " + col + " in this matrix. Returning null.");
+                Debug.LogError("There is no col " + col + " in this matrix. Returning null.");
                 return null;
             }
+        }
+
+        public void SetAllValues(Matrix other) {
+            if (CheckDimention(other)) {
+                for (int i = 0; i < I; i++) {
+                    for (int j = 0; j < J; j++) {
+                        Mtx[i][j] = other.Mtx[i][j];
+                    }
+                }
+            } else {
+                Debug.LogWarning("Matrix dimention not equal, cannot copy values. Doing nothing.");
+            }
+        }
+
+        public void SetAllValues(float[][] otherMtx) {
+            if (CheckDimention(otherMtx)) {
+                for (int i = 0; i < I; i++) {
+                    for (int j = 0; j < J; j++) {
+                        Mtx[i][j] = otherMtx[i][j];
+                    }
+                }
+            }
+            else
+                Debug.LogWarning("Matrix float[][] dimention not equal, cannot copy values. Doing nothing.");                
+        }
+
+        public void SetLineValues (int line, float[] values) {
+            if(line <= I && values.Length <= this.J) {
+                for(int j=0; j<J; j++){
+                    Mtx[line][j] = values[j];
+                }
+
+            } else {
+                Debug.LogWarning("There is no line " + line + " or the number of columns mismatch ("
+                                 + values.Length + " vs " + this.J + ") for this matrix. Doing nothing.");
+            }
+        }
+
+        public void SetColumnValues (int col, float[] values) {
+
+            if(col <= J && values.Length <= this.I) {
+                for(int i=0; i<I; i++){
+                    Mtx[i][col] = values[i];
+                }
+
+            } else {
+                Debug.LogWarning("There is no col " + col + " or the number of lines mismatch ("
+                                 + values.Length + " vs " + this.I + ") for this matrix. Doing nothing.");
+            }
+        }
+
+        public bool CheckDimention (Matrix other) {
+            return (this.I == other.I && this.J == other.J) ? true : false;
+        }
+
+        public bool CheckDimention (float[][] otherMtx) {
+            return (this.I == otherMtx.Length && this.J == otherMtx[0].Length) ? true : false;
+        }
+
+        public Matrix Redimension(int newI, int newJ, bool synapse = true) {
+
+            Matrix redimMat = new Matrix(newI, newJ);
+
+            if(synapse)
+                redimMat.SetAsSynapse(); // in order to get random values then we will copy the previous ones
+            else
+                redimMat.SetToZero();
+
+            int smallI = Mathf.Min(newI, I);
+            int smallJ = Mathf.Min(newJ, J);
+
+            for (int i = 0; i < smallI; i++) {
+                for (int j = 0; j < smallJ; j++) {
+                    redimMat.Mtx[i][j] = Mtx[i][j];
+                }
+            }
+
+            Mtx = redimMat.Mtx;
+
+            I = newI;
+            J = newJ;
+
+            return this;
         }
 
         ///<summary>
