@@ -50,6 +50,7 @@ namespace nfs.layered {
             LayeredNetwork clone = new LayeredNetwork(this.inputNeurons.J, this.outputNeurons.J, hiddenLayerSizes);
 
             clone.InsertSynapses(this.GetSynapsesCopy());
+            clone.FitnessScore = FitnessScore;
 
             return clone;
         }
@@ -58,12 +59,17 @@ namespace nfs.layered {
         // a layer cannot have more than one line so we don't loop through the J
         private void ProcessActivation (Matrix mat) {
             for(int j=0; j < mat.J; j++) {
-                mat.Mtx[0][j] = Sigmoid(mat.Mtx[0][j]);
+                //mat.Mtx[0][j] = Sigmoid(mat.Mtx[0][j]);
+                mat.Mtx[0][j] = Linear(mat.Mtx[0][j]);
             }
         }
 
         private float Sigmoid(float t) {
-            return 1f / (1 + Mathf.Exp(-(t*2-1)));
+            return 1f / (1 + Mathf.Exp(-(t*5f-2.5f)));
+        }
+
+        private float Linear(float t) {
+            return t;
         }
 
         // process the input forward to get output in the network
@@ -75,10 +81,22 @@ namespace nfs.layered {
             for (int i = 0; i < hiddenLayersNeurons.Length + 1; i++) {
                     if (i == 0) {
                         hiddenLayersNeurons[0] = inputNeurons.Multiply(synapses[0], true);
+
+                        //Debug.Log("N1:" + hiddenLayersNeurons[0].Mtx[0][0] + " N2:" + hiddenLayersNeurons[0].Mtx[0][1] + " N3:" + hiddenLayersNeurons[0].Mtx[0][2] + " N4:" + hiddenLayersNeurons[0].Mtx[0][3]);
+
                         ProcessActivation(hiddenLayersNeurons[0]);
+
+                        //Debug.Log("N1:" + hiddenLayersNeurons[0].Mtx[0][0] + " N2:" + hiddenLayersNeurons[0].Mtx[0][1] + " N3:" + hiddenLayersNeurons[0].Mtx[0][2] + " N4:" + hiddenLayersNeurons[0].Mtx[0][3]);
+                        
                     } else if (i == hiddenLayersNeurons.Length) {
                         outputNeurons = hiddenLayersNeurons[i - 1].Multiply(synapses[i], true);
+
+                        //Debug.Log("N1:" + outputNeurons.Mtx[0][0] + " N2:" + outputNeurons.Mtx[0][1]);
+                        
                         ProcessActivation(outputNeurons);
+                        
+                        //Debug.Log("N1:" + outputNeurons.Mtx[0][0] + " N2:" + outputNeurons.Mtx[0][1]);
+                        
                     } else {
                         hiddenLayersNeurons[i] = hiddenLayersNeurons[i - 1].Multiply(synapses[i], true);
                         ProcessActivation(hiddenLayersNeurons[i]);

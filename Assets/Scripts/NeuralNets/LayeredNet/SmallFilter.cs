@@ -14,6 +14,7 @@ namespace nfs.layered {
         public int CarAlive { private set; get; }
         [SerializeField] float survivorRate = 0.25f;
         private int survivorNb;
+        [SerializeField] float freshBloodRate = 0.1f;
         [SerializeField] float synapsesMutationRate = 0.1f;
         [SerializeField] float synapsesMutationRange = 0.1f;
         [SerializeField] bool inputNbMutation = false;
@@ -24,7 +25,8 @@ namespace nfs.layered {
 
         private GameObject[] carPopulation;
         private Stack<CarBehaviour> deadCars = new Stack<CarBehaviour>();
-        private LayeredNetwork[] fittestNets;
+        private LayeredNetwork[] alltimeFittestNets;
+        private LayeredNetwork[] generationFittestNets;
         [SerializeField] Transform populationGroup;
         [SerializeField] Vector3 startPosition = Vector3.zero;
         [SerializeField] GameObject carPrefab;
@@ -57,7 +59,10 @@ namespace nfs.layered {
             survivorNb = (int)(numberOfCar*survivorRate);
             survivorNb = survivorNb < 1 ? 1 : survivorNb;
 
-            fittestNets = new LayeredNetwork[survivorNb];
+            //Debug.Log(survivorNb);
+
+            alltimeFittestNets = new LayeredNetwork[survivorNb];
+            generationFittestNets = new LayeredNetwork[survivorNb];
 
             Generation = 1;
             CarAlive = numberOfCar;
@@ -71,10 +76,12 @@ namespace nfs.layered {
 
             generationStartTime = Time.unscaledTime;
 
-            Debug.Log("Generation " + Generation);            
+            //Debug.Log("Generation " + Generation);            
         }
 
         private void NextGeneration () {
+
+            Debug.Log("Generation " + Generation +  " best fitness:" + generationFittestNets[0].FitnessScore + " all time best fitness:" + alltimeFittestNets[0].FitnessScore);
 
             for (int i=0; i < numberOfCar; i++) {
                 carPopulation[i].GetComponent<CarBehaviour>().Stop = true;
@@ -94,57 +101,36 @@ namespace nfs.layered {
             raceTrack = GameObject.Instantiate(tracks[Random.Range(0, tracks.Length-1)]);
             raceTrack.transform.SetParent(world);
             
-            Debug.Log("Generation " + Generation);                        
+            //Debug.Log("Generation " + Generation);                        
         }
 
         private void BreedCurrentGeneration() {
 
-            int[] survivorsOffspringsNb = new int[survivorNb];
-
-            int totalChecker = 0;
-            for(int i = 0; i<survivorNb; i++){
-
-                if (i+1 > survivorNb*0.4f){
-                    survivorsOffspringsNb[i] = (int)(Mathf.Floor(numberOfCar*0.1f)/Mathf.Ceil(survivorNb*0.5f));
-                    survivorsOffspringsNb[i] = survivorsOffspringsNb[i] < 1 ? 1 : survivorsOffspringsNb[i];
-                    totalChecker += survivorsOffspringsNb[i];
-
-                } else if (i+1 > survivorNb*0.3f){
-                    survivorsOffspringsNb[i] = (int)(Mathf.Floor(numberOfCar*0.2f)/Mathf.Ceil(survivorNb*0.3f));
-                    survivorsOffspringsNb[i] = survivorsOffspringsNb[i] < 1 ? 1 : survivorsOffspringsNb[i];
-                    totalChecker += survivorsOffspringsNb[i];
-
-                } else if (i+1 > survivorNb*0.2f){
-                    survivorsOffspringsNb[i] = (int)(Mathf.Floor(numberOfCar*0.3f)/Mathf.Ceil(survivorNb*0.2f));
-                    survivorsOffspringsNb[i] = survivorsOffspringsNb[i] < 1 ? 1 : survivorsOffspringsNb[i];
-                    totalChecker += survivorsOffspringsNb[i];
-
-                } else {
-                    survivorsOffspringsNb[i] = (int)(Mathf.Floor(numberOfCar*0.4f)/Mathf.Ceil(survivorNb*0.1f));
-                    survivorsOffspringsNb[i] = survivorsOffspringsNb[i] < 1 ? 1 : survivorsOffspringsNb[i];
-                    totalChecker += survivorsOffspringsNb[i];
-
-                }
-
-                //Debug.Log(survivorsOffsprings[i]);
-            }
-
-            if (numberOfCar - totalChecker < 0) {
-                Debug.LogError("BreedCurrentGeneration algorythm broken, too many offsprings assigned: " + totalChecker);
-            } else {
-                survivorsOffspringsNb[0] += numberOfCar - totalChecker;
-                //Debug.Log(totalChecker);
-            }
-
             int k = 0;
+            int l = 0;
             for (int i=0; i < numberOfCar; i++) {
+                if (i < numberOfCar*0.6) { // this generation (60%)
+                    carPopulation[i].GetComponent<LayeredNetController>().SetLayeredNework(CreateMutatedOffspring(generationFittestNets[k]));
+                    l += 1;
+                    if (l> numberOfCar*0.6/survivorNb){
+                        l = 0;
+                        k += 1;
+                    }
 
-                carPopulation[i].GetComponent<LayeredNetController>().SetLayeredNework(CreateMutatedOffspring(fittestNets[k]));
+                } else if (i < numberOfCar*0.9) { // all time generation (30% 0.6 + 0.3)
+                    carPopulation[i].GetComponent<LayeredNetController>().SetLayeredNework(CreateMutatedOffspring(alltimeFittestNets[k]));
+                    l += 1;
+                    if (l> numberOfCar*0.9/survivorNb){
+                        l = 0;
+                        k += 1;
+                    }
 
-                survivorsOffspringsNb[k] -= 1;
-                if (survivorsOffspringsNb[k] == 0) {
-                    k += 1;
+                } else { // fresh blood (10%)
+                    carPopulation[i].GetComponent<LayeredNetController>().InitializeNeuralNetwork();   
                 }
+
+                if(k>=survivorNb)
+                    k = 0;
             }
 
         } 
@@ -240,38 +226,55 @@ namespace nfs.layered {
                 deadCars.Push(who);
                 who.Stop = true;
 
-                CheckFitness(who);
+                LayeredNetwork fitnessContender = who.GetComponent<LayeredNetController>().GetLayeredNetCopy();
+                fitnessContender.FitnessScore = CalculateFitness(who);
+
+                CompareFitness(alltimeFittestNets, fitnessContender);
+                CompareFitness(generationFittestNets, fitnessContender);
+
             }
         }
 
-        private void CheckFitness (CarBehaviour who) {
+        private float CalculateFitness (CarBehaviour who) {
             float distanceFitness = who.DistanceDriven / maxDistFitness;
-            float speedFitness = (who.DistanceDriven / (Time.unscaledDeltaTime - generationStartTime)) / who.MaxForwardSpeed;
+
+            //Debug.Log(distanceFitness);
+            float timeElapsed = (Time.unscaledDeltaTime - generationStartTime);
+            float speedFitness = timeElapsed== 0? 0f : (who.DistanceDriven / timeElapsed) / who.MaxForwardSpeed;
+
+            //Debug.Log(Time.unscaledTime - generationStartTime);
+
             float fitness = distanceFitness + distanceFitness * speedFitness;
 
-            LayeredNetwork fitnessContender = who.GetComponent<LayeredNetController>().GetLayeredNetCopy();
-            fitnessContender.FitnessScore = fitness;
+            //fitness = fitness <= 0 ? 0f : fitness;
 
-            if(fittestNets[survivorNb-1] != null && fittestNets[survivorNb-1].FitnessScore < fitnessContender.FitnessScore) {
-                fittestNets[survivorNb - 1] = fitnessContender;
+            return fitness;
+        }
+
+        private void CompareFitness (LayeredNetwork[] fitnessRankings, LayeredNetwork fitnessContender) {
+            if(fitnessRankings[survivorNb-1] == null){
+                fitnessRankings[survivorNb - 1] = fitnessContender;
+            } else if(fitnessRankings[survivorNb-1] != null && fitnessRankings[survivorNb-1].FitnessScore < fitnessContender.FitnessScore) {
+                fitnessRankings[survivorNb - 1] = fitnessContender;
             }
 
             if (survivorNb > 1) {
                 for (int i = survivorNb - 2; i >= 0; i--) {
-                    if (fittestNets[i] == null) { // if the array is empty we fill it one step at a time
-                        fittestNets[i] = fitnessContender;
-                        fittestNets[i + 1] = null;
-                    } else if(fittestNets[i].FitnessScore < fitnessContender.FitnessScore) {
-                        LayeredNetwork stepDown = fittestNets[i];
-                        fittestNets[i] = fitnessContender;
-                        fittestNets[i + 1] = stepDown;
+                    if (fitnessRankings[i] == null) { // if the array is empty we fill it one step at a time
+                        fitnessRankings[i] = fitnessContender;
+                        fitnessRankings[i + 1] = null;
+                    } else if(fitnessRankings[i].FitnessScore < fitnessContender.FitnessScore) {
+                        LayeredNetwork stepDown = fitnessRankings[i];
+                        fitnessRankings[i] = fitnessContender;
+                        fitnessRankings[i + 1] = stepDown;
+                        // if(i==0) 
+                        //     Debug.Log("New best fitness: " + fitnessContender.FitnessScore);
+
                     } else {
                         i = 0; // if the contender doesn't have a better score anymore we exit the loop
                     }
                 }
             }
-            
-
         }
 
     }

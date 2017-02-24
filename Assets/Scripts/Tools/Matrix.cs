@@ -42,7 +42,7 @@ namespace nfs.tools {
         /// Does a weighted sum of original lines times other colums.
         /// IF there is a mismatch of size, the original matrix will be returned.
 	    ///</summary>
-		public Matrix Multiply (Matrix other, bool clamp = false, float min = 0f, float max = 1f) {
+		public Matrix Multiply (Matrix other, bool normalize = false) {
             if (J == other.I) { 
 				Matrix newMat = new Matrix(I, other.J);
 
@@ -53,7 +53,7 @@ namespace nfs.tools {
 						for(int k = 0; k < J; k ++) {
                             weightedSum += Mtx[i][k] * other.Mtx[k][j];
                         }
-                        newMat.Mtx[i][j] = clamp? Mathf.Clamp(weightedSum, min, max) : weightedSum;
+                        newMat.Mtx[i][j] = normalize? weightedSum/J : weightedSum;
                     }
 				}
                 return newMat;
