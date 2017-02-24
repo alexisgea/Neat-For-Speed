@@ -207,11 +207,15 @@ namespace nfs.tools {
                 Debug.LogWarning("Matrix float[][] dimention not equal, cannot copy values. Doing nothing.");                
         }
 
-        public void SetLineValues (int line, float[] values) {
+        public void SetLineValues (int line, float[] values, bool ignoreMissmatch = false) {
             if(line <= I && values.Length <= this.J) {
-                for(int j=0; j<J; j++){
+
+                for(int j=0; j<Mathf.Min(J, values.Length); j++){
                     Mtx[line][j] = values[j];
                 }
+
+                if(J != values.Length && !ignoreMissmatch)
+                    Debug.LogWarning("Array given not equal to size of line: " + values.Length + " vs " + this.J + ", doing nothing.");
 
             } else {
                 Debug.LogWarning("There is no line " + line + " or the number of columns mismatch ("
@@ -219,12 +223,15 @@ namespace nfs.tools {
             }
         }
 
-        public void SetColumnValues (int col, float[] values) {
+        public void SetColumnValues (int col, float[] values, bool ignoreMissmatch = false) {
 
             if(col <= J && values.Length <= this.I) {
-                for(int i=0; i<I; i++){
+                for(int i=0; i<Mathf.Min(I, values.Length); i++){
                     Mtx[i][col] = values[i];
                 }
+
+                if(I != values.Length && !ignoreMissmatch)
+                    Debug.LogWarning("Array given not equal to size of column: " + values.Length + " vs " + this.I + ", doing nothing.");
 
             } else {
                 Debug.LogWarning("There is no col " + col + " or the number of lines mismatch ("

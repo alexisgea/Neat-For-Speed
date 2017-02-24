@@ -17,6 +17,7 @@ namespace nfs.car {
         private float brakingRate = 20f;
         private float acceleration = 30f;
         private float maxForwardSpeed = 30f;
+        public float MaxForwardSpeed {get { return maxForwardSpeed; } }
         private float maxReverseSpeed = -10f;
         private float aboutZero = 0.01f;
         private float speed = 0f;
@@ -62,7 +63,7 @@ namespace nfs.car {
 
 
         // bool use to initiate the rest car process
-        private bool reset = false; // reset will block controls
+        //private bool reset = false; // reset will block controls
         public bool Stop { set; get; }
 
         // reference to the car Rigidbody
@@ -104,7 +105,7 @@ namespace nfs.car {
 		// Updates the car position each frame depending on speed.
         private void MoveCar() {
             car.MovePosition(transform.position + transform.forward * Speed * Time.deltaTime);
-            if(!reset)
+            if(!Stop)
                 DistanceDriven += speed * Time.deltaTime;
         }
 
@@ -129,7 +130,7 @@ namespace nfs.car {
 
         /// <summary>
 		/// Modifies an axis force by reference. The idea being that an ANN should not be able
-        /// to jump from one side of the whell to the other to keep a human behavior.
+        /// to jump from one side of the wheel to the other to keep a human behavior.
         /// This is done naturally with a keyboard or joystick, so this function enforces
         /// this gradual change of value. I checked with a script to make sure this rate
         /// is similar to the one with a keyboard in unity.
@@ -166,7 +167,7 @@ namespace nfs.car {
             // gets the actual force gradually changed toward the targetForce
             float force = GetForce(ref driveForce, targetForce);
 
-            if (!reset){
+            if (!Stop){
                 if((Speed < 0f && force >= 0f) || (Speed > 0f && force < 0f))
                     Brake(force);
                 else
@@ -182,7 +183,7 @@ namespace nfs.car {
             float force = GetForce(ref turnForce, targetForce);
 
             // if the speed is about zero we can't turn
-            if (!reset && (Mathf.Abs(Speed)-aboutZero)> 0f) {
+            if (!Stop && (Mathf.Abs(Speed)-aboutZero)> 0f) {
                 float relativeSpeed = Speed >= 0 ? Speed / maxForwardSpeed : Speed / maxReverseSpeed;
                 
                 float turnValue = 0f;

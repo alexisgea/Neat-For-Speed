@@ -14,7 +14,7 @@ namespace nfs.car {
 	[RequireComponent (typeof (CarBehaviour))]
 	public class CarSensors : MonoBehaviour {
 
-		private int sensorLength = 5;
+		private int sensorLength = 10;
 
         // Car internal control sensors
         private CarBehaviour car;
@@ -110,7 +110,7 @@ namespace nfs.car {
 		}
 
 		private void EastSensor() {
-			Debug.DrawRay(transform.position, transform.right * sensorLength, Color.green);
+			//Debug.DrawRay(transform.position, transform.right * sensorLength, Color.green);
 
 			RaycastHit hit;
 			if (Physics.Raycast(transform.position, transform.right, out hit, sensorLength)) {
@@ -127,7 +127,7 @@ namespace nfs.car {
 		}
 
 		private void SouthEastSensor() {
-			Debug.DrawRay(transform.position, (-transform.forward + transform.right) * sensorLength, Color.green);
+			//Debug.DrawRay(transform.position, (-transform.forward + transform.right) * sensorLength, Color.green);
 
 			RaycastHit hit;
 			if (Physics.Raycast(transform.position, (-transform.forward + transform.right), out hit, sensorLength)) {
@@ -144,7 +144,7 @@ namespace nfs.car {
 		}
 
 		private void SouthSensor() {
-			Debug.DrawRay(transform.position, -transform.forward * sensorLength, Color.green);
+			//Debug.DrawRay(transform.position, -transform.forward * sensorLength, Color.green);
 
 			RaycastHit hit;
 			if (Physics.Raycast(transform.position, -transform.forward, out hit, sensorLength)) {
@@ -161,7 +161,7 @@ namespace nfs.car {
 		}
 
 		private void SouthWestSensor() {
-			Debug.DrawRay(transform.position, -(transform.forward + transform.right) * sensorLength, Color.green);
+			//Debug.DrawRay(transform.position, -(transform.forward + transform.right) * sensorLength, Color.green);
 
 			RaycastHit hit;
 			if (Physics.Raycast(transform.position, -(transform.forward + transform.right), out hit, sensorLength)) {
@@ -178,7 +178,7 @@ namespace nfs.car {
 		}
 
 		private void WestSensor() {
-			Debug.DrawRay(transform.position, -transform.right * sensorLength, Color.green);
+			//Debug.DrawRay(transform.position, -transform.right * sensorLength, Color.green);
 
 			RaycastHit hit;
 			if (Physics.Raycast(transform.position, -transform.right, out hit, sensorLength)) {

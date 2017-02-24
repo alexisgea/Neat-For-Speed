@@ -42,10 +42,10 @@ namespace nfs.controllers {
             
         }
 
-        public void InitializeNeuralNetwork(int inputSize = 3, int outputSize = 2, int[] hiddenSizes = null) {
+        public void InitializeNeuralNetwork(int inputSize = 3, int biasNeuron = 1, int outputSize = 2, int[] hiddenSizes = null) {
             if (hiddenSizes == null)
                 hiddenSizes = new int[] { 4 };
-            neuralNet = new LayeredNetwork(inputSize, outputSize, hiddenSizes);
+            neuralNet = new LayeredNetwork(inputSize + biasNeuron, outputSize, hiddenSizes);
         }
 
         public LayeredNetwork GetLayeredNetCopy () {
