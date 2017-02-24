@@ -59,8 +59,8 @@ namespace nfs.layered {
         // a layer cannot have more than one line so we don't loop through the J
         private void ProcessActivation (Matrix mat) {
             for(int j=0; j < mat.J; j++) {
-                //mat.Mtx[0][j] = Sigmoid(mat.Mtx[0][j]);
-                mat.Mtx[0][j] = Linear(mat.Mtx[0][j]);
+                mat.Mtx[0][j] = Sigmoid(mat.Mtx[0][j]);
+                //mat.Mtx[0][j] = Linear(mat.Mtx[0][j]);
             }
         }
 

@@ -12,6 +12,9 @@ namespace nfs.layered {
 
         [SerializeField] int numberOfCar = 20;
         public int CarAlive { private set; get; }
+
+        [SerializeField] int[] baseHiddenLayersSizes;
+
         [SerializeField] float survivorRate = 0.25f;
         private int survivorNb;
         [SerializeField] float freshBloodRate = 0.1f;
@@ -70,7 +73,7 @@ namespace nfs.layered {
             for (int i=0; i < numberOfCar; i++) {
                 carPopulation[i] = GameObject.Instantiate(carPrefab, startPosition, Quaternion.identity);
                 carPopulation[i].transform.SetParent(populationGroup);
-                carPopulation[i].GetComponent<LayeredNetController>().InitializeNeuralNetwork();
+                carPopulation[i].GetComponent<LayeredNetController>().InitializeNeuralNetwork(hiddenSizes:baseHiddenLayersSizes);
                 carPopulation[i].GetComponent<CarBehaviour>().HitSomething += OnCarHit;
             }
 
@@ -96,6 +99,12 @@ namespace nfs.layered {
             generationStartTime = Time.unscaledTime;
 
             deadCars.Clear();
+            
+            // reset networks
+            for (int i = 0; i < survivorNb; i++) {
+                generationFittestNets[i] = generationFittestNets[i].GetClone();
+                generationFittestNets[i].FitnessScore = 0;
+            }
 
             Destroy(raceTrack);
             raceTrack = GameObject.Instantiate(tracks[Random.Range(0, tracks.Length-1)]);
@@ -110,7 +119,7 @@ namespace nfs.layered {
             int l = 0;
             for (int i=0; i < numberOfCar; i++) {
                 if (i < numberOfCar*0.6) { // this generation (60%)
-                    carPopulation[i].GetComponent<LayeredNetController>().SetLayeredNework(CreateMutatedOffspring(generationFittestNets[k]));
+                    carPopulation[i].GetComponent<LayeredNetController>().SetLayeredNework(CreateMutatedOffspring(generationFittestNets[k], l+1)); // l+1 as mutate coef to make each version more propable to mutate a lot
                     l += 1;
                     if (l> numberOfCar*0.6/survivorNb){
                         l = 0;
@@ -118,7 +127,7 @@ namespace nfs.layered {
                     }
 
                 } else if (i < numberOfCar*0.9) { // all time generation (30% 0.6 + 0.3)
-                    carPopulation[i].GetComponent<LayeredNetController>().SetLayeredNework(CreateMutatedOffspring(alltimeFittestNets[k]));
+                    carPopulation[i].GetComponent<LayeredNetController>().SetLayeredNework(CreateMutatedOffspring(alltimeFittestNets[k], l+1));
                     l += 1;
                     if (l> numberOfCar*0.9/survivorNb){
                         l = 0;
@@ -126,7 +135,7 @@ namespace nfs.layered {
                     }
 
                 } else { // fresh blood (10%)
-                    carPopulation[i].GetComponent<LayeredNetController>().InitializeNeuralNetwork();   
+                    carPopulation[i].GetComponent<LayeredNetController>().InitializeNeuralNetwork(hiddenSizes:baseHiddenLayersSizes);   
                 }
 
                 if(k>=survivorNb)
@@ -135,7 +144,7 @@ namespace nfs.layered {
 
         } 
 
-        private LayeredNetwork CreateMutatedOffspring(LayeredNetwork neuralNet) {
+        private LayeredNetwork CreateMutatedOffspring(LayeredNetwork neuralNet, int mutateCoef) {
             
             int[] hiddenLayersSizes = neuralNet.GetHiddenLayersSizes();
             Matrix[] synapses = neuralNet.GetSynapsesCopy();
@@ -187,7 +196,7 @@ namespace nfs.layered {
 
             // mutate synapses values
             for (int i=0; i<synapses.Length; i++) {
-                Matrix mutationMat = new Matrix(synapses[i].I, synapses[i].J).SetAsMutator(synapsesMutationRate, synapsesMutationRange);
+                Matrix mutationMat = new Matrix(synapses[i].I, synapses[i].J).SetAsMutator(synapsesMutationRate * mutateCoef, synapsesMutationRange * mutateCoef);
                 synapses[i] = synapses[i].Add(mutationMat, true);
 
                 //Debug.Log(synapses[i].GetValuesAsString());
