@@ -10,13 +10,15 @@ namespace nfs.car {
 
         private float driveInput = 0f;
         protected float DriveInput {
-            set { driveInput = Mathf.Clamp01(value); }
+            //set { driveInput = Mathf.Clamp01(value); }
+            set { driveInput = value; }
             get { return driveInput; }
         }
 
         private float turnInput = 0f;
         protected float TurnInput {
-			set { turnInput = Mathf.Clamp01(value); }
+			//set { turnInput = Mathf.Clamp01(value); }
+			set { turnInput = value; }
             get { return turnInput; }
         }
 

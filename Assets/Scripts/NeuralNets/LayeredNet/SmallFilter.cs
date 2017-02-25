@@ -5,6 +5,8 @@ using nfs.controllers;
 using nfs.tools;
 
 namespace nfs.layered {
+
+    public enum MutationType { additive, multiply, reverse, replace, nullify }
     public class SmallFilter : MonoBehaviour {
 
         [SerializeField] int numberOfGeneration = 100;
@@ -118,16 +120,16 @@ namespace nfs.layered {
             int k = 0;
             int l = 0;
             for (int i=0; i < numberOfCar; i++) {
-                if (i < numberOfCar*0.6) { // this generation (60%)
-                    carPopulation[i].GetComponent<LayeredNetController>().SetLayeredNework(CreateMutatedOffspring(generationFittestNets[k], l+1)); // l+1 as mutate coef to make each version more propable to mutate a lot
+                if (i < numberOfCar*0.6) { // all time generation (60%)
+                    carPopulation[i].GetComponent<LayeredNetController>().SetLayeredNework(CreateMutatedOffspring(alltimeFittestNets[k], l+1)); // l+1 as mutate coef to make each version more propable to mutate a lot
                     l += 1;
                     if (l> numberOfCar*0.6/survivorNb){
                         l = 0;
                         k += 1;
                     }
 
-                } else if (i < numberOfCar*0.9) { // all time generation (30% 0.6 + 0.3)
-                    carPopulation[i].GetComponent<LayeredNetController>().SetLayeredNework(CreateMutatedOffspring(alltimeFittestNets[k], l+1));
+                } else if (i < numberOfCar*0.9) { // this generation (30% 0.6 + 0.3)
+                    carPopulation[i].GetComponent<LayeredNetController>().SetLayeredNework(CreateMutatedOffspring(generationFittestNets[k], l+1));
                     l += 1;
                     if (l> numberOfCar*0.9/survivorNb){
                         l = 0;
@@ -193,13 +195,42 @@ namespace nfs.layered {
             }
 
             //Debug.Log("Mutation " + Generation);
-
+            //enum mutationType { reverse, multiply };
             // mutate synapses values
-            for (int i=0; i<synapses.Length; i++) {
-                Matrix mutationMat = new Matrix(synapses[i].I, synapses[i].J).SetAsMutator(synapsesMutationRate * mutateCoef, synapsesMutationRange * mutateCoef);
-                synapses[i] = synapses[i].Add(mutationMat, true);
+            for (int n=0; n<synapses.Length; n++) {
 
-                //Debug.Log(synapses[i].GetValuesAsString());
+                for (int i = 0; i < synapses[n].I; i++) {
+                    for (int j=0; j < synapses[n].J; j++) {
+                        if (Random.value < synapsesMutationRate) {
+                            MutationType type = (MutationType)Random.Range(0, System.Enum.GetValues(typeof(MutationType)).Length-1);
+                            switch(type) {
+                                case MutationType.additive:
+                                    synapses[n].Mtx[i][j] += Random.Range(-synapsesMutationRange, synapsesMutationRange);
+                                    break;
+                                case MutationType.multiply:
+                                    synapses[n].Mtx[i][j] *= Random.Range(0.5f, 1.5f);
+                                    break;
+                                case MutationType.reverse:
+                                    synapses[n].Mtx[i][j] *= -1;
+                                    break;
+                                case MutationType.replace:
+                                    synapses[n].Mtx[i][j] = Random.Range(-2 / Mathf.Sqrt(synapses[n].J), 2 / Mathf.Sqrt(synapses[n].J));
+                                    break;
+                                case MutationType.nullify:
+                                    synapses[n].Mtx[i][j] = 0f;
+                                    break;
+                                default:
+                                    Debug.LogWarning("Unknown weight mutation type. Doing nothing.");
+                                    break;
+                            }  
+                        }
+                    }
+                }
+
+                // Matrix mutationMat = new Matrix(synapses[i].I, synapses[i].J).SetAsMutator(synapsesMutationRate * mutateCoef, synapsesMutationRange * mutateCoef);
+                // synapses[i] = synapses[i].Add(mutationMat);
+
+                    //Debug.Log(synapses[i].GetValuesAsString());
             }
 
             LayeredNetwork mutadedOffspring = new LayeredNetwork(neuralNet.GetInputSize(), neuralNet.GetOutputSize(), hiddenLayersSizes);

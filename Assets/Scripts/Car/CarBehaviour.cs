@@ -42,6 +42,7 @@ namespace nfs.car {
         public float TurnForce {
             get { return turnForce.Normalized(); }
         }
+        
 		public float NormalizedSpeed {
 			get { 
                 if(Speed >= 0f)
@@ -137,7 +138,7 @@ namespace nfs.car {
 		/// </summary>
         private float GetForce(ref float force, float targetForce) {
 
-            targetForce = Mathf.Clamp01(targetForce).DeNormalized();
+            //targetForce = Mathf.Clamp01(targetForce).DeNormalized();
 
             // if the target value is above the current value
             if(targetForce > force && (targetForce - force) < forceChangeRate)

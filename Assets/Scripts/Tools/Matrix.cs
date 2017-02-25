@@ -64,14 +64,14 @@ namespace nfs.tools {
 			}
         }
 
-        public Matrix Add (Matrix other, bool clamp = false, float min = 0f, float max = 1f) {
+        public Matrix Add (Matrix other) {
             if (CheckDimention(other)) {
                 Matrix newMat = new Matrix(I, J);
 
                 for (int i = 0; i < I; i++) {
 					for(int j = 0; j < J; j++) {
                         float sum = Mtx[i][j] + other.Mtx[i][j];
-                        newMat.Mtx[i][j] = clamp? Mathf.Clamp(sum, min, max) : sum;
+                        newMat.Mtx[i][j] = sum;
                     }
 				}
 
@@ -125,10 +125,12 @@ namespace nfs.tools {
         ///<summary>
 	    /// Randomize all values.
 	    ///</summary>
+        // weights range from here http://stats.stackexchange.com/questions/47590/what-are-good-initial-weights-in-a-neural-network
         public Matrix SetAsSynapse() {
+            float weightRange = 2f / Mathf.Sqrt(J);
             for (int i = 0; i < I; i++) {
                 for(int j = 0; j < J; j++) {
-                    Mtx[i][j] = Random.Range(0f, 1f);
+                    Mtx[i][j] = Random.Range(-weightRange, weightRange);
                 }
             }
             return this;

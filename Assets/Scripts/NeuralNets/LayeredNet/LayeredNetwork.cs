@@ -15,15 +15,15 @@ namespace nfs.layered {
             // each layer is one line of neuron
 
             // input layer is a matrix of 1 line only 
-            inputNeurons = new Matrix(1, inputLayerSize).SetToOne();
+            inputNeurons = new Matrix(1, inputLayerSize).SetToZero();
 
             // output layer is a matrix of 1 line only
-            outputNeurons = new Matrix(1, outputLayerSize).SetToOne();
+            outputNeurons = new Matrix(1, outputLayerSize).SetToZero();
 
             // hidden layer is an array of matrix of one line
             hiddenLayersNeurons = new Matrix[hiddenLayersSizes.Length];
             for (int i = 0; i < hiddenLayersSizes.Length; i++) {
-                hiddenLayersNeurons[i] = new Matrix(1, hiddenLayersSizes[i]).SetToOne();
+                hiddenLayersNeurons[i] = new Matrix(1, hiddenLayersSizes[i]).SetToZero();
             }
 
             // synapses are an array of matrix
@@ -59,13 +59,18 @@ namespace nfs.layered {
         // a layer cannot have more than one line so we don't loop through the J
         private void ProcessActivation (Matrix mat) {
             for(int j=0; j < mat.J; j++) {
-                mat.Mtx[0][j] = Sigmoid(mat.Mtx[0][j]);
+                //mat.Mtx[0][j] = Sigmoid(mat.Mtx[0][j]);
                 //mat.Mtx[0][j] = Linear(mat.Mtx[0][j]);
+                mat.Mtx[0][j] = TanH(mat.Mtx[0][j]);
             }
         }
 
+        private float TanH (float t) {
+            return (2f / (1f + Mathf.Exp(-2f*t))) - 1f;
+        }
+
         private float Sigmoid(float t) {
-            return 1f / (1 + Mathf.Exp(-(t*5f-2.5f)));
+            return 1f / (1f + Mathf.Exp(-t));
         }
 
         private float Linear(float t) {
@@ -80,7 +85,7 @@ namespace nfs.layered {
             // we ping the network
             for (int i = 0; i < hiddenLayersNeurons.Length + 1; i++) {
                     if (i == 0) {
-                        hiddenLayersNeurons[0] = inputNeurons.Multiply(synapses[0], true);
+                        hiddenLayersNeurons[0] = inputNeurons.Multiply(synapses[0]);
 
                         //Debug.Log("N1:" + hiddenLayersNeurons[0].Mtx[0][0] + " N2:" + hiddenLayersNeurons[0].Mtx[0][1] + " N3:" + hiddenLayersNeurons[0].Mtx[0][2] + " N4:" + hiddenLayersNeurons[0].Mtx[0][3]);
 
@@ -89,7 +94,7 @@ namespace nfs.layered {
                         //Debug.Log("N1:" + hiddenLayersNeurons[0].Mtx[0][0] + " N2:" + hiddenLayersNeurons[0].Mtx[0][1] + " N3:" + hiddenLayersNeurons[0].Mtx[0][2] + " N4:" + hiddenLayersNeurons[0].Mtx[0][3]);
                         
                     } else if (i == hiddenLayersNeurons.Length) {
-                        outputNeurons = hiddenLayersNeurons[i - 1].Multiply(synapses[i], true);
+                        outputNeurons = hiddenLayersNeurons[i - 1].Multiply(synapses[i]);
 
                         //Debug.Log("N1:" + outputNeurons.Mtx[0][0] + " N2:" + outputNeurons.Mtx[0][1]);
                         
@@ -98,7 +103,7 @@ namespace nfs.layered {
                         //Debug.Log("N1:" + outputNeurons.Mtx[0][0] + " N2:" + outputNeurons.Mtx[0][1]);
                         
                     } else {
-                        hiddenLayersNeurons[i] = hiddenLayersNeurons[i - 1].Multiply(synapses[i], true);
+                        hiddenLayersNeurons[i] = hiddenLayersNeurons[i - 1].Multiply(synapses[i]);
                         ProcessActivation(hiddenLayersNeurons[i]);
                     }
                 }

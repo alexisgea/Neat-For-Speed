@@ -30,11 +30,12 @@ namespace nfs.controllers {
         protected override void ChildUpdate() {
             inputValues = new float[] {sensors.Wall_NE, sensors.Wall_N, sensors.Wall_NW};
             outputValues = neuralNet.PingFwd(inputValues);
-            DriveInput = ReajustDriveValue(outputValues[0]); // I had to do this otherwise hundreds of generation would pass before they would learn to drive forward...
+            //DriveInput = ReajustDriveValue(outputValues[0]); // I had to do this otherwise hundreds of generation would pass before they would learn to drive forward...
+            DriveInput = outputValues[0];
             TurnInput = outputValues[1];
 
             // if the car is not going forward or going backward, kill the car
-            if(DriveInput < 0.6f && !GetComponent<CarBehaviour>().Stop)
+            if(DriveInput < 0.1f && !GetComponent<CarBehaviour>().Stop)
                 GetComponent<CarBehaviour>().RaiseHitSomething("wall");
 
             //Debug.Log("NE:" + inputValues[0] + " N:" + inputValues[1] + " NW:" + inputValues[2]);

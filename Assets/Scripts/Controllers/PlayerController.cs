@@ -16,8 +16,8 @@ namespace nfs.controllers {
 			// axis input needs to go through every frame
 			// it will be the case for AI
 			// and it is important for the current implentation of the car controller
-			DriveInput = Input.GetAxis("Vertical").Normalized();
-			TurnInput = Input.GetAxis("Horizontal").Normalized();
+			DriveInput = Input.GetAxis("Vertical")/*.Normalized()*/;
+			TurnInput = Input.GetAxis("Horizontal")/*.Normalized()*/;
 
             //Debug.Log("normalized input " + TurnInput);
 
