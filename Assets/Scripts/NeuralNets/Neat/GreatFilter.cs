@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// The correct NEAT implementation has not yet been done
 namespace nfs.neat {
 
     public enum NeuronType { intput, output, bias, hidden }

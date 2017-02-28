@@ -3,21 +3,24 @@
 
 namespace nfs.car {
 
+    ///<summary>
+	/// Base car controller class meant to be extended by a human controller or ai controller.
+    /// The class will always update drive and turn values and requires and implementation
+    /// of a derived update and start.
+	///</summary>
 	[RequireComponent (typeof (CarBehaviour))]
 	public abstract class CarController : MonoBehaviour {
-
+        
         protected CarBehaviour Car { private set; get; }
 
         private float driveInput = 0f;
         protected float DriveInput {
-            //set { driveInput = Mathf.Clamp01(value); }
             set { driveInput = value; }
             get { return driveInput; }
         }
 
         private float turnInput = 0f;
         protected float TurnInput {
-			//set { turnInput = Mathf.Clamp01(value); }
 			set { turnInput = value; }
             get { return turnInput; }
         }
@@ -26,12 +29,12 @@ namespace nfs.car {
         private void Start () {
 			Car = GetComponent<CarBehaviour>();
 
-            ChildStart();
+            DerivedStart();
         }
 		
 		// Update is called once per frame
 		private void Update () {
-			ChildUpdate();
+			DerivedUpdate();
 
 			Car.Drive(DriveInput);
 			Car.Turn(TurnInput);
@@ -41,13 +44,13 @@ namespace nfs.car {
 		/// Is called in Start AFTER the base class function
 		/// Base start get's the CarBehaviour component in Car and sets drive and turn input to 0f.
 		///</sumary>
-        protected abstract void ChildStart();
+        protected abstract void DerivedStart();
 
 		///<sumary>
 		/// Is called in Update BEFORE the base class function
 		/// Base update calls the Car.Drive and Car.Turn methods with the drive and turn input every frame.		
 		///</sumary>
-        protected abstract void ChildUpdate();
+        protected abstract void DerivedUpdate();
 
 
     }

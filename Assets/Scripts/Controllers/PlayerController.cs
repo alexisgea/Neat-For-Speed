@@ -8,19 +8,15 @@ namespace nfs.controllers {
 	///</summary>
 	public class PlayerController : CarController {
 
-		protected override void ChildStart () {
+		// nothing here but implentation is required
+		protected override void DerivedStart () {
 		}
 		
-		protected override void ChildUpdate () {
-
-			// axis input needs to go through every frame
-			// it will be the case for AI
-			// and it is important for the current implentation of the car controller
-			DriveInput = Input.GetAxis("Vertical")/*.Normalized()*/;
-			TurnInput = Input.GetAxis("Horizontal")/*.Normalized()*/;
-
-            //Debug.Log("normalized input " + TurnInput);
-
+		// axis input needs to go through every frame
+		// it will be the case for AI and it is important for the current implentation of the car controller
+		protected override void DerivedUpdate () {
+			DriveInput = Input.GetAxis("Vertical");
+			TurnInput = Input.GetAxis("Horizontal");
         }
 
 	}

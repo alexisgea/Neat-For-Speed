@@ -2,28 +2,36 @@
 using nfs.tools;
 
 namespace nfs.layered {
+
+    ///<summary>
+    /// Neural network class. This is a fully connected deep layered network
+    /// It can have varying number of neurons and layers.
+    /// The network always has a single bias input neuron.
+    ///</summary>
     public class LayeredNetwork {
 
         public float FitnessScore { set; get; }
 
+        // layer properties
         private Matrix inputNeurons;
         private Matrix[] hiddenLayersNeurons;
         private Matrix outputNeurons;
         private Matrix[] synapses;
 
+        ///<summary>
+        /// Layered neural network constructor.
+        /// Requires a given number of input, number given of output
+        /// and an array for the hidden layers with each element being the size of a different hidden layer.!--
+        ///</summary>
         public LayeredNetwork(int inputLayerSize, int outputLayerSize, int[] hiddenLayersSizes) {
             // each layer is one line of neuron
-
-            // input layer is a matrix of 1 line only 
-            inputNeurons = new Matrix(1, inputLayerSize).SetToZero();
-
-            // output layer is a matrix of 1 line only
-            outputNeurons = new Matrix(1, outputLayerSize).SetToZero();
+            inputNeurons = new Matrix(1, inputLayerSize).SetToOne();
+            outputNeurons = new Matrix(1, outputLayerSize).SetToOne();
 
             // hidden layer is an array of matrix of one line
             hiddenLayersNeurons = new Matrix[hiddenLayersSizes.Length];
             for (int i = 0; i < hiddenLayersSizes.Length; i++) {
-                hiddenLayersNeurons[i] = new Matrix(1, hiddenLayersSizes[i]).SetToZero();
+                hiddenLayersNeurons[i] = new Matrix(1, hiddenLayersSizes[i]).SetToOne();
             }
 
             // synapses are an array of matrix
@@ -40,6 +48,9 @@ namespace nfs.layered {
             }
         }
 
+        ///<summary>
+        /// Creates and return a deep clone of the network.
+        ///</summary>
         public LayeredNetwork GetClone () {
             int hiddenLayers = this.hiddenLayersNeurons.Length;
             int[] hiddenLayerSizes = new int[hiddenLayers];
@@ -49,14 +60,15 @@ namespace nfs.layered {
 
             LayeredNetwork clone = new LayeredNetwork(this.inputNeurons.J, this.outputNeurons.J, hiddenLayerSizes);
 
-            clone.InsertSynapses(this.GetSynapsesCopy());
+            clone.InsertSynapses(this.GetSynapsesClone());
             clone.FitnessScore = FitnessScore;
 
             return clone;
         }
 
-        // this is to pass the activation function (sigmoid here) on the neuron value and on each layer
-        // a layer cannot have more than one line so we don't loop through the J
+
+        // this is to pass the activation function on the neuron value and on each layer
+        // a layer cannot have more than one line so we don't loop through the I
         private void ProcessActivation (Matrix mat) {
             for(int j=0; j < mat.J; j++) {
                 //mat.Mtx[0][j] = Sigmoid(mat.Mtx[0][j]);
@@ -77,33 +89,25 @@ namespace nfs.layered {
             return t;
         }
 
-        // process the input forward to get output in the network
-		public float[] PingFwd(float[] sensors) {
-
-            inputNeurons.SetLineValues(0, sensors, true); // we ignore the missmatch as there is a bias neuron
+        ///<summary>
+        /// Process the inputs forward to get outputs in the network.
+        ///</summary>
+		public float[] PingFwd(float[] sensorsValues) {
+            
+            // we set the inputs neurons values and ignore the missmatch as there is a bias neuron
+            inputNeurons.SetLineValues(0, sensorsValues, true); 
 
             // we ping the network
             for (int i = 0; i < hiddenLayersNeurons.Length + 1; i++) {
                     if (i == 0) {
-                        hiddenLayersNeurons[0] = inputNeurons.Multiply(synapses[0]);
-
-                        //Debug.Log("N1:" + hiddenLayersNeurons[0].Mtx[0][0] + " N2:" + hiddenLayersNeurons[0].Mtx[0][1] + " N3:" + hiddenLayersNeurons[0].Mtx[0][2] + " N4:" + hiddenLayersNeurons[0].Mtx[0][3]);
-
+                        hiddenLayersNeurons[0] = Matrix.Multiply(inputNeurons, synapses[0]);
                         ProcessActivation(hiddenLayersNeurons[0]);
-
-                        //Debug.Log("N1:" + hiddenLayersNeurons[0].Mtx[0][0] + " N2:" + hiddenLayersNeurons[0].Mtx[0][1] + " N3:" + hiddenLayersNeurons[0].Mtx[0][2] + " N4:" + hiddenLayersNeurons[0].Mtx[0][3]);
-                        
                     } else if (i == hiddenLayersNeurons.Length) {
-                        outputNeurons = hiddenLayersNeurons[i - 1].Multiply(synapses[i]);
-
-                        //Debug.Log("N1:" + outputNeurons.Mtx[0][0] + " N2:" + outputNeurons.Mtx[0][1]);
-                        
+                        outputNeurons = Matrix.Multiply(hiddenLayersNeurons[i - 1], synapses[i]);
                         ProcessActivation(outputNeurons);
                         
-                        //Debug.Log("N1:" + outputNeurons.Mtx[0][0] + " N2:" + outputNeurons.Mtx[0][1]);
-                        
                     } else {
-                        hiddenLayersNeurons[i] = hiddenLayersNeurons[i - 1].Multiply(synapses[i]);
+                        hiddenLayersNeurons[i] = Matrix.Multiply(hiddenLayersNeurons[i - 1], synapses[i]);
                         ProcessActivation(hiddenLayersNeurons[i]);
                     }
                 }
@@ -111,14 +115,23 @@ namespace nfs.layered {
             return outputNeurons.GetLineValues();
         }
 
+        ///<summary>
+        /// Get the number of input neurons.
+        ///</summary>
         public int GetInputSize () {
             return this.inputNeurons.J;
         }
 
+        ///<summary>
+        /// Get the number of outpu neurons.
+        ///</summary>
         public int GetOutputSize () {
             return this.outputNeurons.J;
         }
 
+        ///<summary>
+        /// Get the number of neurons in each hidden layers.
+        ///</summary>
         public int[] GetHiddenLayersSizes() {
             int[] hiddenLayerSizes = new int[hiddenLayersNeurons.Length];
             for (int i = 0; i < hiddenLayersNeurons.Length; i++) {
@@ -128,11 +141,17 @@ namespace nfs.layered {
             return hiddenLayerSizes;
         }
 
+        ///<summary>
+        /// Get all output values.
+        ///</summary>
         public float[] GetOutputValues() {
             return this.outputNeurons.GetLineValues(0);
         }
 
-        public Matrix[] GetSynapsesCopy () {
+        ///<summary>
+        /// Get a deep clone of all the synapses as an array of Matrices.
+        ///</summary>
+        public Matrix[] GetSynapsesClone () {
             Matrix[] synapsesCopy = new Matrix[synapses.Length];
             for (int i = 0; i < synapses.Length; i++) {
                 synapsesCopy[i] = synapses[i].GetClone();
@@ -140,6 +159,9 @@ namespace nfs.layered {
             return synapsesCopy;
         }
 
+        ///<summary>
+        /// Replace the synapse values with new ones from an array of Matrices.
+        ///</summary>
         public void InsertSynapses(Matrix[] newSynapses) {
 
             if(synapses.Length == newSynapses.Length){

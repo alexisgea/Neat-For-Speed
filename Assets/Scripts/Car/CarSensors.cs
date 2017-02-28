@@ -1,5 +1,4 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace nfs.car {
 
@@ -47,6 +46,7 @@ namespace nfs.car {
 		// fitness sensor
 		public float DistanceDriven { private set; get; }
 
+		// getting a ref to the car
         private void Start() {
             car = GetComponent<CarBehaviour>();
         }
@@ -54,11 +54,13 @@ namespace nfs.car {
 		// Update is called once per frame
 		private void Update () {
             
+			// udpating car behaviour sensors
 			SteerSensor = car.TurnForce;
 			DriveSensor = car.DriveForce;
 			SpeedSensor = car.NormalizedSpeed;
             DirectionSensor = car.Direction;
 
+			// updating external sensors
             NorthSensor();
 			NorthEastSensor();
 			EastSensor();
@@ -68,13 +70,12 @@ namespace nfs.car {
 			WestSensor();
 			NorthWestSensor();
 
+			// updating fitness
             DistanceDriven += car.DistanceDriven;
         }
 
-		/// <summary>
-		/// The function creates a raycast from the transform center to the sensor direction.
-		/// Check hit with the tag "wall" and "car".
-		/// </summary>
+		// This function (and all similar ones) creates a raycast from the transform center to the sensor direction.
+		// Check hit with the tag "wall" and "car".
 		private void NorthSensor() {
 			Debug.DrawRay(transform.position, transform.forward * sensorLength, Color.green);
 

@@ -29,6 +29,7 @@ namespace nfs.car {
             }
 			get { return speed; }
         }
+        public bool Stop { set; get; }
 
         // axis force related variable
         private float forceChangeRate = 0.05f; // I made a script to check rate of value change of a keyboard axis and it was ~0.0495
@@ -37,12 +38,11 @@ namespace nfs.car {
 
         // public acces to the current values of the axis in case it is need for the AI
         public float DriveForce {
-            get { return driveForce.Normalized(); }
+            get { return NormalizeForce(driveForce); }
         }
         public float TurnForce {
-            get { return turnForce.Normalized(); }
+            get { return NormalizeForce(turnForce); }
         }
-        
 		public float NormalizedSpeed {
 			get { 
                 if(Speed >= 0f)
@@ -60,18 +60,15 @@ namespace nfs.car {
             }
         }
 
-        public float DistanceDriven { private set; get; }
-
-
-        // bool use to initiate the rest car process
-        //private bool reset = false; // reset will block controls
-        public bool Stop { set; get; }
+        // Distance driven is used by the genetic algorythm
+        public float DistanceDriven { private set; get; }      
 
         // reference to the car Rigidbody
         private Rigidbody car;
         public event Action <CarBehaviour, string>HitSomething;
         //public UnityEvent test2;
 
+        // initiate all sort of stuff
         private void Start() {
             car = GetComponent<Rigidbody>();
             Stop = false;
@@ -93,6 +90,11 @@ namespace nfs.car {
             }
         }
 
+        // Both forces are actually axis values from -1 to 1
+        private float NormalizeForce(float force) {
+            return (force + 1f) / 2f;
+        }
+
 		// Default friction slow down effect running each frame
         // it will completly compensate acceleration toward max speed, enforcing it
         private void FrictionEffect() {
@@ -107,38 +109,15 @@ namespace nfs.car {
         private void MoveCar() {
             car.MovePosition(transform.position + transform.forward * Speed * Time.deltaTime);
             if(!Stop)
-                DistanceDriven += speed * Time.deltaTime;
+                DistanceDriven += Speed * Time.deltaTime;
         }
 
-		// called when there is a collision to reset the car
-        private void OnTriggerEnter(Collider other) {
-            RaiseHitSomething(other.gameObject.tag);
-        }
-
-        public void RaiseHitSomething(string tag){
-            if(HitSomething != null)
-                HitSomething.Invoke(this, tag);
-        }
-
-		// resets the car to the start state
-        public void Reset(Vector3 position, Quaternion rotation) {
-            car.velocity = Vector3.zero;
-            transform.position = position;
-            transform.rotation = rotation;
-            DistanceDriven = 0;
-            Stop = false;
-        }
-
-        /// <summary>
-		/// Modifies an axis force by reference. The idea being that an ANN should not be able
-        /// to jump from one side of the wheel to the other to keep a human behavior.
-        /// This is done naturally with a keyboard or joystick, so this function enforces
-        /// this gradual change of value. I checked with a script to make sure this rate
-        /// is similar to the one with a keyboard in unity.
-		/// </summary>
+		// Modifies an axis force by reference. The idea being that an ANN should not be able
+        // to jump from one side of the wheel to the other to keep a human behavior.
+        // This is done naturally with a keyboard or joystick, so this function enforces
+        // this gradual change of value. I checked with a script to make sure this rate
+        // is similar to the one with a keyboard in unity.
         private float GetForce(ref float force, float targetForce) {
-
-            //targetForce = Mathf.Clamp01(targetForce).DeNormalized();
 
             // if the target value is above the current value
             if(targetForce > force && (targetForce - force) < forceChangeRate)
@@ -159,10 +138,36 @@ namespace nfs.car {
             return force;
         }
 
+		// called when there is a collision
+        private void OnTriggerEnter(Collider other) {
+            RaiseHitSomething(other.gameObject.tag);
+        }
+
+        /// <summary>
+		/// Sends this object and the tag of the other object in the collision.
+		/// </summary>
+        public void RaiseHitSomething(string tag){
+            if(HitSomething != null)
+                HitSomething.Invoke(this, tag);
+        }
+
+		/// <summary>
+		/// Resets the car state to start again.
+		/// </summary>
+        public void Reset(Vector3 position, Quaternion rotation) {
+            car.velocity = Vector3.zero;
+            transform.position = position;
+            transform.rotation = rotation;
+            DistanceDriven = 0;
+            Stop = false;
+        }
+
 
 		// Public Control Intention Methods
 
-		// Is called from the control methods to update the speed value
+		/// <summary>
+		/// Is called from the control methods to update the speed value
+		/// </summary>
 		public void Drive(float targetForce) {
 
             // gets the actual force gradually changed toward the targetForce
@@ -176,8 +181,10 @@ namespace nfs.car {
             }
         }
 
-		// Is called from the control methods to turn the car
         // TODO Need to somehow improve the function to not be just rotating on the axis but dependent on where the wheels are pointing
+        /// <summary>
+		/// Is called from the control methods to turn the car
+		/// </summary>
 		public void Turn(float targetForce) {
 
             // gets the actual force gradually changed toward the targetForce
@@ -205,7 +212,7 @@ namespace nfs.car {
         public void Brake(float force = 0.75f) {
             float brakeValue = brakingRate * Mathf.Abs(force) * Time.deltaTime;
             
-            if(speed > 0){
+            if(Speed > 0){
                 Speed -= brakeValue;
                 if(Speed < 0f)
                     Speed = 0f;

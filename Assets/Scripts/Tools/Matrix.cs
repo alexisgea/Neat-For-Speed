@@ -5,7 +5,7 @@ namespace nfs.tools {
 
     ///<summary>
 	/// Standard math matrix class.
-    /// Can be multiplied with another matrix.
+    /// Can be multiplied or added with another matrix.
     /// Can be set to different predefined matrix.
     /// Can be randomized for synapse initialization.
 	///</summary>
@@ -18,7 +18,7 @@ namespace nfs.tools {
         // the number of column
 		public int J { private set; get; }
 
-
+        // Constructor
         public Matrix(int i, int j) {
             I = i;
             J = j;
@@ -30,47 +30,47 @@ namespace nfs.tools {
             }
         }
 
-        public Matrix GetClone() {
-            Matrix clone = new Matrix(this.I, this.J);
-            clone.SetAllValues(this);
-            return clone;
-        }
-
-		///<summary>
+        ///<summary>
 	    /// Standard matrix multiply.
-        /// Return a matrix of size I from original and J from other matrix.
-        /// Does a weighted sum of original lines times other colums.
-        /// IF there is a mismatch of size, the original matrix will be returned.
+        /// Return a matrix of size I from matrix A and J from matrix B
+        /// after doing a weighted sum of A lines times B colums.
+        /// If there is a mismatch of size, the matrix A will be returned.
+        /// Can be set to normalize to get values of each cell devided by the length of the line.
+        /// If matrix B has value 01 then the new one will as well.
 	    ///</summary>
-		public Matrix Multiply (Matrix other, bool normalize = false) {
-            if (J == other.I) { 
-				Matrix newMat = new Matrix(I, other.J);
+		public static Matrix Multiply (Matrix matrixA, Matrix matrixB, bool normalize = false) {
+            if (matrixA.J == matrixB.I) { 
+				Matrix resultMatrix = new Matrix(matrixA.I, matrixB.J);
 
-                for (int i = 0; i < I; i++) {
-					for(int j = 0; j < other.J; j++) {
+                for (int i = 0; i < matrixA.I; i++) {
+					for(int j = 0; j < matrixB.J; j++) {
 
                         float weightedSum = 0f;
-						for(int k = 0; k < J; k ++) {
-                            weightedSum += Mtx[i][k] * other.Mtx[k][j];
+						for(int k = 0; k < matrixA.J; k ++) {
+                            weightedSum += matrixA.Mtx[i][k] * matrixB.Mtx[k][j];
                         }
-                        newMat.Mtx[i][j] = normalize? weightedSum/J : weightedSum;
+                        resultMatrix.Mtx[i][j] = normalize? weightedSum/matrixA.J : weightedSum;
                     }
 				}
-                return newMat;
+                return resultMatrix;
 
             } else {
-                Debug.LogWarning("Matrix multiplication error due to size missmatch. Base matrix returned.");
-                return this;
+                Debug.LogWarning("Matrix multiplication error due to size missmatch. Matrix A returned.");
+                return matrixA;
 			}
         }
 
-        public Matrix Add (Matrix other) {
-            if (CheckDimention(other)) {
-                Matrix newMat = new Matrix(I, J);
+        ///<summary>
+	    /// Standard matrix addition. Returns a new matrix.
+        /// IF there is a mismatch of size, the matrix A will be returned.
+	    ///</summary>
+        public static Matrix Add (Matrix matrixA, Matrix matrixB) {
+            if (CheckDimention(matrixA, matrixB)) {
+                Matrix newMat = new Matrix(matrixA.I, matrixA.J);
 
-                for (int i = 0; i < I; i++) {
-					for(int j = 0; j < J; j++) {
-                        float sum = Mtx[i][j] + other.Mtx[i][j];
+                for (int i = 0; i < matrixA.I; i++) {
+					for(int j = 0; j < matrixA.J; j++) {
+                        float sum = matrixA.Mtx[i][j] + matrixB.Mtx[i][j];
                         newMat.Mtx[i][j] = sum;
                     }
 				}
@@ -78,10 +78,27 @@ namespace nfs.tools {
                 return newMat;
 
             } else {
-                Debug.LogWarning("Matrix addition error due to size missmatch. Base matrix returned.");
-                return this;
+                Debug.LogWarning("Matrix addition error due to size missmatch. Matrix A returned.");
+                return matrixA;
 			}
         }
+
+        ///<summary>
+	    /// Check if another matrix is of the same dimention as this one.
+	    ///</summary>
+        public static bool CheckDimention (Matrix matrixA, Matrix matrixB) {
+            return (matrixA.I == matrixB.I && matrixA.J == matrixB.J) ? true : false;
+        }
+
+        ///<summary>
+	    /// Return a deep clone of the original Matrix.
+	    ///</summary>
+        public Matrix GetClone() {
+            Matrix clone = new Matrix(this.I, this.J);
+            clone.SetAllValues(this);
+            return clone;
+        }
+
 
         ///<summary>
 	    /// Set all values to 0.
@@ -123,7 +140,7 @@ namespace nfs.tools {
         }
 
         ///<summary>
-	    /// Randomize all values.
+	    /// Randomize all values with within a range dependant on matrix dimension for synapses.
 	    ///</summary>
         // weights range from here http://stats.stackexchange.com/questions/47590/what-are-good-initial-weights-in-a-neural-network
         public Matrix SetAsSynapse() {
@@ -137,24 +154,8 @@ namespace nfs.tools {
         }
 
         ///<summary>
-	    /// Randomize all values.
+	    /// Returns all float values from a requested line.
 	    ///</summary>
-        public Matrix SetAsMutator(float probability, float range) {
-            for (int i = 0; i < I; i++) {
-                for(int j = 0; j < J; j++) {
-                    if(Random.value < probability)
-                        Mtx[i][j] = Random.Range(-range, +range);
-                    else
-                        Mtx[i][j] = 0f;
-                }
-            }
-            return this;
-        }
-
-        public float[][] GetAllValues() {
-            return Mtx;
-        }
-
         public float[] GetLineValues(int line = 0) {
             float[] lineValues = new float[J];
 
@@ -170,6 +171,9 @@ namespace nfs.tools {
             }
         }
 
+        ///<summary>
+	    /// Returns all float values from a requested column.
+	    ///</summary>
         public float[] GetColumnValues(int col = 0) {
             float[] colValues = new float[I];
 
@@ -185,8 +189,11 @@ namespace nfs.tools {
             }
         }
 
+        ///<summary>
+	    /// Set all values from another matrix.
+	    ///</summary>
         public void SetAllValues(Matrix other) {
-            if (CheckDimention(other)) {
+            if (CheckDimention(this, other)) {
                 for (int i = 0; i < I; i++) {
                     for (int j = 0; j < J; j++) {
                         Mtx[i][j] = other.Mtx[i][j];
@@ -197,18 +204,10 @@ namespace nfs.tools {
             }
         }
 
-        public void SetAllValues(float[][] otherMtx) {
-            if (CheckDimention(otherMtx)) {
-                for (int i = 0; i < I; i++) {
-                    for (int j = 0; j < J; j++) {
-                        Mtx[i][j] = otherMtx[i][j];
-                    }
-                }
-            }
-            else
-                Debug.LogWarning("Matrix float[][] dimention not equal, cannot copy values. Doing nothing.");                
-        }
-
+        ///<summary>
+	    /// Set all float values of a line.
+        /// It is possible to ignore size missmatch.
+	    ///</summary>
         public void SetLineValues (int line, float[] values, bool ignoreMissmatch = false) {
             if(line <= I && values.Length <= this.J) {
 
@@ -225,6 +224,10 @@ namespace nfs.tools {
             }
         }
 
+        ///<summary>
+	    /// Set all float values of a column.
+        /// It is possible to ignore size missmatch.
+	    ///</summary>
         public void SetColumnValues (int col, float[] values, bool ignoreMissmatch = false) {
 
             if(col <= J && values.Length <= this.I) {
@@ -241,14 +244,10 @@ namespace nfs.tools {
             }
         }
 
-        public bool CheckDimention (Matrix other) {
-            return (this.I == other.I && this.J == other.J) ? true : false;
-        }
-
-        public bool CheckDimention (float[][] otherMtx) {
-            return (this.I == otherMtx.Length && this.J == otherMtx[0].Length) ? true : false;
-        }
-
+        ///<summary>
+	    /// Redimension tge Matrix by creating a new one an copying all value and returning the new one.
+        /// This new Matrix can be set as synapse to get random synapse values in the new empty cell if there are some.
+	    ///</summary>
         public Matrix Redimension(int newI, int newJ, bool synapse = true) {
 
             Matrix redimMat = new Matrix(newI, newJ);
@@ -273,19 +272,6 @@ namespace nfs.tools {
             J = newJ;
 
             return this;
-        }
-
-        ///<summary>
-	    /// Return all values of the matrix as a string separated by comma and a space.
-	    ///</summary>
-        public string GetValuesAsString() {
-            string values = "";
-            for (int i = 0; i < I; i++) {
-                for(int j = 0; j < J; j++) {
-                    values += Mtx[i][j] + ", ";
-                }
-            }
-            return values.Substring(0, values.Length - 2);
         }
 		
 	}

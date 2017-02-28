@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
+// The correct NEAT implementation has not yet been done
 namespace nfs.neat {
 	public class Neuron {
 
