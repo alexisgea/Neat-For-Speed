@@ -1,7 +1,7 @@
 # Neat-For-Speed
 Small car racing game where the aim is to race against neural networks. This is something I programmed for fun as a way to improve my skill in Unity and learn about neural networks and genetic algorythms. It is under the MIT license attached with this project.
 
-Though the game is has NEAT in it's name, the current neural network implementation is not the actual NEAT implementation, but my goal is to implement it at some point.
+Though the game has NEAT in it's name, the current neural network implementation is not the actual NEAT design but my goal is to implement it at some point.
 
 Currently the neural network and genetic algorythm is of my own design after reading a little bit on how it works.
 
