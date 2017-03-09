@@ -169,7 +169,7 @@ namespace nfs.layered {
         ///</summary>
         private LayeredNetwork CreateMutatedOffspring(LayeredNetwork neuralNet, int mutateCoef) {
             
-            int[] hiddenLayersSizes = neuralNet.GetHiddenLayersSizes();
+            int[] hiddenLayersSizes = neuralNet.HiddenLayersSizes;
             Matrix[] synapses = neuralNet.GetSynapsesClone();
 
             // TODO LATER
@@ -183,14 +183,14 @@ namespace nfs.layered {
                     hiddenLayersSizes = RedimentionLayersNb(hiddenLayersSizes, -1);
 
                     synapses = RedimentionLayersNb(synapses, -1);
-                    synapses[synapses.Length - 1].Redimension(hiddenLayersSizes[hiddenLayersSizes.Length - 1], neuralNet.GetOutputSize());
+                    synapses[synapses.Length - 1].Redimension(hiddenLayersSizes[hiddenLayersSizes.Length - 1], neuralNet.OutputSize);
 
                 } else {
                     hiddenLayersSizes = RedimentionLayersNb(hiddenLayersSizes, +1);
-                    hiddenLayersSizes[hiddenLayersSizes.Length - 1] = neuralNet.GetOutputSize();
+                    hiddenLayersSizes[hiddenLayersSizes.Length - 1] = neuralNet.OutputSize;
 
                     synapses = RedimentionLayersNb(synapses, +1);
-                    synapses[synapses.Length - 1] = new Matrix(hiddenLayersSizes[hiddenLayersSizes.Length - 1], neuralNet.GetOutputSize()).SetAsSynapse();
+                    synapses[synapses.Length - 1] = new Matrix(hiddenLayersSizes[hiddenLayersSizes.Length - 1], neuralNet.OutputSize).SetAsSynapse();
                 }
             }
  
@@ -214,32 +214,35 @@ namespace nfs.layered {
                     for (int j=0; j < synapses[n].J; j++) {
                         if (Random.value < synapsesMutationRate) {
                             MutationType type = (MutationType)Random.Range(0, System.Enum.GetValues(typeof(MutationType)).Length-1);
+                            float mutatedValue = synapses[n].GetValue(i, j);;
                             switch(type) {
                                 case MutationType.additive:
-                                    synapses[n].Mtx[i][j] += Random.Range(-synapsesMutationRange, synapsesMutationRange);
+                                    mutatedValue += Random.Range(-synapsesMutationRange, synapsesMutationRange);
                                     break;
                                 case MutationType.multiply:
-                                    synapses[n].Mtx[i][j] *= Random.Range(0.5f, 1.5f);
+                                    mutatedValue *= Random.Range(0.5f, 1.5f);
                                     break;
                                 case MutationType.reverse:
-                                    synapses[n].Mtx[i][j] *= -1;
+                                    mutatedValue *= -1;
                                     break;
                                 case MutationType.replace:
-                                    synapses[n].Mtx[i][j] = Random.Range(-2 / Mathf.Sqrt(synapses[n].J), 2 / Mathf.Sqrt(synapses[n].J));
+                                    mutatedValue = Random.Range(-2 / Mathf.Sqrt(synapses[n].J), 2 / Mathf.Sqrt(synapses[n].J));
                                     break;
                                 case MutationType.nullify:
-                                    synapses[n].Mtx[i][j] = 0f;
+                                    mutatedValue = 0f;
                                     break;
                                 default:
                                     Debug.LogWarning("Unknown weight mutation type. Doing nothing.");
                                     break;
-                            }  
+                            }
+
+                            synapses[n].SetValue(i, j, mutatedValue);  
                         }
                     }
                 }
             }
 
-            LayeredNetwork mutadedOffspring = new LayeredNetwork(neuralNet.GetInputSize(), neuralNet.GetOutputSize(), hiddenLayersSizes);
+            LayeredNetwork mutadedOffspring = new LayeredNetwork(neuralNet.InputSize, neuralNet.OutputSize, hiddenLayersSizes);
             mutadedOffspring.InsertSynapses(synapses);
 
             return mutadedOffspring;

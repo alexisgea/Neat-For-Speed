@@ -50,6 +50,13 @@ namespace nfs.controllers {
         }
 
         ///<summary>
+        /// Get a reference to the Layered Net.
+        ///</summary>
+        public LayeredNetwork GetLayeredNet () {
+            return neuralNet;
+        }
+
+        ///<summary>
         /// Request a deep clone from the network.
         ///</summary>
         public LayeredNetwork GetLayeredNetClone () {

@@ -19,6 +19,57 @@ namespace nfs.layered {
         private Matrix[] synapses;
 
         ///<summary>
+        /// Get the total number of layers including input and output.
+        ///</summary>
+        public int NumberOfLayers { get{ return hiddenLayersNeurons.Length + 2; } }
+        
+        ///<summary>
+        /// Get the number of neurons in each layers.
+        ///</summary>
+        public int[] LayersSizes {
+            get {
+                int[] layersSizes = new int[NumberOfLayers];
+
+                for (int i = 0; i < layersSizes.Length; i++) {
+
+                    if (i == 0) {
+                        layersSizes[i] = InputSize;
+                    } else if (i == NumberOfLayers-1) {
+                        layersSizes[i] = OutputSize;
+                    } else {
+                        layersSizes[i] = HiddenLayersSizes[i-1];
+                    }
+                }
+
+                return layersSizes;
+            }
+        }
+
+        ///<summary>
+        /// Get the number of input neurons.
+        ///</summary>
+        public int InputSize { get {return this.inputNeurons.J;} }
+
+        ///<summary>
+        /// Get the number of outpu neurons.
+        ///</summary>
+        public int OutputSize{ get{ return this.outputNeurons.J;} }
+
+        ///<summary>
+        /// Get the number of neurons in each hidden layers.
+        ///</summary>
+        public int[] HiddenLayersSizes {
+            get {
+                int[] hiddenLayerSizes = new int[hiddenLayersNeurons.Length];
+                for (int i = 0; i < hiddenLayersNeurons.Length; i++) {
+                    hiddenLayerSizes[i] = hiddenLayersNeurons[i].J;
+                }
+
+                return hiddenLayerSizes;
+            }
+        }
+
+        ///<summary>
         /// Layered neural network constructor.
         /// Requires a given number of input, number given of output
         /// and an array for the hidden layers with each element being the size of a different hidden layer.!--
@@ -73,7 +124,8 @@ namespace nfs.layered {
             for(int j=0; j < mat.J; j++) {
                 //mat.Mtx[0][j] = Sigmoid(mat.Mtx[0][j]);
                 //mat.Mtx[0][j] = Linear(mat.Mtx[0][j]);
-                mat.Mtx[0][j] = TanH(mat.Mtx[0][j]);
+                //mat.Mtx[0][j] = TanH(mat.Mtx[0][j]);
+                mat.SetValue(0, j, TanH(mat.GetValue(0, j)));
             }
         }
 
@@ -116,29 +168,22 @@ namespace nfs.layered {
         }
 
         ///<summary>
-        /// Get the number of input neurons.
+        /// Get all values of a layer of neurons.
         ///</summary>
-        public int GetInputSize () {
-            return this.inputNeurons.J;
-        }
+        public float[] GetNeuronLayerValues(int layer) {
+            if(layer >= NumberOfLayers) {
+                Debug.LogError("Neuron layer requested is not in the neural net (too high). Returning empty array.");
+                return new float[] {};
 
-        ///<summary>
-        /// Get the number of outpu neurons.
-        ///</summary>
-        public int GetOutputSize () {
-            return this.outputNeurons.J;
-        }
+            } else if (layer == 0){
+                return GetInputValues();
 
-        ///<summary>
-        /// Get the number of neurons in each hidden layers.
-        ///</summary>
-        public int[] GetHiddenLayersSizes() {
-            int[] hiddenLayerSizes = new int[hiddenLayersNeurons.Length];
-            for (int i = 0; i < hiddenLayersNeurons.Length; i++) {
-                hiddenLayerSizes[i] = hiddenLayersNeurons[i].J;
+            } else if (layer == NumberOfLayers-1) {
+                return GetOutputValues();
+
+            } else {
+                return hiddenLayersNeurons[layer-1].GetLineValues();
             }
-
-            return hiddenLayerSizes;
         }
 
         ///<summary>
@@ -146,6 +191,72 @@ namespace nfs.layered {
         ///</summary>
         public float[] GetOutputValues() {
             return this.outputNeurons.GetLineValues(0);
+        }
+
+        ///<summary>
+        /// Get all input values.
+        ///</summary>
+        public float[] GetInputValues() {
+            return this.inputNeurons.GetLineValues(0);
+        }
+
+        ///<summary>
+        /// Get a specific neuron's value.
+        ///</summary>
+        public float GetNeuronValue(int layer, int neuron) {
+            // if(layer >= NumberOfLayers-1 || neuron >= GetNeuronLayerValues(layer).Length) {
+            //     Debug.LogError("Synapse layer or neuron requested is not in the neural net (too high). Returning 0.");
+            //     return 0f;
+
+            // } else {
+            //     return  GetNeuronLayerValues(layer)[neuron];
+            // }
+            return  GetNeuronLayerValues(layer)[neuron];
+
+        }
+
+        ///<summary>
+        /// Get all out synapses values of a layer of neurons.
+        ///</summary>
+        public float[][] GetSynapseLayerValues(int layer) {
+            if(layer >= NumberOfLayers-1) {
+                Debug.LogError("Synapse layer requested is not in the neural net (too high). Returning emtpy array of array.");
+                return new float[][]{}; // is it possible to create an array of lenght 0?
+
+            } else {
+                return synapses[layer].GetAllValues();
+            }
+        }
+
+        ///<summary>
+        /// Get all out synapses values of a neuron.
+        ///</summary>
+        public float[] GetNeuronSynapsesValues(int layer, int neuron) {
+            if(layer >= NumberOfLayers-1 || neuron >= synapses[layer].J) {
+                Debug.LogError("Synapse layer or neuron requested is not in the neural net (too high). Returning empty array.");
+                return new float[]{};
+
+            } else {
+                return synapses[layer].GetLineValues(neuron);
+            }
+        }
+
+        ///<summary>
+        /// Get a specific synapse value from a synapses layer or neuron layer (for out synapse of said neuron).
+        ///</summary>
+        public float GetSynapseValue (int layer, int neuron, int synapse) {
+            // if(layer >= synapses.Length || neuron >= synapses[layer].J || synapse >= synapses[layer].I) {
+            //     Debug.LogError("Synapse layer " + layer + "vs" + synapses.Length +
+            //                     ", or neuron " + neuron + "vs" + synapses[layer].J +
+            //                     ", or synapse " + synapse + "vs" + synapses[layer].I +
+            //                     ", requested is not in the neural net (too high). Returning 0.");
+            //     return 0f;
+
+            // } else {
+            //     return synapses[layer].GetValue(neuron, synapse);
+            // }
+
+            return synapses[layer].GetValue(neuron, synapse);
         }
 
         ///<summary>

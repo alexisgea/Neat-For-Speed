@@ -12,7 +12,7 @@ namespace nfs.tools {
     public class Matrix {
 
         // the matrix itself as an array of array
-        public float[][] Mtx { set; get; }
+        private float[][] matrix;
         // the number of row
 		public int I { private set; get; }
         // the number of column
@@ -23,10 +23,10 @@ namespace nfs.tools {
             I = i;
             J = j;
 
-            Mtx = new float[i][];
+            matrix = new float[i][];
 			
 			for(int k = 0; k < i; k++) {
-                Mtx[k] = new float[j];
+                matrix[k] = new float[j];
             }
         }
 
@@ -47,9 +47,9 @@ namespace nfs.tools {
 
                         float weightedSum = 0f;
 						for(int k = 0; k < matrixA.J; k ++) {
-                            weightedSum += matrixA.Mtx[i][k] * matrixB.Mtx[k][j];
+                            weightedSum += matrixA.matrix[i][k] * matrixB.matrix[k][j];
                         }
-                        resultMatrix.Mtx[i][j] = normalize? weightedSum/matrixA.J : weightedSum;
+                        resultMatrix.matrix[i][j] = normalize? weightedSum/matrixA.J : weightedSum;
                     }
 				}
                 return resultMatrix;
@@ -70,8 +70,8 @@ namespace nfs.tools {
 
                 for (int i = 0; i < matrixA.I; i++) {
 					for(int j = 0; j < matrixA.J; j++) {
-                        float sum = matrixA.Mtx[i][j] + matrixB.Mtx[i][j];
-                        newMat.Mtx[i][j] = sum;
+                        float sum = matrixA.matrix[i][j] + matrixB.matrix[i][j];
+                        newMat.matrix[i][j] = sum;
                     }
 				}
 
@@ -106,7 +106,7 @@ namespace nfs.tools {
         public Matrix SetToZero() {
             for (int i = 0; i < I; i++) {
                 for(int j = 0; j < J; j++) {
-                    Mtx[i][j] = 0f;
+                    matrix[i][j] = 0f;
                 }
             }
             return this;
@@ -118,7 +118,7 @@ namespace nfs.tools {
         public Matrix SetToOne() {
             for (int i = 0; i < I; i++) {
                 for(int j = 0; j < J; j++) {
-                    Mtx[i][j] = 1f;
+                    matrix[i][j] = 1f;
                 }
             }
             return this;
@@ -131,9 +131,9 @@ namespace nfs.tools {
             for (int i = 0; i < I; i++) {
                 for(int j = 0; j < J; j++) {
                     if (i==j)
-                        Mtx[i][j] = 1f;
+                        matrix[i][j] = 1f;
                     else
-                        Mtx[i][j] = 0f;
+                        matrix[i][j] = 0f;
                 }
             }
             return this;
@@ -147,10 +147,17 @@ namespace nfs.tools {
             float weightRange = 2f / Mathf.Sqrt(J);
             for (int i = 0; i < I; i++) {
                 for(int j = 0; j < J; j++) {
-                    Mtx[i][j] = Random.Range(-weightRange, weightRange);
+                    matrix[i][j] = Random.Range(-weightRange, weightRange);
                 }
             }
             return this;
+        }
+
+        ///<summary>
+	    /// Returns all float values, same as Mtx.
+	    ///</summary>
+        public float[][] GetAllValues () {
+            return matrix;
         }
 
         ///<summary>
@@ -161,7 +168,7 @@ namespace nfs.tools {
 
             if(line <= I) {
                 for(int j=0; j<J; j++){
-                    lineValues[j] = Mtx[line][j];
+                    lineValues[j] = matrix[line][j];
                 }
                 return lineValues;
 
@@ -179,7 +186,7 @@ namespace nfs.tools {
 
             if(col <= J) {
                 for(int i=0; i<I; i++){
-                    colValues[i] = Mtx[i][col];
+                    colValues[i] = matrix[i][col];
                 }
                 return colValues;
 
@@ -190,13 +197,25 @@ namespace nfs.tools {
         }
 
         ///<summary>
+	    /// Get one specific value in the matrix.
+	    ///</summary>
+        public float GetValue(int line, int col) {
+            if(line <= I && col <= J) {
+                return matrix[line][col];
+            } else {
+                Debug.LogWarning("There is no col " + col + " or line " + line + " for this matrix. Returning 0.");
+                return 0f;
+            }
+        }
+
+        ///<summary>
 	    /// Set all values from another matrix.
 	    ///</summary>
         public void SetAllValues(Matrix other) {
             if (CheckDimention(this, other)) {
                 for (int i = 0; i < I; i++) {
                     for (int j = 0; j < J; j++) {
-                        Mtx[i][j] = other.Mtx[i][j];
+                        matrix[i][j] = other.matrix[i][j];
                     }
                 }
             } else {
@@ -212,7 +231,7 @@ namespace nfs.tools {
             if(line <= I && values.Length <= this.J) {
 
                 for(int j=0; j<Mathf.Min(J, values.Length); j++){
-                    Mtx[line][j] = values[j];
+                    matrix[line][j] = values[j];
                 }
 
                 if(J != values.Length && !ignoreMissmatch)
@@ -232,7 +251,7 @@ namespace nfs.tools {
 
             if(col <= J && values.Length <= this.I) {
                 for(int i=0; i<Mathf.Min(I, values.Length); i++){
-                    Mtx[i][col] = values[i];
+                    matrix[i][col] = values[i];
                 }
 
                 if(I != values.Length && !ignoreMissmatch)
@@ -241,6 +260,17 @@ namespace nfs.tools {
             } else {
                 Debug.LogWarning("There is no col " + col + " or the number of lines mismatch ("
                                  + values.Length + " vs " + this.I + ") for this matrix. Doing nothing.");
+            }
+        }
+
+        ///<summary>
+	    /// Set one specific value in the matrix.
+	    ///</summary>
+        public void SetValue(int line, int col, float value) {
+            if(line <= I && col <= J) {
+                matrix[line][col] = value;
+            } else {
+                Debug.LogWarning("There is no col " + col + " or line " + line + " for this matrix. Doing nothing.");
             }
         }
 
@@ -262,11 +292,11 @@ namespace nfs.tools {
 
             for (int i = 0; i < smallI; i++) {
                 for (int j = 0; j < smallJ; j++) {
-                    redimMat.Mtx[i][j] = Mtx[i][j];
+                    redimMat.matrix[i][j] = matrix[i][j];
                 }
             }
 
-            Mtx = redimMat.Mtx;
+            matrix = redimMat.matrix;
 
             I = newI;
             J = newJ;
