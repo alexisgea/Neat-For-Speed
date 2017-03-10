@@ -39,6 +39,9 @@ namespace nfs.layered {
 					neuralNet = hitInfo.transform.GetComponent<LayeredNetController>().GetLayeredNet();
 					BuildVisualisation ();
 				}
+			} else if (Input.GetMouseButtonDown(1)) {
+				neuralNet = null;
+				ClearCurrentVisualisation();
 			}
 
 			if (neuralNet != null && !buildingVisualisation) {
@@ -54,27 +57,25 @@ namespace nfs.layered {
 			for (int L=0; L < layers.Length; L++) {
 				for (int n=0; n < layersSizes[L]; n++) {
 					neurons[N].GetComponentInChildren<Text>().text = neuralNet.GetNeuronValue(L, n).ToString("F2");
-					neurons[N].GetComponent<Image>().color = Color.green * Mathf.Abs(neuralNet.GetNeuronValue(L, n)) + Color.red * (1f - Mathf.Abs(neuralNet.GetNeuronValue(L, n)));
-
-					// if (neuralNet.GetNeuronValue(L, n) > 0) {
-					// 	neurons[N].GetComponent<Image>().color = Color.green * neuralNet.GetNeuronValue(L, n) * 0.8f +
-					// 											Color.red * (1f - Mathf.Abs(neuralNet.GetNeuronValue(L, n))) * 0.6f;
-					// } else {
-					// 	neurons[N].GetComponent<Image>().color = Color.blue * -1f * neuralNet.GetNeuronValue(L, n) * 0.8f + 
-					// 											Color.red * (1f - Mathf.Abs(neuralNet.GetNeuronValue(L, n))) * 0.6f;
-					// }
+					
+					if (neuralNet.GetNeuronValue(L, n) >= 0) {
+						neurons[N].GetComponent<Image>().color = Color.green * neuralNet.GetNeuronValue(L, n);
+					} else {
+						neurons[N].GetComponent<Image>().color = Color.red * -neuralNet.GetNeuronValue(L, n);						
+					}
 
 					// the last layer doesn't have any synapses
-					if (L < layers.Length-1) {
-						for (int s=0; s < layersSizes[L+1]; s++) {
-							synapses[N].GetComponentInChildren<Text>().text = neuralNet.GetSynapseValue(L, n, s).ToString("F2");
-							// synapses[S].GetComponent<LineRenderer>().startColor = Color.blue;
-							// synapses[S].GetComponent<LineRenderer>().endColor = Color.blue;
-							//synapses[N].GetComponent<LineRenderer>().SetColors 
-							//synapses[N].GetComponent<LineRenderer>().SetWidth
-							S++;
-						}
-					}
+					// for (int s=0; s < layersSizes[L+1]; s++) {
+					// 	if (L < layers.Length-1) {}
+					// 		synapses[S].GetComponent<LineRenderer>().startColor = neurons[N].GetComponent<Image>().color;
+
+					// 	if (L>1)
+					// 		synapses[S-layersSizes[L]].GetComponent<LineRenderer>().endColor = neurons[N].GetComponent<Image>().color;
+
+					// 	S++; // S will go over the total number of synapse, that's dangerous
+						
+					// }
+
 					N ++;
 				}
 			}
@@ -114,7 +115,8 @@ namespace nfs.layered {
 
 			for (int i = 0; i < layers.Length; i++) {
 				layers[i] = GameObject.Instantiate(baseLayer);
-				layers[i].transform.SetParent(transform);
+				layers[i].transform.SetParent(transform, false);
+				
 			}
 		}
 
@@ -127,7 +129,7 @@ namespace nfs.layered {
 			int neuronsInLayer = 0; // sum of neuron per layer already done
 			for (int i=0; i < neurons.Length; i++) {
 				neurons[i] = GameObject.Instantiate(baseNeuron);
-				neurons[i].transform.SetParent(layers[k].transform);
+				neurons[i].transform.SetParent(layers[k].transform, false);
 
 				neuronsInLayer ++;
 				if (neuronsInLayer == layersSizes[k]) {
@@ -147,45 +149,44 @@ namespace nfs.layered {
 
 			synapses = new GameObject[totalSynapses];
 
-			int S = 0; // current Synapse
-			int L = 0; // current Layer
-			int NLsum = 0; // this is the sum of neurons of all fully processed layers
 
-			// going through all neurons
-			for (int N=0; N < neurons.Length; N++) {
+			int N = 0; // neuron counter
+			int S = 0; // synapse counter
+			int NLsum = 0;
 
-				// there is no synapses on the last layer
-				if (L == layers.Length-1 || S == totalSynapses) {
-					break;
+			for (int L=0; L < layers.Length; L++) {
+				for (int n=0; n < layersSizes[L]; n++) {
+					// the last layer doesn't have any synapses
+					if (L < layers.Length-1) {
+						for (int s=0; s < layersSizes[L+1]; s++) {
+
+							// we create the synapse and set it's parent as the current neuron
+							synapses[S] = GameObject.Instantiate(baseSynapse);
+							synapses[S].transform.SetParent(neurons[N].transform, false);
+
+							// we get the position values of the "from" and "to" neuron for the synapse
+							// the next neuron is equal to the sum of neuron of all previous processed layer + the number of neuron in the current layer + the current synapse fo this neuron
+							Vector3[] linePoints = new Vector3[] {
+								neurons[N].transform.position + Vector3.forward * 0.1f,
+								neurons[NLsum + layersSizes[L] + s].transform.position + Vector3.forward * 0.1f
+								};
+							synapses[S].GetComponent<LineRenderer>().SetPositions(linePoints);
+
+							float width = Mathf.Abs(neuralNet.GetSynapseValue(L, n, s))*0.2f;
+							synapses[S].GetComponent<LineRenderer>().widthMultiplier = width;
+
+							//synapses[S].GetComponent<LineRenderer>().startColor = Color.red;
+							//synapses[S].GetComponent<LineRenderer>().endColor = Color.red;
+
+							// synapses[N].GetComponentInChildren<Text>().text = neuralNet.GetSynapseValue(L, n, s).ToString("F2");
+
+							S++;
+						}
+					}
+					N ++;
 				}
-
-				// going through all neurons of the next layer (to know how many synapses should be done for each neuron)
-				// s is the local synapse (small s vs big S)
-				for (int s=0; s < layersSizes[L+1]; s++) {
-
-					// we create the synapse and set it's parent as the current neuron
-					synapses[S] = GameObject.Instantiate(baseSynapse);
-					synapses[S].transform.SetParent(neurons[N].transform);
-
-					// we get the position values of the "from" and "to" neuron for the synapse
-					// the next neuron is equal to the sum of neuron of all previous processed layer + the number of neuron in the current layer + the current synapse fo this neuron
-					Vector3[] linePoints = new Vector3[] {neurons[N].transform.position, neurons[NLsum + layersSizes[L] + s].transform.position};
-					// linePoints[0].z = -1;
-					// linePoints[1].z = -1;
-					//Debug.Log(linePoints[0] + " " + linePoints[1] + " " + neurons[N].transform.position);
-					synapses[S].GetComponent<LineRenderer>().SetPositions(linePoints);
-					//synapses[S].GetComponent<LineRenderer>()
-					S++;
-				}
-
-				// we check if we need to change to the next layer
-				if (N == layersSizes[L]-1) {
-					NLsum += layersSizes[L];
-					L++;
-				}
-				
+				NLsum += layersSizes[L];
 			}
-
 
 		}
 
