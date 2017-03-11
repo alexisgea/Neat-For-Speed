@@ -56,7 +56,8 @@ namespace nfs.layered {
 
 			for (int L=0; L < layers.Length; L++) {
 				for (int n=0; n < layersSizes[L]; n++) {
-					neurons[N].GetComponentInChildren<Text>().text = neuralNet.GetNeuronValue(L, n).ToString("F2");
+					//neurons[N].GetComponentInChildren<Text>().text = neuralNet.GetNeuronValue(L, n).ToString("F2");
+					neurons[N].transform.FindChild("value").GetComponent<Text>().text = neuralNet.GetNeuronValue(L, n).ToString("F2");
 					
 					if (neuralNet.GetNeuronValue(L, n) >= 0) {
 						neurons[N].GetComponent<Image>().color = Color.green * neuralNet.GetNeuronValue(L, n);
@@ -125,15 +126,46 @@ namespace nfs.layered {
 
 			neurons = new GameObject[totalNeurons];
 
-			int k = 0; // layer counter
+			int L = 0; // layer counter
 			int neuronsInLayer = 0; // sum of neuron per layer already done
 			for (int i=0; i < neurons.Length; i++) {
 				neurons[i] = GameObject.Instantiate(baseNeuron);
-				neurons[i].transform.SetParent(layers[k].transform, false);
+				neurons[i].transform.SetParent(layers[L].transform, false);
+				
+				if (L == 0) {
+					switch(i) {
+						case(0):
+							neurons[i].transform.FindChild("label").GetComponent<Text>().text = "Sensor NW";
+							break;
 
+						case(1):
+							neurons[i].transform.FindChild("label").GetComponent<Text>().text = "Sensor N";
+							break;
+
+						case(2):
+							neurons[i].transform.FindChild("label").GetComponent<Text>().text = "Sensor NE";
+							break;
+						
+						case(3):
+							neurons[i].transform.FindChild("label").GetComponent<Text>().text = "Bias input";
+							break;
+					}
+
+				} else 	if (L == layersSizes.Length -1) { // last layer
+					if(i == neurons.Length-2)
+						neurons[i].transform.FindChild("label").GetComponent<Text>().text = "Drive";
+
+					else if(i == neurons.Length-1)
+						neurons[i].transform.FindChild("label").GetComponent<Text>().text = "Turn";
+
+				} else {
+					neurons[i].transform.FindChild("label").GetComponent<Text>().text = "";
+
+				}
+			
 				neuronsInLayer ++;
-				if (neuronsInLayer == layersSizes[k]) {
-					k++;
+				if (neuronsInLayer == layersSizes[L]) {
+					L++;
 					neuronsInLayer = 0;
 				}
 			}
@@ -160,23 +192,28 @@ namespace nfs.layered {
 					if (L < layers.Length-1) {
 						for (int s=0; s < layersSizes[L+1]; s++) {
 
+
 							// we create the synapse and set it's parent as the current neuron
 							synapses[S] = GameObject.Instantiate(baseSynapse);
 							synapses[S].transform.SetParent(neurons[N].transform, false);
+							LineRenderer line = synapses[S].GetComponent<LineRenderer>();
 
 							// we get the position values of the "from" and "to" neuron for the synapse
 							// the next neuron is equal to the sum of neuron of all previous processed layer + the number of neuron in the current layer + the current synapse fo this neuron
 							Vector3[] linePoints = new Vector3[] {
-								neurons[N].transform.position + Vector3.forward * 0.1f,
-								neurons[NLsum + layersSizes[L] + s].transform.position + Vector3.forward * 0.1f
+								neurons[N].transform.position + Camera.main.transform.forward * 0.1f,
+								neurons[NLsum + layersSizes[L] + s].transform.position + Camera.main.transform.forward * 0.1f
 								};
-							synapses[S].GetComponent<LineRenderer>().SetPositions(linePoints);
+							line.SetPositions(linePoints);
 
-							float width = Mathf.Abs(neuralNet.GetSynapseValue(L, n, s))*0.2f;
-							synapses[S].GetComponent<LineRenderer>().widthMultiplier = width;
+							float width = Mathf.Abs(neuralNet.GetSynapseValue(L, n, s))*0.05f;
+							line.widthMultiplier = width;
 
-							//synapses[S].GetComponent<LineRenderer>().startColor = Color.red;
-							//synapses[S].GetComponent<LineRenderer>().endColor = Color.red;
+							if (neuralNet.GetSynapseValue(L, n, s) >= 0 ) {
+								line.material.color = Color.green;
+							} else {
+								line.material.color = Color.red;
+							}
 
 							// synapses[N].GetComponentInChildren<Text>().text = neuralNet.GetSynapseValue(L, n, s).ToString("F2");
 

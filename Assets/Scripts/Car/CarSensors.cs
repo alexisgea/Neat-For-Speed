@@ -79,136 +79,169 @@ namespace nfs.car {
 		private void NorthSensor() {
 			Debug.DrawRay(transform.position, transform.forward * sensorLength, Color.green);
 
-			RaycastHit hit;
-			if (Physics.Raycast(transform.position, transform.forward, out hit, sensorLength)) {
+			RaycastHit[] hits;
+
+			hits = Physics.RaycastAll(transform.position, transform.forward, sensorLength);
+
+			Wall_N = 1f;
+			Car_N = 1f;
+
+			for (int i = 0; i < hits.Length; i++) {
+				RaycastHit hit = hits[i];
+				
 				if (hit.collider.gameObject.tag == "wall")
 					Wall_N = hit.distance / sensorLength;
-				else
-                    Wall_N = 1f;
 
-                if (hit.collider.gameObject.tag == "car")
+                else if (hit.collider.gameObject.tag == "car")
 					Car_N = hit.distance / sensorLength;
-				else
-                    Car_N = 1f;
-			}
+			}						
 		}
 		
 		private void NorthEastSensor() {
 			Debug.DrawRay(transform.position, (transform.forward + transform.right) * sensorLength, Color.green);
 
-			RaycastHit hit;
-			if (Physics.Raycast(transform.position, (transform.forward + transform.right), out hit, sensorLength)) {
+			RaycastHit[] hits;
+
+			hits = Physics.RaycastAll(transform.position, (transform.forward + transform.right), sensorLength);
+
+			Wall_NE = 1f;
+			Car_NE = 1f;
+
+			for (int i = 0; i < hits.Length; i++) {
+				RaycastHit hit = hits[i];
+				
 				if (hit.collider.gameObject.tag == "wall")
 					Wall_NE = hit.distance / sensorLength;
-				else
-                    Wall_NE = 1f;
 
-                if (hit.collider.gameObject.tag == "car")
+                else if (hit.collider.gameObject.tag == "car")
 					Car_NE = hit.distance / sensorLength;
-				else
-                    Car_NE = 1f;
-			}
+			}	
 		}
 
 		private void EastSensor() {
 			//Debug.DrawRay(transform.position, transform.right * sensorLength, Color.green);
 
-			RaycastHit hit;
-			if (Physics.Raycast(transform.position, transform.right, out hit, sensorLength)) {
+			RaycastHit[] hits;
+
+			hits = Physics.RaycastAll(transform.position, transform.right, sensorLength);
+
+			Wall_E = 1f;
+			Car_E = 1f;
+
+			for (int i = 0; i < hits.Length; i++) {
+				RaycastHit hit = hits[i];
+				
 				if (hit.collider.gameObject.tag == "wall")
 					Wall_E = hit.distance / sensorLength;
-				else
-                    Wall_E = 1f;
 
-				if (hit.collider.gameObject.tag == "car")
+                else if (hit.collider.gameObject.tag == "car")
 					Car_E = hit.distance / sensorLength;
-				else
-                    Car_E = 1f;
 			}
 		}
 
 		private void SouthEastSensor() {
 			//Debug.DrawRay(transform.position, (-transform.forward + transform.right) * sensorLength, Color.green);
 
-			RaycastHit hit;
-			if (Physics.Raycast(transform.position, (-transform.forward + transform.right), out hit, sensorLength)) {
+			RaycastHit[] hits;
+
+			hits = Physics.RaycastAll(transform.position, (-transform.forward + transform.right), sensorLength);
+
+			Wall_SE = 1f;
+			Car_SE = 1f;
+
+			for (int i = 0; i < hits.Length; i++) {
+				RaycastHit hit = hits[i];
+				
 				if (hit.collider.gameObject.tag == "wall")
 					Wall_SE = hit.distance / sensorLength;
-				else
-                    Wall_SE = 1f;
 
-				if (hit.collider.gameObject.tag == "car")
+                else if (hit.collider.gameObject.tag == "car")
 					Car_SE = hit.distance / sensorLength;
-				else
-                    Car_SE = 1f;
 			}
 		}
 
 		private void SouthSensor() {
 			//Debug.DrawRay(transform.position, -transform.forward * sensorLength, Color.green);
 
-			RaycastHit hit;
-			if (Physics.Raycast(transform.position, -transform.forward, out hit, sensorLength)) {
+			RaycastHit[] hits;
+
+			hits = Physics.RaycastAll(transform.position, -transform.forward, sensorLength);
+
+			Wall_S = 1f;
+			Car_S = 1f;
+
+			for (int i = 0; i < hits.Length; i++) {
+				RaycastHit hit = hits[i];
+				
 				if (hit.collider.gameObject.tag == "wall")
 					Wall_S = hit.distance / sensorLength;
-				else
-                    Wall_S = 1f;
 
-				if (hit.collider.gameObject.tag == "car")
+                else if (hit.collider.gameObject.tag == "car")
 					Car_S = hit.distance / sensorLength;
-				else
-                    Car_S = 1f;
 			}
 		}
 
 		private void SouthWestSensor() {
 			//Debug.DrawRay(transform.position, -(transform.forward + transform.right) * sensorLength, Color.green);
 
-			RaycastHit hit;
-			if (Physics.Raycast(transform.position, -(transform.forward + transform.right), out hit, sensorLength)) {
+			RaycastHit[] hits;
+
+			hits = Physics.RaycastAll(transform.position, -(transform.forward + transform.right), sensorLength);
+
+			Wall_SW = 1f;
+			Car_SW = 1f;
+
+			for (int i = 0; i < hits.Length; i++) {
+				RaycastHit hit = hits[i];
+				
 				if (hit.collider.gameObject.tag == "wall")
 					Wall_SW = hit.distance / sensorLength;
-				else
-                    Wall_SW = 1f;
-					
-				if (hit.collider.gameObject.tag == "car")
+
+                else if (hit.collider.gameObject.tag == "car")
 					Car_SW = hit.distance / sensorLength;
-				else
-                    Car_SW = 1f;
 			}
 		}
 
 		private void WestSensor() {
 			//Debug.DrawRay(transform.position, -transform.right * sensorLength, Color.green);
 
-			RaycastHit hit;
-			if (Physics.Raycast(transform.position, -transform.right, out hit, sensorLength)) {
+			RaycastHit[] hits;
+
+			hits = Physics.RaycastAll(transform.position, -transform.right, sensorLength);
+
+			Wall_W = 1f;
+			Car_W = 1f;
+
+			for (int i = 0; i < hits.Length; i++) {
+				RaycastHit hit = hits[i];
+				
 				if (hit.collider.gameObject.tag == "wall")
 					Wall_W = hit.distance / sensorLength;
-				else
-                    Wall_W = 1f;
 
-				if (hit.collider.gameObject.tag == "car")
+                else if (hit.collider.gameObject.tag == "car")
 					Car_W = hit.distance / sensorLength;
-				else
-                    Car_W = 1f;
 			}
 		}
 
 		private void NorthWestSensor() {
 			Debug.DrawRay(transform.position, (transform.forward - transform.right) * sensorLength, Color.green);
 
-			RaycastHit hit;
-			if (Physics.Raycast(transform.position, (transform.forward - transform.right), out hit, sensorLength)) {
+			RaycastHit[] hits;
+
+			hits = Physics.RaycastAll(transform.position, (transform.forward - transform.right), sensorLength);
+
+			Wall_NW = 1f;
+			Car_NW = 1f;
+
+			for (int i = 0; i < hits.Length; i++) {
+				RaycastHit hit = hits[i];
+				
 				if (hit.collider.gameObject.tag == "wall")
 					Wall_NW = hit.distance / sensorLength;
-				else
-                    Wall_NW = 1f;
 
-				if (hit.collider.gameObject.tag == "car")
+                else if (hit.collider.gameObject.tag == "car")
 					Car_NW = hit.distance / sensorLength;
-				else
-                    Car_NW = 1f;
+
 			}
 		}
 
