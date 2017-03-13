@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Linq;
-using nfs.controllers;
+using nfs.layered;
 
-namespace nfs.layered {
+namespace nfs.gui {
 
 	public class NetworkVisualiser : MonoBehaviour {
+
+		[SerializeField] Camera cam;
 
 		[SerializeField] GameObject baseLayer;
 		[SerializeField] GameObject baseNeuron;
@@ -26,25 +28,12 @@ namespace nfs.layered {
 		// Update is called once per frame
 		void Update () {
 
-			if (buildingVisualisation) {
-				InstantiateSynapses();
-				buildingVisualisation = false;
-			}
+			// if (buildingVisualisation) {
+			// 	InstantiateSynapses();
+			// 	buildingVisualisation = false;
+			// }
 
-			if (Input.GetMouseButtonDown(0)) {
-				RaycastHit hitInfo = new RaycastHit();
-				bool hit = Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo);
-
-				if (hit && hitInfo.transform.tag == "car" && hitInfo.transform.GetComponent<LayeredNetController>() != null)	{
-					neuralNet = hitInfo.transform.GetComponent<LayeredNetController>().GetLayeredNet();
-					BuildVisualisation ();
-				}
-			} else if (Input.GetMouseButtonDown(1)) {
-				neuralNet = null;
-				ClearCurrentVisualisation();
-			}
-
-			if (neuralNet != null && !buildingVisualisation) {
+			if (neuralNet != null /*&& !buildingVisualisation*/) {
 				UpdateVisualisation();
 			}
 		}
@@ -53,6 +42,7 @@ namespace nfs.layered {
 
 			int N = 0; // neuron counter
 			int S = 0; // synapse counter
+			int NLsum = 0;
 
 			for (int L=0; L < layers.Length; L++) {
 				for (int n=0; n < layersSizes[L]; n++) {
@@ -66,49 +56,30 @@ namespace nfs.layered {
 					}
 
 					// the last layer doesn't have any synapses
-					// for (int s=0; s < layersSizes[L+1]; s++) {
-					// 	if (L < layers.Length-1) {}
-					// 		synapses[S].GetComponent<LineRenderer>().startColor = neurons[N].GetComponent<Image>().color;
+					if (L < layers.Length-1) {
+						for (int s=0; s < layersSizes[L+1]; s++) {
+							Vector3[] linePoints = new Vector3[] {
+									neurons[N].transform.position + cam.transform.forward * 0.1f,
+									neurons[NLsum + layersSizes[L] + s].transform.position + cam.transform.forward * 0.1f
+									};
+								synapses[S].GetComponent<LineRenderer>().SetPositions(linePoints);
 
-					// 	if (L>1)
-					// 		synapses[S-layersSizes[L]].GetComponent<LineRenderer>().endColor = neurons[N].GetComponent<Image>().color;
-
-					// 	S++; // S will go over the total number of synapse, that's dangerous
-						
-					// }
-
+							S++; // S will go over the total number of synapse, that's dangerous
+						}
+					}
 					N ++;
 				}
+				NLsum += layersSizes[L];
 			}
 		}
 
 		void BuildVisualisation () {
-			ClearCurrentVisualisation();
 			InstantiateLayers();
 			InstantiateNeurons();
-			//InstantiateSynapses();
-			buildingVisualisation = true;
+			InstantiateSynapses();
+			//buildingVisualisation = true;
 		}
 
-		void ClearCurrentVisualisation() {
-			if (synapses != null) {
-				for (int i=0; i < synapses.Length; i++){
-					GameObject.Destroy(synapses[i]);
-				}
-			}
-
-			if (neurons != null) {
-				for (int i=0; i < neurons.Length; i++){
-					GameObject.Destroy(neurons[i]);
-				}
-			}
-
-			if (layers != null) {
-				for (int i=0; i < layers.Length; i++){
-					GameObject.Destroy(layers[i]);
-				}
-			}
-		}
 
 		void InstantiateLayers() {
 			layers = new GameObject[neuralNet.NumberOfLayers];
@@ -201,8 +172,8 @@ namespace nfs.layered {
 							// we get the position values of the "from" and "to" neuron for the synapse
 							// the next neuron is equal to the sum of neuron of all previous processed layer + the number of neuron in the current layer + the current synapse fo this neuron
 							Vector3[] linePoints = new Vector3[] {
-								neurons[N].transform.position + Camera.main.transform.forward * 0.1f,
-								neurons[NLsum + layersSizes[L] + s].transform.position + Camera.main.transform.forward * 0.1f
+								neurons[N].transform.position + cam.transform.forward * 0.1f,
+								neurons[NLsum + layersSizes[L] + s].transform.position + cam.transform.forward * 0.1f
 								};
 							line.SetPositions(linePoints);
 
@@ -225,6 +196,35 @@ namespace nfs.layered {
 				NLsum += layersSizes[L];
 			}
 
+		}
+
+
+		public void AssignFocusNetwork (LayeredNetwork newFocusNet) {
+			ClearCurrentVisualisation();
+			neuralNet = newFocusNet;
+			BuildVisualisation ();
+		}
+
+		public void ClearCurrentVisualisation() {
+			neuralNet = null;
+
+			if (synapses != null) {
+				for (int i=0; i < synapses.Length; i++){
+					GameObject.Destroy(synapses[i]);
+				}
+			}
+
+			if (neurons != null) {
+				for (int i=0; i < neurons.Length; i++){
+					GameObject.Destroy(neurons[i]);
+				}
+			}
+
+			if (layers != null) {
+				for (int i=0; i < layers.Length; i++){
+					GameObject.Destroy(layers[i]);
+				}
+			}
 		}
 
 	}
