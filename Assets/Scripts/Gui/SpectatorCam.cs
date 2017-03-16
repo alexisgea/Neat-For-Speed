@@ -22,6 +22,7 @@ namespace nfs.gui {
 		void Update () {
 			CheckSpeedSwitch();
 			CheckTranslateCam();
+			CheckRotateCam();
 			CheckFocusNetwork();
 		}
 
@@ -48,7 +49,13 @@ namespace nfs.gui {
 
 		}
 
-		void CheckFocusNetwork() {
+		void CheckRotateCam() {
+			if (Input.GetMouseButton(1)) {
+				// rotate cam on self
+			}
+		}
+
+		void CheckFocusNetwork() { // add an overall "if not Input.GetMouseButton(1)"
 			if (Input.GetMouseButtonDown(0)) {
 				RaycastHit hitInfo = new RaycastHit();
 				bool hit = Physics.Raycast(GetComponent<Camera>().ScreenPointToRay(Input.mousePosition), out hitInfo);
@@ -57,7 +64,7 @@ namespace nfs.gui {
 					LayeredNetwork focusNet = hitInfo.transform.GetComponent<LayeredNetController>().GetLayeredNet();
 					FindObjectOfType<NetworkVisualiser>().AssignFocusNetwork(focusNet);
 				}
-			} else if (Input.GetMouseButtonDown(1)) {
+			} else if (Input.GetMouseButtonDown(1)) { // change to mouse wheel click if to many errors
 				FindObjectOfType<NetworkVisualiser>().ClearCurrentVisualisation();
 			}
 		}
