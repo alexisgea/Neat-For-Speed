@@ -1,13 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Linq;
-using nfs.layered;
 
-namespace nfs.gui {
+namespace nfs.layered {
 
-	public class NetworkVisualiser : MonoBehaviour {
+	public class Visualiser : MonoBehaviour {
 
 		[SerializeField] Camera cam;
 
@@ -21,7 +18,7 @@ namespace nfs.gui {
 		GameObject[] neurons;
 		GameObject[] synapses;
 
-		LayeredNetwork neuralNet;
+		NeuralNet neuralNet;
 
 		bool buildingVisualisation = false;
 		
@@ -199,7 +196,7 @@ namespace nfs.gui {
 		}
 
 
-		public void AssignFocusNetwork (LayeredNetwork newFocusNet) {
+		public void AssignFocusNetwork (NeuralNet newFocusNet) {
 			ClearCurrentVisualisation();
 			neuralNet = newFocusNet;
 			BuildVisualisation ();

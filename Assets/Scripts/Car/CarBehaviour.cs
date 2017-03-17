@@ -65,8 +65,7 @@ namespace nfs.car {
 
         // reference to the car Rigidbody
         private Rigidbody car;
-        public event Action <CarBehaviour, string>HitSomething;
-        //public UnityEvent test2;
+        public event Action <string>HitSomething;
 
         // initiate all sort of stuff
         private void Start() {
@@ -146,9 +145,9 @@ namespace nfs.car {
         /// <summary>
 		/// Sends this object and the tag of the other object in the collision.
 		/// </summary>
-        public void RaiseHitSomething(string tag){
+        private void RaiseHitSomething(string tag){
             if(HitSomething != null)
-                HitSomething.Invoke(this, tag);
+                HitSomething.Invoke(tag);
         }
 
 		/// <summary>

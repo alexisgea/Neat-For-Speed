@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using nfs.tools;
-using System.Collections;
 
 namespace nfs.layered {
 
@@ -9,9 +8,9 @@ namespace nfs.layered {
     /// It can have varying number of neurons and layers.
     /// The network always has a single bias input neuron.
     ///</summary>
-    public class LayeredNetwork {
+    public class NeuralNet {
 
-        public int Id {set; get; }
+        public float Id {set; get; }
 
         //public Queue[] Lineage = new Queue();
 
@@ -35,6 +34,8 @@ namespace nfs.layered {
             get {
                 int[] layersSizes = new int[NumberOfLayers];
 
+                int[] hiddenLayersSizes = HiddenLayersSizes;
+
                 for (int i = 0; i < layersSizes.Length; i++) {
 
                     if (i == 0) {
@@ -42,7 +43,7 @@ namespace nfs.layered {
                     } else if (i == NumberOfLayers-1) {
                         layersSizes[i] = OutputSize;
                     } else {
-                        layersSizes[i] = HiddenLayersSizes[i-1];
+                        layersSizes[i] = hiddenLayersSizes[i-1];
                     }
                 }
 
@@ -65,12 +66,12 @@ namespace nfs.layered {
         ///</summary>
         public int[] HiddenLayersSizes {
             get {
-                int[] hiddenLayerSizes = new int[hiddenLayersNeurons.Length];
+                int[] hiddenLayersSizes = new int[hiddenLayersNeurons.Length];
                 for (int i = 0; i < hiddenLayersNeurons.Length; i++) {
-                    hiddenLayerSizes[i] = hiddenLayersNeurons[i].J;
+                    hiddenLayersSizes[i] = hiddenLayersNeurons[i].J;
                 }
 
-                return hiddenLayerSizes;
+                return hiddenLayersSizes;
             }
         }
 
@@ -81,15 +82,17 @@ namespace nfs.layered {
         /// Requires a given number of input, number given of output
         /// and an array for the hidden layers with each element being the size of a different hidden layer.!--
         ///</summary>
-        public LayeredNetwork(int[] layersSizes) {
+        public NeuralNet(int[] layersSizes) {
+
+            Id = Time.time;
             // each layer is one line of neuron
             inputNeurons = new Matrix(1, layersSizes[0]).SetToOne();
             outputNeurons = new Matrix(1, layersSizes[layersSizes.Length-1]).SetToOne();
 
             // hidden layer is an array of matrix of one line
             hiddenLayersNeurons = new Matrix[layersSizes.Length-2];
-            for (int i = 1; i < layersSizes.Length-2; i++) {
-                hiddenLayersNeurons[i] = new Matrix(1, layersSizes[i]).SetToOne();
+            for (int i = 0; i < hiddenLayersNeurons.Length; i++) {
+                hiddenLayersNeurons[i] = new Matrix(1, layersSizes[i+1]).SetToOne();
             }
 
             // synapses are an array of matrix
@@ -97,32 +100,25 @@ namespace nfs.layered {
             // the number of column (or nb of synapses in a row) is equal to the next layer (neurons going to)
             synapses = new Matrix[layersSizes.Length-1];
             for (int i = 0; i < synapses.Length; i++) {
-                float weightRange = StandardSynapseRange(synapses[i].J);
-                synapses[i] = new Matrix(layersSizes[i], layersSizes[i+1]).SetAsSynapse(weightRange);
+                synapses[i] = new Matrix(layersSizes[i], layersSizes[i+1]).SetAsSynapse();
             }
         }
 
         ///<summary>
         /// Creates and return a deep clone of the network.
         ///</summary>
-        public LayeredNetwork GetClone () {
-            int hiddenLayers = this.hiddenLayersNeurons.Length;
-            int[] hiddenLayerSizes = new int[hiddenLayers];
-            for(int i=0; i<hiddenLayers; i++) {
-                hiddenLayerSizes[i] = this.hiddenLayersNeurons[i].J;
-            }
+        public NeuralNet GetClone () {
 
-            LayeredNetwork clone = new LayeredNetwork(this.inputNeurons.J, this.outputNeurons.J, hiddenLayerSizes);
-
+            NeuralNet clone = new NeuralNet(this.LayersSizes);
             clone.InsertSynapses(this.GetSynapsesClone());
-            clone.FitnessScore = FitnessScore;
+            clone.FitnessScore = this.FitnessScore;
 
             return clone;
         }
 
-        public float StandardSynapseRange (int J) {
-            return 2f / Mathf.Sqrt(J);
-        }
+        // public float StandardSynapseRange (int J) {
+        //     return 2f / Mathf.Sqrt(J);
+        // }
 
 
         // this is to pass the activation function on the neuron value and on each layer

@@ -90,6 +90,10 @@ namespace nfs.tools {
             return (matrixA.I == matrixB.I && matrixA.J == matrixB.J) ? true : false;
         }
 
+        public static float StandardSynapseRange (int matJ) {
+            return 2f / Mathf.Sqrt(matJ);
+        }
+
         ///<summary>
 	    /// Return a deep clone of the original Matrix.
 	    ///</summary>
@@ -143,7 +147,8 @@ namespace nfs.tools {
 	    /// Randomize all values with within a range dependant on matrix dimension for synapses.
 	    ///</summary>
         // weights range from here http://stats.stackexchange.com/questions/47590/what-are-good-initial-weights-in-a-neural-network
-        public Matrix SetAsSynapse(float weightRange) {
+        public Matrix SetAsSynapse() {
+            float weightRange = StandardSynapseRange(this.J);
             for (int i = 0; i < I; i++) {
                 for(int j = 0; j < J; j++) {
                     matrix[i][j] = Random.Range(-weightRange, weightRange);
@@ -273,11 +278,41 @@ namespace nfs.tools {
             }
         }
 
+        // ///<summary>
+	    // /// Redimension the Matrix by creating a new one an copying all value and returning the new one.
+        // /// This new Matrix can be set as synapse to get random synapse values in the new empty cell if there are some.
+	    // ///</summary>
+        // public Matrix Redimension(int newI, int newJ, float weightRange = -1f) {
+
+        //     Matrix redimMat = new Matrix(newI, newJ);
+
+        //     if(weightRange != -1f)
+        //         redimMat.SetAsSynapse(weightRange); // in order to get random values then we will copy the previous ones
+        //     else
+        //         redimMat.SetToZero();
+
+        //     int smallI = Mathf.Min(newI, I);
+        //     int smallJ = Mathf.Min(newJ, J);
+
+        //     for (int i = 0; i < smallI; i++) {
+        //         for (int j = 0; j < smallJ; j++) {
+        //             redimMat.matrix[i][j] = matrix[i][j];
+        //         }
+        //     }
+
+        //     matrix = redimMat.matrix;
+
+        //     I = newI;
+        //     J = newJ;
+
+        //     return this;
+        // }
+
         ///<summary>
-	    /// Redimension tge Matrix by creating a new one an copying all value and returning the new one.
+	    /// Redimension the Matrix by creating a new one an copying all value and returning the new one.
         /// This new Matrix can be set as synapse to get random synapse values in the new empty cell if there are some.
 	    ///</summary>
-        public Matrix Redimension(int newI, int newJ, bool synapse = true) {
+        public static Matrix Redimension(Matrix oldMatrix, int newI, int newJ, bool synapse = true) {
 
             Matrix redimMat = new Matrix(newI, newJ);
 
@@ -286,21 +321,16 @@ namespace nfs.tools {
             else
                 redimMat.SetToZero();
 
-            int smallI = Mathf.Min(newI, I);
-            int smallJ = Mathf.Min(newJ, J);
+            int smallI = Mathf.Min(newI, oldMatrix.I);
+            int smallJ = Mathf.Min(newJ, oldMatrix.J);
 
             for (int i = 0; i < smallI; i++) {
                 for (int j = 0; j < smallJ; j++) {
-                    redimMat.matrix[i][j] = matrix[i][j];
+                    redimMat.matrix[i][j] = oldMatrix.matrix[i][j];
                 }
             }
 
-            matrix = redimMat.matrix;
-
-            I = newI;
-            J = newJ;
-
-            return this;
+            return redimMat;
         }
 		
 	}
