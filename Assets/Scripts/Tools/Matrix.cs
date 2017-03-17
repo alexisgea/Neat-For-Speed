@@ -143,8 +143,7 @@ namespace nfs.tools {
 	    /// Randomize all values with within a range dependant on matrix dimension for synapses.
 	    ///</summary>
         // weights range from here http://stats.stackexchange.com/questions/47590/what-are-good-initial-weights-in-a-neural-network
-        public Matrix SetAsSynapse() {
-            float weightRange = 2f / Mathf.Sqrt(J);
+        public Matrix SetAsSynapse(float weightRange) {
             for (int i = 0; i < I; i++) {
                 for(int j = 0; j < J; j++) {
                     matrix[i][j] = Random.Range(-weightRange, weightRange);

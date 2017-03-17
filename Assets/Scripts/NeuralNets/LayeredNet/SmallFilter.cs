@@ -16,150 +16,105 @@ namespace nfs.layered {
     /// checking their fitness and producing mutated offsprings.
     /// Also cycles through different tracks to avoid overfitting.
     ///</summary>
-    public class SmallFilter : MonoBehaviour {
+    public class SmallFilter {
 
-        
-        [SerializeField] int numberOfGeneration = 100;
-        [SerializeField] float maxGenerationTime = 90;
-        public int Generation { private set; get; }
+        private float _survivorRate; // how many of a generation will be considered for breeding
+        private float _breedingRepartitionCoef; // what proportion of a new generation will be alltime fittest
+        private float _freshBloodCoef; // what proportion of a new generation will be brand new nets
+        private float _synapsesMutationRate; // how much is a synapses likely to mutate
+        private float _synapsesMutationRange; // how much can be the mutation of a synapse at maximum
+        private bool _inputNbMutation; // is it possible to modify the number of input (Input discovery)
+        private float _inputNbMutationRate; // what is the probability of a new neuron in input layer
+        private bool _hiddenLayerNbMutation; // is it possible to modify the number of hidden layer
+        private float _hiddenLayerNbMutationRate; // what is the probability of a new hidden layer
+        private bool _hiddenNbMutation; // is it possible to modify the number of neurons in hidden layers
+        private float _hiddenMbMutationRate; // what is the probability of a new neuron in hidden layer
 
-        [SerializeField] int numberOfCar = 20;
-        public int CarAlive { private set; get; }
+        private int _breedingSample;
 
-        [SerializeField] int[] baseHiddenLayersSizes;
+        public int PopulationSize {get {return Population.Length;}}
+        public LayeredNetwork[] Population {private set; get;}
+        private LayeredNetwork[] _alltimeFittestNets;
+        private LayeredNetwork[] _generationFittestNets;
 
-        [SerializeField] float survivorRate = 0.25f;
-        private int breedingSample;
-        [SerializeField] float freshBloodRate = 0.1f;
-        [SerializeField] float synapsesMutationRate = 0.1f;
-        [SerializeField] float synapsesMutationRange = 0.1f;
-        [SerializeField] bool inputNbMutation = false;
-        [SerializeField] bool hiddenNbMutation = false;
-        [SerializeField] float hiddenMbMutationRate = 0.01f;
-        [SerializeField] bool hiddenLayerNbMutation = false;
-        [SerializeField] float hiddenLayerNbMutationRate = 0.001f;
-
-        private GameObject[] carPopulation;
-        private Stack<CarBehaviour> deadCars = new Stack<CarBehaviour>();
-        private LayeredNetwork[] alltimeFittestNets;
-        private LayeredNetwork[] generationFittestNets;
-        [SerializeField] Transform populationGroup;
-        [SerializeField] Vector3 startPosition = Vector3.zero;
-        [SerializeField] GameObject carPrefab;
-
-        [SerializeField] float maxDistFitness = 1000;
-        private float generationStartTime;
-
-        // world and race tracks references
-        [SerializeField] Transform world;
-        [SerializeField] GameObject[] tracks;
-        private GameObject raceTrack;
+        private int[] _baseNetLayersSizes;
 
 
-        // Initialises the base popuplations
-        private void Start() {
-            InitializePopulation();
-        }
 
-        // starts the next generation when the time has come
-        private void Update() {
-            if (CarAlive <= 0 || Time.unscaledTime - generationStartTime > maxGenerationTime) {
-                NextGeneration();
-            }
+        public SmallFilter (int popSize, int[] networkLayersSizes,
+                            float survivorRate = 0.25f, float breedingRepartitionCoef = 0.6f, float freshBloodCoef = 0.1f,
+                            float synapsesMutationRate = 0.1f, float synapsesMutationRange = 0.1f,
+                            bool inputNbMutation = false, float inputNbMutationRate = 0.01f,
+                            bool hiddenLayerNbMutation = true, float hiddenLayerNbMutationRate = 0.001f,
+                            bool hiddenNbMutation = true, float hiddenMbMutationRate = 0.01f) {
+
+            _baseNetLayersSizes = networkLayersSizes;
+            _survivorRate = survivorRate;
+            _breedingRepartitionCoef = breedingRepartitionCoef;
+            _freshBloodCoef = freshBloodCoef;
+            _synapsesMutationRate = synapsesMutationRate;
+            _synapsesMutationRange = synapsesMutationRange;
+            _inputNbMutation = inputNbMutation;
+            _inputNbMutationRate = inputNbMutationRate;
+            _hiddenLayerNbMutation = hiddenLayerNbMutation;
+            _hiddenLayerNbMutationRate = hiddenLayerNbMutationRate;
+            _hiddenNbMutation = hiddenNbMutation;
+            _hiddenMbMutationRate = hiddenMbMutationRate;
+
+            InitializePopulation( popSize, _baseNetLayersSizes);
+
         }
 
         ///<summary>
         /// Instantiate the base popuplation and initialises their neural networks
         ///</summary>
-        public void InitializePopulation () {
-            // create a new racetrack form the list
-            raceTrack = GameObject.Instantiate(tracks[Random.Range(0, tracks.Length-1)]);
-            raceTrack.transform.SetParent(world);
+        private void InitializePopulation (int popSize, int[] networkLayersSizes) {
+
+            // creates the population
+            Population = new LayeredNetwork[popSize];
 
             // compute the amount of network which will have a descendance in each generation
-            breedingSample = (int)(numberOfCar*survivorRate);
-            breedingSample = breedingSample < 1 ? 1 : breedingSample;
+            _breedingSample = (int)(PopulationSize*_survivorRate);
+            _breedingSample = _breedingSample < 1 ? 1 : _breedingSample;
             
-            // creates the population
-            carPopulation = new GameObject[numberOfCar];
-            alltimeFittestNets = new LayeredNetwork[breedingSample];
-            generationFittestNets = new LayeredNetwork[breedingSample];
+            // create the best fitness reference
+            _alltimeFittestNets = new LayeredNetwork[_breedingSample];
+            _generationFittestNets = new LayeredNetwork[_breedingSample];
 
-            for (int i=0; i < numberOfCar; i++) {
-                carPopulation[i] = GameObject.Instantiate(carPrefab, startPosition, Quaternion.identity);
-                carPopulation[i].transform.SetParent(populationGroup);
-                carPopulation[i].GetComponent<LayeredNetController>().InitializeNeuralNetwork(hiddenSizes:baseHiddenLayersSizes);
-                carPopulation[i].GetComponent<CarBehaviour>().HitSomething += OnCarHit; // we register to each car's signal for collision
+            for (int i=0; i < PopulationSize; i++) {
+                Population[i] = new LayeredNetwork(networkLayersSizes);
             }
-
-            // all is ready and set to start for the training
-            Generation = 1;
-            CarAlive = numberOfCar;
-            generationStartTime = Time.unscaledTime;
-        }
-
-        ///<summary>
-        /// Initiate the new generation by breeding offspring and inserting them in the current popuplation.
-        ///</summary>
-        private void NextGeneration () {
-            
-            Debug.Log("Generation " + Generation +  " best fitness:" + generationFittestNets[0].FitnessScore + " all time best fitness:" + alltimeFittestNets[0].FitnessScore);
-
-            // we make sure everything is stopped and reset their state
-            for (int i=0; i < numberOfCar; i++) {
-                carPopulation[i].GetComponent<CarBehaviour>().Stop = true;
-                carPopulation[i].GetComponent<CarBehaviour>().Reset(startPosition, Quaternion.identity);
-            }
-
-            // we breed the next generation from the best cars
-            BreedNextGeneration();
-            // we make sure dead cars are cleared now that there is a new generation
-            deadCars.Clear();
-            // we also make sure that the generation fittest array can be beaten by the next one (easier than nullifying)
-            for (int i = 0; i < breedingSample; i++) {
-                generationFittestNets[i].FitnessScore = 0;
-            }
-
-            // we create a new track to avoid overfitting
-            Destroy(raceTrack);
-            raceTrack = GameObject.Instantiate(tracks[Random.Range(0, tracks.Length-1)]);
-            raceTrack.transform.SetParent(world);
-            
-            // all is ready and set to start for the training
-            Generation += 1;
-            CarAlive = numberOfCar;
-            generationStartTime = Time.unscaledTime;
         }
 
         ///<summary>
         /// Breed the next generation of networks from the current best and overall best.
         ///</summary>
-        private void BreedNextGeneration() {
+        public void BreedNextGeneration() {
 
             int k = 0;
             int l = 0;
-            for (int i=0; i < numberOfCar; i++) {
-                if (i < numberOfCar*0.6) { // all time generation (60%)
-                    carPopulation[i].GetComponent<LayeredNetController>().SetLayeredNework(CreateMutatedOffspring(alltimeFittestNets[k], l+1)); // l+1 as mutate coef to make each version more propable to mutate a lot
+            for (int i=0; i < PopulationSize; i++) {
+                if (i < PopulationSize * _breedingRepartitionCoef) { // all time generation
+                    Population[i] = CreateMutatedOffspring(_alltimeFittestNets[k], l+1); // l+1 as mutate coef to make each version more propable to mutate a lot
                     l += 1;
-                    if (l> numberOfCar*0.6/breedingSample){
+                    if (l > PopulationSize * _breedingRepartitionCoef / _breedingSample){
                         l = 0;
                         k += 1;
                     }
 
-                } else if (i < numberOfCar*0.9) { // this generation (30% 0.6 + 0.3)
-                    carPopulation[i].GetComponent<LayeredNetController>().SetLayeredNework(CreateMutatedOffspring(generationFittestNets[k], l+1));
+                } else if (i < PopulationSize * (1 - _freshBloodCoef)) { // this generation
+                    Population[i] = CreateMutatedOffspring(_generationFittestNets[k], l+1);
                     l += 1;
-                    if (l> numberOfCar*0.9/breedingSample){
+                    if (l > PopulationSize * (1 - _freshBloodCoef) / _breedingSample){
                         l = 0;
                         k += 1;
                     }
 
                 } else { // fresh blood (10%)
-                    carPopulation[i].GetComponent<LayeredNetController>().InitializeNeuralNetwork(hiddenSizes:baseHiddenLayersSizes);   
+                    Population[i] = new LayeredNetwork(_baseNetLayersSizes);   
                 }
 
-                if(k>=breedingSample)
+                if(k>=_breedingSample)
                     k = 0;
             }
         } 
@@ -178,8 +133,8 @@ namespace nfs.layered {
             // mutate this array of int
 
             // mutate number of hidden layers
-            if(hiddenLayerNbMutation && Random.value < hiddenLayerNbMutationRate) {
-                if (Random.value < 0.5f && hiddenLayersSizes.Length > 1) {
+            if(_hiddenLayerNbMutation && Random.value < _hiddenLayerNbMutationRate) {
+                if (Random.value < 0.5f && hiddenLayersSizes.Length > 1) { // random to get positive vs negative value
                     hiddenLayersSizes = RedimentionLayersNb(hiddenLayersSizes, -1);
 
                     synapses = RedimentionLayersNb(synapses, -1);
@@ -190,14 +145,15 @@ namespace nfs.layered {
                     hiddenLayersSizes[hiddenLayersSizes.Length - 1] = neuralNet.OutputSize;
 
                     synapses = RedimentionLayersNb(synapses, +1);
-                    synapses[synapses.Length - 1] = new Matrix(hiddenLayersSizes[hiddenLayersSizes.Length - 1], neuralNet.OutputSize).SetAsSynapse();
+                    float weightRange = neuralNet.StandardSynapseRange(synapses[synapses.Length - 1].J);
+                    synapses[synapses.Length - 1] = new Matrix(hiddenLayersSizes[hiddenLayersSizes.Length - 1], neuralNet.OutputSize).SetAsSynapse(weightRange);
                 }
             }
  
             // mutated number of neurons in hidden layers
-            if(hiddenNbMutation && Random.value < hiddenMbMutationRate) {
+            if(_hiddenNbMutation && Random.value < _hiddenMbMutationRate) {
                 int layerNb = Random.Range(0, hiddenLayersSizes.Length - 1);
-                if (Random.value < 0.5f && hiddenLayersSizes[layerNb] > 1) {
+                if (Random.value < 0.5f && hiddenLayersSizes[layerNb] > 1) { // random to get positive vs negative value
                     hiddenLayersSizes[layerNb] -= 1;
                 } else {
                     hiddenLayersSizes[layerNb] += 1;
@@ -212,21 +168,22 @@ namespace nfs.layered {
 
                 for (int i = 0; i < synapses[n].I; i++) {
                     for (int j=0; j < synapses[n].J; j++) {
-                        if (Random.value < synapsesMutationRate) {
+                        if (Random.value < _synapsesMutationRate) {
                             MutationType type = (MutationType)Random.Range(0, System.Enum.GetValues(typeof(MutationType)).Length-1);
                             float mutatedValue = synapses[n].GetValue(i, j);;
                             switch(type) {
                                 case MutationType.additive:
-                                    mutatedValue += Random.Range(-synapsesMutationRange, synapsesMutationRange);
+                                    mutatedValue += Random.Range(-_synapsesMutationRange, _synapsesMutationRange);
                                     break;
                                 case MutationType.multiply:
-                                    mutatedValue *= Random.Range(0.5f, 1.5f);
+                                    mutatedValue *= Random.Range(1f - 5f *_synapsesMutationRange, 1f + 5f * _synapsesMutationRange);
                                     break;
                                 case MutationType.reverse:
                                     mutatedValue *= -1;
                                     break;
                                 case MutationType.replace:
-                                    mutatedValue = Random.Range(-2 / Mathf.Sqrt(synapses[n].J), 2 / Mathf.Sqrt(synapses[n].J));
+                                    float weightRange = neuralNet.StandardSynapseRange(synapses[n].J);
+                                    mutatedValue = Random.Range(-weightRange, weightRange);
                                     break;
                                 case MutationType.nullify:
                                     mutatedValue = 0f;
@@ -242,7 +199,7 @@ namespace nfs.layered {
                 }
             }
 
-            LayeredNetwork mutadedOffspring = new LayeredNetwork(neuralNet.InputSize, neuralNet.OutputSize, hiddenLayersSizes);
+            LayeredNetwork mutadedOffspring = new LayeredNetwork(neuralNet.LayersSizes);
             mutadedOffspring.InsertSynapses(synapses);
 
             return mutadedOffspring;
@@ -268,58 +225,22 @@ namespace nfs.layered {
             return newLayers;
         }
 
-        ///<summary>
-        /// Called by each car's colision.
-        /// Updates the car alive counter and add the car to the deadCars array to not count them multiple tiem.
-        ///</summary>
-        private void OnCarHit (CarBehaviour who, string what) {
-            // first we make sure the car hit a wall
-            if(what == "wall" && !deadCars.Contains(who)) {
-
-                CarAlive -= 1;
-                deadCars.Push(who);
-                who.Stop = true;
-
-                // we retrive the neural network from the car and check it's fitness
-                LayeredNetwork fitnessContender = who.GetComponent<LayeredNetController>().GetLayeredNetClone();
-                fitnessContender.FitnessScore = CalculateFitness(who);
-
-                // we then compare the fitness to the current best and store/sort it if good
-                CompareFitness(alltimeFittestNets, fitnessContender);
-                CompareFitness(generationFittestNets, fitnessContender);
-
-            }
-        }
-
-        // compute the fitness value of a network from a mix distance and average speed
-        // distance is more important than speed
-        private float CalculateFitness (CarBehaviour who) {
-            float distanceFitness = who.DistanceDriven / maxDistFitness;
-
-            float timeElapsed = (Time.unscaledDeltaTime - generationStartTime);
-            float speedFitness = timeElapsed== 0? 0f : (who.DistanceDriven / timeElapsed) / who.MaxForwardSpeed;
-
-            float fitness = distanceFitness + distanceFitness * speedFitness;
-
-            return fitness;
-        }
-
         // compares a given neural network to a list of other and if better stores it at the correct rank
         // compares the network to the current generation as well as overall best network in all generations
         private void CompareFitness (LayeredNetwork[] fitnessRankings, LayeredNetwork fitnessContender) {
 
             // first we take care of the first case of an empty array (no other contender yet)
-            if(fitnessRankings[breedingSample-1] == null){
-                fitnessRankings[breedingSample - 1] = fitnessContender;
-            } else if(fitnessRankings[breedingSample-1] != null && fitnessRankings[breedingSample-1].FitnessScore < fitnessContender.FitnessScore) {
-                fitnessRankings[breedingSample - 1] = fitnessContender;
+            if(fitnessRankings[_breedingSample-1] == null){
+                fitnessRankings[_breedingSample - 1] = fitnessContender;
+            } else if(fitnessRankings[_breedingSample-1] != null && fitnessRankings[_breedingSample-1].FitnessScore < fitnessContender.FitnessScore) {
+                fitnessRankings[_breedingSample - 1] = fitnessContender;
             }
 
             // then we go through the rest of the arrays
-            if (breedingSample > 1) { // just making sure there is more than one network to breed (there can't be less)
+            if (_breedingSample > 1) { // just making sure there is more than one network to breed (there can't be less)
 
                 // we go from last to first in the loop
-                for (int i = breedingSample - 2; i >= 0; i--) {
+                for (int i = _breedingSample - 2; i >= 0; i--) {
                     if (fitnessRankings[i] == null) { // if the array is empty we fill it one step at a time
                         fitnessRankings[i] = fitnessContender;
                         fitnessRankings[i + 1] = null;

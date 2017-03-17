@@ -9,14 +9,17 @@ namespace nfs.gui {
 	[RequireComponent(typeof(Camera))]
 	public class SpectatorCam : MonoBehaviour {
 
-		[SerializeField] const float camNormalSpeed = 25;
-		[SerializeField] const float camFastSpeed = 50;
-		float camSpeed = camNormalSpeed;
+		[SerializeField] const float rotationSpeed = 100;
+		[SerializeField] const float normalSpeed = 25;
+		[SerializeField] const float fastSpeed = 50;
+		float camSpeed = normalSpeed;
 
-		// Use this for initialization
-		void Start () {
-			
-		}
+		float sensitivityX = 15F;
+		float sensitivityY = 15F;
+		float minimumY = -60F;
+		float maximumY = 60F;
+		float rotationY = 0F;
+
 		
 		// Update is called once per frame
 		void Update () {
@@ -28,9 +31,9 @@ namespace nfs.gui {
 
 		void CheckSpeedSwitch() {
 			if (Input.GetButtonDown("SpeedSwitch")) {
-				camSpeed = camFastSpeed;
+				camSpeed = fastSpeed;
 			} else if (Input.GetButtonUp("SpeedSwitch")){
-				camSpeed = camNormalSpeed;
+				camSpeed = normalSpeed;
 			}
 		}
 
@@ -49,9 +52,18 @@ namespace nfs.gui {
 
 		}
 
+		// script inspired from here for simplicity sake
+		// https://forum.unity3d.com/threads/looking-with-the-mouse.109250/
 		void CheckRotateCam() {
-			if (Input.GetMouseButton(1)) {
-				// rotate cam on self
+			if (Input.GetMouseButton(2)) {
+
+				float rotationX = transform.localEulerAngles.y + Input.GetAxis("Mouse X") * sensitivityX;
+				
+				rotationY += Input.GetAxis("Mouse Y") * sensitivityY;
+				rotationY = Mathf.Clamp (rotationY, minimumY, maximumY);
+				
+				transform.localEulerAngles = new Vector3(-rotationY, rotationX, 0);
+				
 			}
 		}
 

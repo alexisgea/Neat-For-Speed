@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using nfs.tools;
+using System.Collections;
 
 namespace nfs.layered {
 
@@ -9,6 +10,10 @@ namespace nfs.layered {
     /// The network always has a single bias input neuron.
     ///</summary>
     public class LayeredNetwork {
+
+        public int Id {set; get; }
+
+        //public Queue[] Lineage = new Queue();
 
         public float FitnessScore { set; get; }
 
@@ -69,33 +74,31 @@ namespace nfs.layered {
             }
         }
 
+        
+
         ///<summary>
         /// Layered neural network constructor.
         /// Requires a given number of input, number given of output
         /// and an array for the hidden layers with each element being the size of a different hidden layer.!--
         ///</summary>
-        public LayeredNetwork(int inputLayerSize, int outputLayerSize, int[] hiddenLayersSizes) {
+        public LayeredNetwork(int[] layersSizes) {
             // each layer is one line of neuron
-            inputNeurons = new Matrix(1, inputLayerSize).SetToOne();
-            outputNeurons = new Matrix(1, outputLayerSize).SetToOne();
+            inputNeurons = new Matrix(1, layersSizes[0]).SetToOne();
+            outputNeurons = new Matrix(1, layersSizes[layersSizes.Length-1]).SetToOne();
 
             // hidden layer is an array of matrix of one line
-            hiddenLayersNeurons = new Matrix[hiddenLayersSizes.Length];
-            for (int i = 0; i < hiddenLayersSizes.Length; i++) {
-                hiddenLayersNeurons[i] = new Matrix(1, hiddenLayersSizes[i]).SetToOne();
+            hiddenLayersNeurons = new Matrix[layersSizes.Length-2];
+            for (int i = 1; i < layersSizes.Length-2; i++) {
+                hiddenLayersNeurons[i] = new Matrix(1, layersSizes[i]).SetToOne();
             }
 
             // synapses are an array of matrix
             // the number of line (or array of synapses sort of) is equal to the previous layer (neurons coming from)
             // the number of column (or nb of synapses in a row) is equal to the next layer (neurons going to)
-            synapses = new Matrix[hiddenLayersSizes.Length + 1];
+            synapses = new Matrix[layersSizes.Length-1];
             for (int i = 0; i < synapses.Length; i++) {
-                if (i == 0) // input synapses
-                    synapses[i] = new Matrix(inputLayerSize, hiddenLayersSizes[i]).SetAsSynapse();
-                else if (i == synapses.Length - 1) // synapses to output
-                    synapses[i] = new Matrix(hiddenLayersSizes[i - 1], outputLayerSize).SetAsSynapse();
-                else // middle synapses
-                    synapses[i] = new Matrix(hiddenLayersSizes[i - 1], hiddenLayersSizes[i]).SetAsSynapse();
+                float weightRange = StandardSynapseRange(synapses[i].J);
+                synapses[i] = new Matrix(layersSizes[i], layersSizes[i+1]).SetAsSynapse(weightRange);
             }
         }
 
@@ -115,6 +118,10 @@ namespace nfs.layered {
             clone.FitnessScore = FitnessScore;
 
             return clone;
+        }
+
+        public float StandardSynapseRange (int J) {
+            return 2f / Mathf.Sqrt(J);
         }
 
 
