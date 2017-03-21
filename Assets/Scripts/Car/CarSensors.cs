@@ -43,7 +43,7 @@ namespace nfs.car {
 		public float Car_W {private set; get;}
 		public float Car_NW {private set; get;}
 
-		// fitness sensor
+		// sensor useful for a fitness function
 		public float DistanceDriven { private set; get; }
 
 		// getting a ref to the car
@@ -55,8 +55,8 @@ namespace nfs.car {
 		private void Update () {
             
 			// udpating car behaviour sensors
-			SteerSensor = car.TurnForce;
-			DriveSensor = car.DriveForce;
+			SteerSensor = car.TurnIntensity;
+			DriveSensor = car.DriveIntensity;
 			SpeedSensor = car.NormalizedSpeed;
             DirectionSensor = car.Direction;
 

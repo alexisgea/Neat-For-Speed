@@ -4,18 +4,20 @@ using nfs.controllers;
 using nfs.car;
 
 namespace nfs.trainers {
+
+	/// <summary>
+	/// Implementation of the evolution car to specifically train neural net controlling cars.
+	/// </summary>
 	public class CarLayeredNetTrainer : MonoBehaviour {
 
+		// THE genetic algorythm instance
         private layered.Evolution evolution;
 
+		// variables necessary for creating an instance of the trainer
         [SerializeField] private int numberOfCar = 20;
-        public int CarAlive { private set; get; }
         [SerializeField] private Transform populationGroup;
         [SerializeField] private GameObject carPrefab;
-        private GameObject[] carPopulation;
-        private Stack<CarBehaviour> deadCars = new Stack<CarBehaviour>();
         [SerializeField] private float maxDistFitness = 1000;
-
         [SerializeField] private int[] networkLayerSizes = new int[] {4, 4, 5, 2};
         [SerializeField] private float survivorRate = 0.25f;
         [SerializeField] private float breedingRepartitionCoef = 0.6f;
@@ -29,10 +31,17 @@ namespace nfs.trainers {
         [SerializeField] private bool hiddenLayerNbMutation = true;
         [SerializeField] private float hiddenLayerNbMutationRate = 0.001f;
 
+		// variables specific to this trainer
+
+		// car related variable and reference
+		public int CarAlive { private set; get; }
+		private GameObject[] carPopulation;
+		private Stack<CarBehaviour> deadCars = new Stack<CarBehaviour>();
+
+		public int Generation { private set; get; }
         [SerializeField] private float maxGenerationTime = 90;
         private float generationStartTime;
-        public int Generation { private set; get; }
-
+	
         // world and race tracks references
         [SerializeField] private Transform world;
         [SerializeField] private GameObject[] tracks;
@@ -64,7 +73,6 @@ namespace nfs.trainers {
         /// Instantiate the base popuplation and initialises their neural networks
         ///</summary>
         private void InitializePopulation () {
-
 
             // create a new racetrack form the list
             raceTrack = GameObject.Instantiate(tracks[Random.Range(0, tracks.Length-1)]);
@@ -124,6 +132,9 @@ namespace nfs.trainers {
             generationStartTime = Time.unscaledTime;
         }
 
+		/// <summary>
+		/// Calculates the start position. of each car.
+		/// </summary>
         private Vector3 CalculateStartPosition(int i) {
             return startPosition + new Vector3( (i%2 -0.5f) * startPositioSpread, 0, - Mathf.Floor(i/2f) * startPositioSpread);
         }
@@ -143,8 +154,10 @@ namespace nfs.trainers {
             }
         }
 
-		// compute the fitness value of a network from a mix distance and average speed
-        // distance is more important than speed
+		/// <summary>
+		/// Computes the fitness value of a network. 
+		/// In this case from a mix distance and average speed where distance is more important than speed.
+		/// </summary>
         private float CalculateFitness (CarBehaviour car) {
             float distanceFitness = car.DistanceDriven / maxDistFitness;
 

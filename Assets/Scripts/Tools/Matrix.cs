@@ -278,36 +278,6 @@ namespace nfs.tools {
             }
         }
 
-        // ///<summary>
-	    // /// Redimension the Matrix by creating a new one an copying all value and returning the new one.
-        // /// This new Matrix can be set as synapse to get random synapse values in the new empty cell if there are some.
-	    // ///</summary>
-        // public Matrix Redimension(int newI, int newJ, float weightRange = -1f) {
-
-        //     Matrix redimMat = new Matrix(newI, newJ);
-
-        //     if(weightRange != -1f)
-        //         redimMat.SetAsSynapse(weightRange); // in order to get random values then we will copy the previous ones
-        //     else
-        //         redimMat.SetToZero();
-
-        //     int smallI = Mathf.Min(newI, I);
-        //     int smallJ = Mathf.Min(newJ, J);
-
-        //     for (int i = 0; i < smallI; i++) {
-        //         for (int j = 0; j < smallJ; j++) {
-        //             redimMat.matrix[i][j] = matrix[i][j];
-        //         }
-        //     }
-
-        //     matrix = redimMat.matrix;
-
-        //     I = newI;
-        //     J = newJ;
-
-        //     return this;
-        // }
-
         ///<summary>
 	    /// Redimension the Matrix by creating a new one an copying all value and returning the new one.
         /// This new Matrix can be set as synapse to get random synapse values in the new empty cell if there are some.

@@ -15,8 +15,8 @@ namespace nfs.controllers {
 		// axis input needs to go through every frame
 		// it will be the case for AI and it is important for the current implentation of the car controller
 		protected override void DerivedUpdate () {
-			DriveInput = Input.GetAxis("Vertical");
-			TurnInput = Input.GetAxis("Horizontal");
+			driveInput = Input.GetAxis("Vertical");
+			turnInput = Input.GetAxis("Horizontal");
         }
 
 	}

@@ -36,8 +36,7 @@ namespace nfs.layered {
 
         private int[] baseNetLayersSizes;
 
-
-
+		// Constructor
         public Evolution (int popSize, int[] networkLayersSizes,
                             float survivorRate = 0.25f, float breedingRepartitionCoef = 0.6f, float freshBloodCoef = 0.1f,
                             float synapsesMutationRate = 0.1f, float synapsesMutationRange = 0.1f,
@@ -67,7 +66,7 @@ namespace nfs.layered {
         ///</summary>
         private void InitializePopulation (int popSize, int[] networkLayersSizes) {
 
-            // creates the population
+            // creates the population of networks
             Population = new NeuralNet[popSize];
 
             // compute the amount of network which will have a descendance in each generation
@@ -83,11 +82,18 @@ namespace nfs.layered {
             }
         }
 
+		/// <summary>
+		/// Prepares the next generation.
+		/// It first sorts the networks by Fitness and them breeds a new generation from the best.
+		/// </summary>
         public void PrepareNextGeneration() {
             SortCurrentGeneration();
             BreedNextGeneration();
         }
 
+		/// <summary>
+		/// Sorts the current generation of networks by fitness.
+		/// </summary>
         private void SortCurrentGeneration() {
 
             if (GenerationFittestNets[GenerationFittestNets.Length-1] != null) {
@@ -135,9 +141,12 @@ namespace nfs.layered {
             }
         } 
 
-        ///<summary>
-        /// Create a new neural net which will be a slightly different copy of a given one.
-        ///</summary>
+        /// <summary>
+        /// Creates the mutated offspring.
+        /// </summary>
+        /// <returns>The mutated offspring.</returns>
+        /// <param name="neuralNet">Neural net.</param>
+        /// <param name="mutateCoef">Mutate coef.</param>
         private NeuralNet CreateMutatedOffspring(NeuralNet neuralNet, int mutateCoef) {
             
             int[] hiddenLayersSizes = neuralNet.HiddenLayersSizes;
@@ -173,6 +182,12 @@ namespace nfs.layered {
             return mutadedOffspring;
         }
 
+		/// <summary>
+		/// Mutates the nb of hidden layer.
+		/// </summary>
+		/// <param name="neuralNet">Neural net.</param>
+		/// <param name="hiddenLayersSizes">Hidden layers sizes.</param>
+		/// <param name="synapses">Synapses.</param>
         private void MutateNbOfHiddenLayer(NeuralNet neuralNet, int[] hiddenLayersSizes, Matrix[] synapses) {
             
             if(Random.value < hiddenLayerNbMutationRate) {
@@ -192,6 +207,12 @@ namespace nfs.layered {
             }
         }
 
+		/// <summary>
+		/// Mutates the nb of hidden layer neurons.
+		/// </summary>
+		/// <param name="neuralNet">Neural net.</param>
+		/// <param name="hiddenLayersSizes">Hidden layers sizes.</param>
+		/// <param name="synapses">Synapses.</param>
         private void MutateNbOfHiddenLayerNeurons(NeuralNet neuralNet, int[] hiddenLayersSizes, Matrix[] synapses) {
             if(Random.value < hiddenMbMutationRate) {
                 int layerNb = Random.Range(0, hiddenLayersSizes.Length - 1);
@@ -206,6 +227,11 @@ namespace nfs.layered {
             }
         }
 
+		/// <summary>
+		/// Mutates the synapses values.
+		/// </summary>
+		/// <param name="neuralNet">Neural net.</param>
+		/// <param name="synapses">Synapses.</param>
         private void MutateSynapsesValues(NeuralNet neuralNet, Matrix[] synapses) {
             for (int n=0; n<synapses.Length; n++) {
 
@@ -242,7 +268,12 @@ namespace nfs.layered {
             }
         }
 
-        // redimension an array of in for the hidden layers
+		/// <summary>
+		/// Redimension an array of in for the hidden layers.
+		/// </summary>
+		/// <returns>The layers nb.</returns>
+		/// <param name="currentLayers">Current layers.</param>
+		/// <param name="sizeMod">Size mod.</param>
         private int[] RedimentionLayersNb (int[] currentLayers, int sizeMod) {
             int[] newLayers = new int[currentLayers.Length + sizeMod];
             for (int i = 0; i < Mathf.Min(currentLayers.Length, newLayers.Length); i++) {
@@ -252,7 +283,12 @@ namespace nfs.layered {
             return newLayers;
         }
 
-        // redimension an array of matrix for the synapses
+		/// <summary>
+		/// Redimension an array of matrix for the synapses.
+		/// </summary>
+		/// <returns>The layers nb.</returns>
+		/// <param name="currentLayers">Current layers.</param>
+		/// <param name="sizeMod">Size mod.</param>
         private Matrix[] RedimentionLayersNb (Matrix[] currentLayers, int sizeMod) {
             Matrix[] newLayers = new Matrix[currentLayers.Length + sizeMod];
             for (int i = 0; i < Mathf.Min(currentLayers.Length, newLayers.Length); i++) {
@@ -262,8 +298,12 @@ namespace nfs.layered {
             return newLayers;
         }
 
-        // compares a given neural network to a list of other and if better stores it at the correct rank
-        // compares the network to the current generation as well as overall best network in all generations
+		/// <summary>
+		// Compares a given neural network to a list of other and if better stores it at the correct rank.
+		// Compares the network to the current generation as well as overall best network in all generations.
+		/// </summary>
+		/// <param name="fitnessRankings">Fitness rankings.</param>
+		/// <param name="fitnessContender">Fitness contender.</param>
         private void CompareFitness (NeuralNet[] fitnessRankings, NeuralNet fitnessContender) {
             int last = fitnessRankings.Length-1;
 

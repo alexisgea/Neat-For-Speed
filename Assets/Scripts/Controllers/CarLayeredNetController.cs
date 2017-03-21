@@ -4,6 +4,8 @@ using nfs.car;
 
 namespace nfs.controllers {
 
+	// this is an example implementation of a base NeuralNetController
+
     ///<summary>
 	/// Neural network controller class.
     /// Owns an instance of a neural network and updates it (ping forward).
@@ -13,46 +15,72 @@ namespace nfs.controllers {
 
         // THE Neural Network
         public layered.NeuralNet NeuralNet {set; get;}
-        // reference to the sensors for input
-        private CarSensors sensors;
-        // array to send an receive the data to the network
-        private float[] inputValues = new float[] {0f, 0f, 0f};
-        private float[] outputValues = new float[] {0f, 0f};
 
+        // array to send an receive the data to the network
+        [SerializeField] private float[] inputValues;
+        [SerializeField] private float[] outputValues;
+
+		// reference to the sensors for input
+		private CarSensors sensors;
+		// called when the car dies or is triggered for similar purpose otherwise
         public event Action <CarBehaviour> CarDeath;
 
         // equivalent of start, from the car controller class
-        protected override void DerivedStart() {
-            sensors = GetComponent<CarSensors>();
-            GetComponent<CarBehaviour>().HitSomething += OnCarHit;
-        }
+		protected override void DerivedStart() {
+			InitialiseController ();
+		}
 
-        // equivalent of update, from the car controller class
-        protected override void DerivedUpdate() {
+		// equivalent of update, from the car controller class
+		protected override void DerivedUpdate() {
 
-            // TODO change this bit to be more flexible (enum stuff?)
-            // we get input from the sensors in the array and pass it to the network who returns an array of output
-            inputValues[0] = sensors.Wall_NE;
-            inputValues[1] = sensors.Wall_N;
-            inputValues[2] = sensors.Wall_NW;
-            
-            if(NeuralNet != null) {
-                outputValues = NeuralNet.PingFwd(inputValues);
-            }
+			UpdateInputValues ();
 
-            // we send the received output to the car
-            DriveInput = outputValues[0];
-            TurnInput = outputValues[1];
+			if(NeuralNet != null) {
+				outputValues = NeuralNet.PingFwd(inputValues);
+			}
 
-            // if the car is not going forward or going backward, kill the car
-            if(DriveInput < 0.1f && !GetComponent<CarBehaviour>().Stop) {
-                Stop();         
-            }
-        }
+			UseOutputValues ();
+
+			CheckAliveStatus ();
+		}
+
+		/// <summary>
+		/// Initialises the neural net controller.
+		/// </summary>
+		private void InitialiseController() {
+			sensors = GetComponent<CarSensors>();
+			GetComponent<CarBehaviour>().HitSomething += OnCarHit;
+		}
+
+		/// <summary>
+		/// Updates the input values from the controller in the neural net.
+		/// </summary>
+		private void UpdateInputValues() {
+			//TODO implement something better with some kind of enums or other
+			inputValues[0] = sensors.Wall_NE;
+			inputValues[1] = sensors.Wall_N;
+			inputValues[2] = sensors.Wall_NW;
+		}
+
+		/// <summary>
+		/// Uses the output values from the neural net in the controller.
+		/// </summary>
+		private void UseOutputValues() {
+			driveInput = outputValues[0];
+			turnInput = outputValues[1];
+		}
+
+		/// <summary>
+		/// Checks the neural net alive status.
+		/// </summary>
+		private void CheckAliveStatus() {
+			if(driveInput < 0.1f && !GetComponent<CarBehaviour>().Stop) {
+				Stop();         
+			}
+		}
 
         ///<summary>
         /// Called by each car's colision.
-        /// Updates the car alive counter and add the car to the deadCars array to not count them multiple tiem.
         ///</summary>
         private void OnCarHit (string what) {
             // first we make sure the car hit a wall
@@ -61,6 +89,9 @@ namespace nfs.controllers {
             }
         }
 
+		/// <summary>
+		/// Stop the car and invoke the "CarDeath" event.
+		/// </summary>
         public void Stop() {
              GetComponent<CarBehaviour>().Stop = true;
 
@@ -68,8 +99,6 @@ namespace nfs.controllers {
                  CarDeath.Invoke(GetComponent<CarBehaviour>());
              }
         }
-
-        
 		
     }
 }

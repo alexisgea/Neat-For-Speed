@@ -131,7 +131,7 @@ namespace nfs.layered {
                 mat.SetValue(0, j, TanH(mat.GetValue(0, j)));
             }
         }
-
+			
         private float TanH (float t) {
             return (2f / (1f + Mathf.Exp(-2f*t))) - 1f;
         }
@@ -248,17 +248,6 @@ namespace nfs.layered {
         /// Get a specific synapse value from a synapses layer or neuron layer (for out synapse of said neuron).
         ///</summary>
         public float GetSynapseValue (int layer, int neuron, int synapse) {
-            // if(layer >= synapses.Length || neuron >= synapses[layer].J || synapse >= synapses[layer].I) {
-            //     Debug.LogError("Synapse layer " + layer + "vs" + synapses.Length +
-            //                     ", or neuron " + neuron + "vs" + synapses[layer].J +
-            //                     ", or synapse " + synapse + "vs" + synapses[layer].I +
-            //                     ", requested is not in the neural net (too high). Returning 0.");
-            //     return 0f;
-
-            // } else {
-            //     return synapses[layer].GetValue(neuron, synapse);
-            // }
-
             return synapses[layer].GetValue(neuron, synapse);
         }
 

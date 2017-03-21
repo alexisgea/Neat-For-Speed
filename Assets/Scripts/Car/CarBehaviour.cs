@@ -16,10 +16,14 @@ namespace nfs.car {
         private float steeringRate = 100f;
         private float brakingRate = 20f;
         private float acceleration = 30f;
+
         private float maxForwardSpeed = 30f;
         public float MaxForwardSpeed {get { return maxForwardSpeed; } }
+
         private float maxReverseSpeed = -10f;
-        private float aboutZero = 0.01f;
+		public float MaxReverseSpeed {get { return maxReverseSpeed; } }
+
+		private float aboutZero = 0.01f;
         private float speed = 0f;
         private float Speed {
             set {
@@ -29,20 +33,27 @@ namespace nfs.car {
             }
 			get { return speed; }
         }
+
         public bool Stop { set; get; }
 
-        // axis force related variable
-        private float forceChangeRate = 0.05f; // I made a script to check rate of value change of a keyboard axis and it was ~0.0495
-        private float driveForce = 0f;
-        private float turnForce = 0f;
+		// car controle intensity related variable (goes from -1 to 1)
+		private float controlChangeRate = 0.05f; // I made a script to check rate of value change of a keyboard axis and it was ~0.0495
+		private float driveIntensity = 0f;
+		private float turnIntensity = 0f;
 
-        // public acces to the current values of the axis in case it is need for the AI
-        public float DriveForce {
-            get { return NormalizeForce(driveForce); }
+        /// <summary>
+        /// How much the car controller is pressing on the accelerating pedal.
+        /// </summary>
+        public float DriveIntensity {
+            get { return NormalizeControl(driveIntensity); }
         }
-        public float TurnForce {
-            get { return NormalizeForce(turnForce); }
+		/// <summary>
+		/// How much the car controller is turning the wheel.
+		/// </summary>
+        public float TurnIntensity {
+            get { return NormalizeControl(turnIntensity); }
         }
+
 		public float NormalizedSpeed {
 			get { 
                 if(Speed >= 0f)
@@ -51,6 +62,9 @@ namespace nfs.car {
                     return Speed / maxReverseSpeed;
             }
 		}
+		/// <summary>
+		/// Forward or backward direction. (1 or 0)
+		/// </summary>
         public float Direction {
             get {
                 if(Speed >= 0f)
@@ -59,12 +73,18 @@ namespace nfs.car {
                     return 0f;
             }
         }
-
-        // Distance driven is used by the genetic algorythm
+			
+		/// <summary>
+		/// Distance driven is used by the genetic algorythm.
+		/// </summary>
         public float DistanceDriven { private set; get; }      
 
         // reference to the car Rigidbody
         private Rigidbody car;
+
+		/// <summary>
+		/// Occurs when the car hit something.
+		/// </summary>
         public event Action <string>HitSomething;
 
         // initiate all sort of stuff
@@ -78,9 +98,6 @@ namespace nfs.car {
         private void Update() {
             if (Stop) {
                 Brake(1f);
-
-                // if (Speed == 0f)
-                //     Reset();
             }
 
             if (Speed != 0f) {
@@ -89,8 +106,8 @@ namespace nfs.car {
             }
         }
 
-        // Both forces are actually axis values from -1 to 1
-        private float NormalizeForce(float force) {
+		// Both control (turn and drive) are actually axis values from -1 to 1 which we can normalize for the genetic algo.
+        private float NormalizeControl(float force) {
             return (force + 1f) / 2f;
         }
 
@@ -111,30 +128,30 @@ namespace nfs.car {
                 DistanceDriven += Speed * Time.deltaTime;
         }
 
-		// Modifies an axis force by reference. The idea being that an ANN should not be able
+		// Modifies an axis intensity by reference. The idea being that an ANN should not be able
         // to jump from one side of the wheel to the other to keep a human behavior.
         // This is done naturally with a keyboard or joystick, so this function enforces
         // this gradual change of value. I checked with a script to make sure this rate
         // is similar to the one with a keyboard in unity.
-        private float GetForce(ref float force, float targetForce) {
+		private float GetControlIntensity(ref float currentIntensity, float targeIntensity) {
 
             // if the target value is above the current value
-            if(targetForce > force && (targetForce - force) < forceChangeRate)
-                force = targetForce;
+            if(targeIntensity > currentIntensity && (targeIntensity - currentIntensity) < controlChangeRate)
+                currentIntensity = targeIntensity;
 
-            else if(targetForce > force)
-                force += forceChangeRate;
+            else if(targeIntensity > currentIntensity)
+                currentIntensity += controlChangeRate;
 
             // if the target value is under the current value
-            else if(targetForce < force && (force - targetForce) < forceChangeRate)
-                force = targetForce;
+            else if(targeIntensity < currentIntensity && (currentIntensity - targeIntensity) < controlChangeRate)
+                currentIntensity = targeIntensity;
             
-            else if(targetForce < force)
-                force -= forceChangeRate;
+            else if(targeIntensity < currentIntensity)
+                currentIntensity -= controlChangeRate;
             
-            force = Mathf.Clamp(force, -1f, 1f);
+            currentIntensity = Mathf.Clamp(currentIntensity, -1f, 1f);
 
-            return force;
+            return currentIntensity;
         }
 
 		// called when there is a collision
@@ -167,16 +184,16 @@ namespace nfs.car {
 		/// <summary>
 		/// Is called from the control methods to update the speed value
 		/// </summary>
-		public void Drive(float targetForce) {
+		public void Drive(float targetIntensity) {
 
             // gets the actual force gradually changed toward the targetForce
-            float force = GetForce(ref driveForce, targetForce);
+			float intensity = GetControlIntensity(ref driveIntensity, targetIntensity);
 
             if (!Stop){
-                if((Speed < 0f && force >= 0f) || (Speed > 0f && force < 0f))
-                    Brake(force);
+                if((Speed < 0f && intensity >= 0f) || (Speed > 0f && intensity < 0f))
+                    Brake(intensity);
                 else
-                    Speed += force * acceleration * Time.deltaTime;
+                    Speed += intensity * acceleration * Time.deltaTime;
             }
         }
 
@@ -184,10 +201,10 @@ namespace nfs.car {
         /// <summary>
 		/// Is called from the control methods to turn the car
 		/// </summary>
-		public void Turn(float targetForce) {
+		public void Turn(float targetIntensity) {
 
             // gets the actual force gradually changed toward the targetForce
-            float force = GetForce(ref turnForce, targetForce);
+			float intensity = GetControlIntensity(ref turnIntensity, targetIntensity);
 
             // if the speed is about zero we can't turn
             if (!Stop && (Mathf.Abs(Speed)-aboutZero)> 0f) {
@@ -196,10 +213,10 @@ namespace nfs.car {
                 float turnValue = 0f;
                 // if the speed is high it wil be harder to turn due to coriolis effects
                 if(relativeSpeed > 0.5)
-                    turnValue = force * steeringRate * (1-relativeSpeed/2.5f) * Time.deltaTime;
+                    turnValue = intensity * steeringRate * (1-relativeSpeed/2.5f) * Time.deltaTime;
                 // but if the speed is low we don't want the car to turn on it's axis
                 else
-                    turnValue = force * steeringRate * relativeSpeed * Time.deltaTime;
+                    turnValue = intensity * steeringRate * relativeSpeed * Time.deltaTime;
 
                 transform.Rotate(0f, turnValue, 0f);
             }
@@ -208,8 +225,8 @@ namespace nfs.car {
 		/// <summary>
 		/// Get the speed closer to 0 by the force and brake rate.
 		/// </summary>
-        public void Brake(float force = 0.75f) {
-            float brakeValue = brakingRate * Mathf.Abs(force) * Time.deltaTime;
+        public void Brake(float intensity = 0.75f) {
+            float brakeValue = brakingRate * Mathf.Abs(intensity) * Time.deltaTime;
             
             if(Speed > 0){
                 Speed -= brakeValue;

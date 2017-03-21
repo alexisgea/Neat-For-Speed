@@ -5,30 +5,37 @@ using nfs.controllers;
 
 namespace nfs.gui {
 
+	/// <summary>
+	/// Basic control for a spectator camera during training sessions.
+	/// </summary>
 	[RequireComponent(typeof(Camera))]
 	public class SpectatorCam : MonoBehaviour {
 
-		[SerializeField] const float rotationSpeed = 100;
-		[SerializeField] const float normalSpeed = 25;
-		[SerializeField] const float fastSpeed = 50;
-		float camSpeed = normalSpeed;
+		// camera specific variables
+		[SerializeField] private const float rotationSpeed = 100;
+		[SerializeField] private const float normalSpeed = 25;
+		[SerializeField] private const float fastSpeed = 50;
 
-		float sensitivityX = 15F;
-		float sensitivityY = 15F;
-		float minimumY = -60F;
-		float maximumY = 60F;
-		float rotationY = 0F;
+		private float camSpeed = normalSpeed;
+		private float sensitivityX = 15F;
+		private float sensitivityY = 15F;
+		private float minimumY = -60F;
+		private float maximumY = 60F;
+		private float rotationY = 0F;
 
 		
 		// Update is called once per frame
-		void Update () {
+		private void Update () {
 			CheckSpeedSwitch();
 			CheckTranslateCam();
 			CheckRotateCam();
 			CheckFocusNetwork();
 		}
 
-		void CheckSpeedSwitch() {
+		/// <summary>
+		/// Checks if the player is pressing the sprint movement key for the cam.
+		/// </summary>
+		private void CheckSpeedSwitch() {
 			if (Input.GetButtonDown("SpeedSwitch")) {
 				camSpeed = fastSpeed;
 			} else if (Input.GetButtonUp("SpeedSwitch")){
@@ -36,7 +43,10 @@ namespace nfs.gui {
 			}
 		}
 
-		void CheckTranslateCam() {
+		/// <summary>
+		/// Checks the player input for moving the car around.
+		/// </summary>
+		private void CheckTranslateCam() {
 			if(Input.GetAxis("Horizontal") != 0) {
 				transform.position += transform.right * Input.GetAxis("Horizontal") * camSpeed * Time.deltaTime;
 			}
@@ -50,10 +60,13 @@ namespace nfs.gui {
 			}
 
 		}
-
-		// script inspired from here for simplicity sake
-		// https://forum.unity3d.com/threads/looking-with-the-mouse.109250/
-		void CheckRotateCam() {
+			
+		/// <summary>
+		/// Checks the player input for rotating the cam.
+		/// script inspired from here for simplicity sake
+		/// https://forum.unity3d.com/threads/looking-with-the-mouse.109250/
+		/// </summary>
+		private void CheckRotateCam() {
 			if (Input.GetMouseButton(2)) {
 
 				float rotationX = transform.localEulerAngles.y + Input.GetAxis("Mouse X") * sensitivityX;
@@ -66,7 +79,10 @@ namespace nfs.gui {
 			}
 		}
 
-		void CheckFocusNetwork() { // add an overall "if not Input.GetMouseButton(1)"
+		/// <summary>
+		/// Checks if the player clicked on a network to focus it.
+		/// </summary>
+		private void CheckFocusNetwork() { // add an overall "if not Input.GetMouseButton(1)"
 			if (Input.GetMouseButtonDown(0)) {
 				RaycastHit hitInfo = new RaycastHit();
 				bool hit = Physics.Raycast(GetComponent<Camera>().ScreenPointToRay(Input.mousePosition), out hitInfo);

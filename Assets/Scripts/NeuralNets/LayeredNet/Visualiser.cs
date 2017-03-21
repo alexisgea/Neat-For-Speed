@@ -4,23 +4,31 @@ using System.Linq;
 
 namespace nfs.layered {
 
+	/// <summary>
+	/// Display the neural network layout on a canvas and update it.
+	/// </summary>
 	public class Visualiser : MonoBehaviour {
 
-		[SerializeField] Camera cam;
+		// reference to a camera for choosing a network
+		[SerializeField] private Camera cam;
 
-		[SerializeField] GameObject baseLayer;
-		[SerializeField] GameObject baseNeuron;
-		[SerializeField] GameObject baseSynapse;
+		// prefabs of object to display on the canvas
+		[SerializeField] private GameObject baseLayer;
+		[SerializeField] private GameObject baseNeuron;
+		[SerializeField] private GameObject baseSynapse;
 
-		int[] layersSizes;
+		// reference to the layers sizes of the current neural net to go faster
+		private int[] layersSizes;
 
-		GameObject[] layers;
-		GameObject[] neurons;
-		GameObject[] synapses;
+		// array of objected displayed on the canvas
+		private GameObject[] layers;
+		private GameObject[] neurons;
+		private GameObject[] synapses;
 
-		NeuralNet neuralNet;
+		// the current neural net
+		private NeuralNet focusedNeuralNet;
 
-		bool buildingVisualisation = false;
+		//bool buildingVisualisation = false;
 		
 		// Update is called once per frame
 		void Update () {
@@ -30,11 +38,14 @@ namespace nfs.layered {
 			// 	buildingVisualisation = false;
 			// }
 
-			if (neuralNet != null /*&& !buildingVisualisation*/) {
+			if (focusedNeuralNet != null /*&& !buildingVisualisation*/) {
 				UpdateVisualisation();
 			}
 		}
 
+		/// <summary>
+		/// Updates the neural net visualisation.
+		/// </summary>
 		void UpdateVisualisation () {
 
 			int N = 0; // neuron counter
@@ -44,12 +55,12 @@ namespace nfs.layered {
 			for (int L=0; L < layers.Length; L++) {
 				for (int n=0; n < layersSizes[L]; n++) {
 					//neurons[N].GetComponentInChildren<Text>().text = neuralNet.GetNeuronValue(L, n).ToString("F2");
-					neurons[N].transform.FindChild("value").GetComponent<Text>().text = neuralNet.GetNeuronValue(L, n).ToString("F2");
+					neurons[N].transform.FindChild("value").GetComponent<Text>().text = focusedNeuralNet.GetNeuronValue(L, n).ToString("F2");
 					
-					if (neuralNet.GetNeuronValue(L, n) >= 0) {
-						neurons[N].GetComponent<Image>().color = Color.green * neuralNet.GetNeuronValue(L, n);
+					if (focusedNeuralNet.GetNeuronValue(L, n) >= 0) {
+						neurons[N].GetComponent<Image>().color = Color.green * focusedNeuralNet.GetNeuronValue(L, n);
 					} else {
-						neurons[N].GetComponent<Image>().color = Color.red * -neuralNet.GetNeuronValue(L, n);						
+						neurons[N].GetComponent<Image>().color = Color.red * -focusedNeuralNet.GetNeuronValue(L, n);						
 					}
 
 					// the last layer doesn't have any synapses
@@ -70,6 +81,9 @@ namespace nfs.layered {
 			}
 		}
 
+		/// <summary>
+		/// Builds the neural net visualisation.
+		/// </summary>
 		void BuildVisualisation () {
 			InstantiateLayers();
 			InstantiateNeurons();
@@ -77,10 +91,12 @@ namespace nfs.layered {
 			//buildingVisualisation = true;
 		}
 
-
+		/// <summary>
+		/// Instantiates the neural net layers on the canvas.
+		/// </summary>
 		void InstantiateLayers() {
-			layers = new GameObject[neuralNet.NumberOfLayers];
-			layersSizes = neuralNet.LayersSizes;
+			layers = new GameObject[focusedNeuralNet.NumberOfLayers];
+			layersSizes = focusedNeuralNet.LayersSizes;
 
 			for (int i = 0; i < layers.Length; i++) {
 				layers[i] = GameObject.Instantiate(baseLayer);
@@ -89,6 +105,9 @@ namespace nfs.layered {
 			}
 		}
 
+		/// <summary>
+		/// Instantiates the neurons in the layers on the canvas.
+		/// </summary>
 		void InstantiateNeurons() {
 			int totalNeurons = layersSizes.Sum();
 
@@ -139,6 +158,9 @@ namespace nfs.layered {
 			}
 		}
 
+		/// <summary>
+		/// Instantiates the synapses as child of neurons on the canvas.
+		/// </summary>
 		void InstantiateSynapses() {
 			int totalSynapses = 0;
 
@@ -174,10 +196,10 @@ namespace nfs.layered {
 								};
 							line.SetPositions(linePoints);
 
-							float width = Mathf.Abs(neuralNet.GetSynapseValue(L, n, s))*0.05f;
+							float width = Mathf.Abs(focusedNeuralNet.GetSynapseValue(L, n, s))*0.05f;
 							line.widthMultiplier = width;
 
-							if (neuralNet.GetSynapseValue(L, n, s) >= 0 ) {
+							if (focusedNeuralNet.GetSynapseValue(L, n, s) >= 0 ) {
 								line.material.color = Color.green;
 							} else {
 								line.material.color = Color.red;
@@ -195,15 +217,21 @@ namespace nfs.layered {
 
 		}
 
-
+		/// <summary>
+		/// Assigns the focus network.
+		/// </summary>
+		/// <param name="newFocusNet">New focus net.</param>
 		public void AssignFocusNetwork (NeuralNet newFocusNet) {
 			ClearCurrentVisualisation();
-			neuralNet = newFocusNet;
+			focusedNeuralNet = newFocusNet;
 			BuildVisualisation ();
 		}
 
+		/// <summary>
+		/// Clears the current visualisation.
+		/// </summary>
 		public void ClearCurrentVisualisation() {
-			neuralNet = null;
+			focusedNeuralNet = null;
 
 			if (synapses != null) {
 				for (int i=0; i < synapses.Length; i++){
