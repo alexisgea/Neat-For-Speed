@@ -26,7 +26,7 @@ namespace nfs.nets.layered {
 		private GameObject[] synapses;
 
 		// the current neural net
-		private Network focusedNeuralNet;
+		private Controller focus;
 
 		//bool buildingVisualisation = false;
 		
@@ -38,7 +38,7 @@ namespace nfs.nets.layered {
 			// 	buildingVisualisation = false;
 			// }
 
-			if (focusedNeuralNet != null /*&& !buildingVisualisation*/) {
+			if (focus != null /*&& !buildingVisualisation*/) {
 				UpdateVisualisation();
 			}
 		}
@@ -55,12 +55,12 @@ namespace nfs.nets.layered {
 			for (int L=0; L < layers.Length; L++) {
 				for (int n=0; n < layersSizes[L]; n++) {
 					//neurons[N].GetComponentInChildren<Text>().text = neuralNet.GetNeuronValue(L, n).ToString("F2");
-					neurons[N].transform.FindChild("value").GetComponent<Text>().text = focusedNeuralNet.GetNeuronValue(L, n).ToString("F2");
+					neurons[N].transform.FindChild("value").GetComponent<Text>().text = focus.NeuralNet.GetNeuronValue(L, n).ToString("F2");
 					
-					if (focusedNeuralNet.GetNeuronValue(L, n) >= 0) {
-						neurons[N].GetComponent<Image>().color = Color.green * focusedNeuralNet.GetNeuronValue(L, n);
+					if (focus.NeuralNet.GetNeuronValue(L, n) >= 0) {
+						neurons[N].GetComponent<Image>().color = Color.green * focus.NeuralNet.GetNeuronValue(L, n);
 					} else {
-						neurons[N].GetComponent<Image>().color = Color.red * -focusedNeuralNet.GetNeuronValue(L, n);						
+						neurons[N].GetComponent<Image>().color = Color.red * -focus.NeuralNet.GetNeuronValue(L, n);						
 					}
 
 					// the last layer doesn't have any synapses
@@ -95,8 +95,8 @@ namespace nfs.nets.layered {
 		/// Instantiates the neural net layers on the canvas.
 		/// </summary>
 		void InstantiateLayers() {
-			layers = new GameObject[focusedNeuralNet.NumberOfLayers];
-			layersSizes = focusedNeuralNet.LayersSizes;
+			layers = new GameObject[focus.NeuralNet.NumberOfLayers];
+			layersSizes = focus.NeuralNet.LayersSizes;
 
 			for (int i = 0; i < layers.Length; i++) {
 				layers[i] = GameObject.Instantiate(baseLayer);
@@ -120,30 +120,18 @@ namespace nfs.nets.layered {
 				neurons[i].transform.SetParent(layers[L].transform, false);
 				
 				if (L == 0) {
-					switch(i) {
-						case(0):
-							neurons[i].transform.FindChild("label").GetComponent<Text>().text = "Sensor NW";
-							break;
-
-						case(1):
-							neurons[i].transform.FindChild("label").GetComponent<Text>().text = "Sensor N";
-							break;
-
-						case(2):
-							neurons[i].transform.FindChild("label").GetComponent<Text>().text = "Sensor NE";
-							break;
-						
-						case(3):
-							neurons[i].transform.FindChild("label").GetComponent<Text>().text = "Bias input";
-							break;
+					if(i < focus.InputNames.Length) {
+						neurons[i].transform.FindChild("label").GetComponent<Text>().text = focus.InputNames[i];						
+					} else {
+						neurons[i].transform.FindChild("label").GetComponent<Text>().text = "Bias";
 					}
 
 				} else 	if (L == layersSizes.Length -1) { // last layer
-					if(i == neurons.Length-2)
-						neurons[i].transform.FindChild("label").GetComponent<Text>().text = "Drive";
-
-					else if(i == neurons.Length-1)
-						neurons[i].transform.FindChild("label").GetComponent<Text>().text = "Turn";
+					if(neurons.Length-1 - i < focus.OutputNames.Length) {
+						neurons[i].transform.FindChild("label").GetComponent<Text>().text = focus.OutputNames[neurons.Length-1 - i];						
+					} else {
+						neurons[i].transform.FindChild("label").GetComponent<Text>().text = "";
+					}
 
 				} else {
 					neurons[i].transform.FindChild("label").GetComponent<Text>().text = "";
@@ -196,10 +184,10 @@ namespace nfs.nets.layered {
 								};
 							line.SetPositions(linePoints);
 
-							float width = Mathf.Abs(focusedNeuralNet.GetSynapseValue(L, n, s))*0.05f;
+							float width = Mathf.Abs(focus.NeuralNet.GetSynapseValue(L, n, s))*0.05f;
 							line.widthMultiplier = width;
 
-							if (focusedNeuralNet.GetSynapseValue(L, n, s) >= 0 ) {
+							if (focus.NeuralNet.GetSynapseValue(L, n, s) >= 0 ) {
 								line.material.color = Color.green;
 							} else {
 								line.material.color = Color.red;
@@ -221,9 +209,9 @@ namespace nfs.nets.layered {
 		/// Assigns the focus network.
 		/// </summary>
 		/// <param name="newFocusNet">New focus net.</param>
-		public void AssignFocusNetwork (Network newFocusNet) {
+		public void AssignFocusNetwork (Controller newFocusNet) {
 			ClearCurrentVisualisation();
-			focusedNeuralNet = newFocusNet;
+			focus = newFocusNet;
 			BuildVisualisation ();
 		}
 
@@ -231,7 +219,7 @@ namespace nfs.nets.layered {
 		/// Clears the current visualisation.
 		/// </summary>
 		public void ClearCurrentVisualisation() {
-			focusedNeuralNet = null;
+			focus = null;
 
 			if (synapses != null) {
 				for (int i=0; i < synapses.Length; i++){

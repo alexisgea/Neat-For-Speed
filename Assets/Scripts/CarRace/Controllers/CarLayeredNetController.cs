@@ -27,7 +27,9 @@ namespace nfs.car {
 
 		protected override void InitInputAndOutputArrays() {
 			inputValues = new float[3];
+			InputNames = new string[3] {"sensor NW", "sensor N", "sensor NE"};
 			outputValues = new float[2];
+			OutputNames = new string[2] {"Drive", "Turn"};
 		}
 
 		/// <summary>

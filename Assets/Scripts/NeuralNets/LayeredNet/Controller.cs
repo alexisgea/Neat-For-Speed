@@ -13,7 +13,10 @@ namespace nfs.nets.layered {
 
 		// array to send an receive the data to the network
 		protected float[] inputValues;
+		public string[] InputNames {protected set; get;}
+
 		protected float[] outputValues;
+		public string[] OutputNames {protected set; get;}
 
 		public event Action <Controller> Death;
 

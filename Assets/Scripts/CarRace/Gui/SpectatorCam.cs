@@ -85,8 +85,8 @@ namespace nfs.gui {
 				RaycastHit hitInfo = new RaycastHit();
 				bool hit = Physics.Raycast(GetComponent<Camera>().ScreenPointToRay(Input.mousePosition), out hitInfo);
 
-				if (hit && hitInfo.transform.tag == "car" && hitInfo.transform.GetComponent<CarLayeredNetController>() != null)	{
-					nets.layered.Network focusNet = hitInfo.transform.GetComponent<CarLayeredNetController>().NeuralNet;
+				if (hit && hitInfo.transform.tag == "car" && hitInfo.transform.GetComponent<nets.layered.Controller>() != null)	{
+					nets.layered.Controller focusNet = hitInfo.transform.GetComponent<nets.layered.Controller>();
 					FindObjectOfType<nets.layered.Visualiser>().AssignFocusNetwork(focusNet);
 				}
 			} else if (Input.GetMouseButtonDown(1)) { // change to mouse wheel click if to many errors
