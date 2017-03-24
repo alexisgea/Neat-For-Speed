@@ -84,6 +84,11 @@ namespace nfs.nets.layered {
         ///</summary>
         public Network(int[] layersSizes) {
 
+            if(layersSizes == null || layersSizes.Length < 2) {
+                Debug.LogError("Cannot create a network that has less than 2 layer.");
+                return;
+            }
+
             Id = Time.time;
             // each layer is one line of neuron
             inputNeurons = new Matrix(1, layersSizes[0]).SetToOne();

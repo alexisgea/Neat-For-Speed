@@ -12,7 +12,7 @@ namespace nfs.nets.layered{
         [SerializeField] protected int population = 20;
         [SerializeField] protected Transform populationGroup;
         [SerializeField] protected GameObject networkHost;
-        [SerializeField] protected int[] networkLayerSizes = new int[] {4, 4, 5, 2};
+        [SerializeField] protected int[] networkLayersSizes = new int[] {4, 4, 5, 2};
         [SerializeField] protected float survivorRate = 0.25f;
         [SerializeField] protected float breedingRepartitionCoef = 0.6f;
         [SerializeField] protected float freshBloodCoef = 0.1f;
@@ -40,7 +40,7 @@ namespace nfs.nets.layered{
 		 // Initialises the base popuplations
         private void Start() {
             
-            evolution = new nets.layered.Evolution(population, networkLayerSizes,
+            evolution = new nets.layered.Evolution(population, networkLayersSizes,
                                                 survivorRate, breedingRepartitionCoef, freshBloodCoef,
                                                 synapsesMutationRate, synapsesMutationRange,
                                                 inputNbMutation, inputNbMutationRate,
