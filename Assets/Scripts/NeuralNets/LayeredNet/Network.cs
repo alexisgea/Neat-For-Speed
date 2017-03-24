@@ -1,14 +1,14 @@
 ﻿using UnityEngine;
 using nfs.tools;
 
-namespace nfs.layered {
+namespace nfs.nets.layered {
 
     ///<summary>
     /// Neural network class. This is a fully connected deep layered network
     /// It can have varying number of neurons and layers.
     /// The network always has a single bias input neuron.
     ///</summary>
-    public class NeuralNet {
+    public class Network {
 
         public float Id {set; get; }
 
@@ -82,7 +82,7 @@ namespace nfs.layered {
         /// Requires a given number of input, number given of output
         /// and an array for the hidden layers with each element being the size of a different hidden layer.!--
         ///</summary>
-        public NeuralNet(int[] layersSizes) {
+        public Network(int[] layersSizes) {
 
             Id = Time.time;
             // each layer is one line of neuron
@@ -107,9 +107,9 @@ namespace nfs.layered {
         ///<summary>
         /// Creates and return a deep clone of the network.
         ///</summary>
-        public NeuralNet GetClone () {
+        public Network GetClone () {
 
-            NeuralNet clone = new NeuralNet(this.LayersSizes);
+            Network clone = new Network(this.LayersSizes);
             clone.InsertSynapses(this.GetSynapsesClone());
             clone.FitnessScore = this.FitnessScore;
 

@@ -170,10 +170,8 @@ namespace nfs.car {
 		/// <summary>
 		/// Resets the car state to start again.
 		/// </summary>
-        public void Reset(Vector3 position, Quaternion rotation) {
+        public void Reset() {
             car.velocity = Vector3.zero;
-            transform.position = position;
-            transform.rotation = rotation;
             DistanceDriven = 0;
             Stop = false;
         }

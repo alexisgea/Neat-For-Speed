@@ -1,7 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using nfs.controllers;
+﻿using UnityEngine;
+using nfs.car;
 
 namespace nfs.gui {
 
@@ -88,11 +86,11 @@ namespace nfs.gui {
 				bool hit = Physics.Raycast(GetComponent<Camera>().ScreenPointToRay(Input.mousePosition), out hitInfo);
 
 				if (hit && hitInfo.transform.tag == "car" && hitInfo.transform.GetComponent<CarLayeredNetController>() != null)	{
-					layered.NeuralNet focusNet = hitInfo.transform.GetComponent<CarLayeredNetController>().NeuralNet;
-					FindObjectOfType<layered.Visualiser>().AssignFocusNetwork(focusNet);
+					nets.layered.Network focusNet = hitInfo.transform.GetComponent<CarLayeredNetController>().NeuralNet;
+					FindObjectOfType<nets.layered.Visualiser>().AssignFocusNetwork(focusNet);
 				}
 			} else if (Input.GetMouseButtonDown(1)) { // change to mouse wheel click if to many errors
-				FindObjectOfType<layered.Visualiser>().ClearCurrentVisualisation();
+				FindObjectOfType<nets.layered.Visualiser>().ClearCurrentVisualisation();
 			}
 		}
 

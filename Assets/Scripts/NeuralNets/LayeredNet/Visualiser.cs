@@ -2,7 +2,7 @@
 using UnityEngine.UI;
 using System.Linq;
 
-namespace nfs.layered {
+namespace nfs.nets.layered {
 
 	/// <summary>
 	/// Display the neural network layout on a canvas and update it.
@@ -26,7 +26,7 @@ namespace nfs.layered {
 		private GameObject[] synapses;
 
 		// the current neural net
-		private NeuralNet focusedNeuralNet;
+		private Network focusedNeuralNet;
 
 		//bool buildingVisualisation = false;
 		
@@ -221,7 +221,7 @@ namespace nfs.layered {
 		/// Assigns the focus network.
 		/// </summary>
 		/// <param name="newFocusNet">New focus net.</param>
-		public void AssignFocusNetwork (NeuralNet newFocusNet) {
+		public void AssignFocusNetwork (Network newFocusNet) {
 			ClearCurrentVisualisation();
 			focusedNeuralNet = newFocusNet;
 			BuildVisualisation ();

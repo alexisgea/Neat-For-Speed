@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using nfs.tools;
 
-namespace nfs.layered {
+namespace nfs.nets.layered {
 
     ///<summary>
     /// All the different time of synapses mutation.
@@ -30,9 +30,9 @@ namespace nfs.layered {
         private int breedingSample;
 
         public int PopulationSize {get {return Population.Length;}}
-        public NeuralNet[] Population {private set; get;}
-        public  NeuralNet[] AlltimeFittestNets {private set; get;}
-        public NeuralNet[] GenerationFittestNets {private set; get;}
+        public Network[] Population {private set; get;}
+        public  Network[] AlltimeFittestNets {private set; get;}
+        public Network[] GenerationFittestNets {private set; get;}
 
         private int[] baseNetLayersSizes;
 
@@ -67,18 +67,18 @@ namespace nfs.layered {
         private void InitializePopulation (int popSize, int[] networkLayersSizes) {
 
             // creates the population of networks
-            Population = new NeuralNet[popSize];
+            Population = new Network[popSize];
 
             // compute the amount of network which will have a descendance in each generation
             breedingSample = (int)(PopulationSize*survivorRate);
             breedingSample = breedingSample < 1 ? 1 : breedingSample;
             
             // create the best fitness reference
-            AlltimeFittestNets = new NeuralNet[breedingSample];
-            GenerationFittestNets = new NeuralNet[breedingSample];
+            AlltimeFittestNets = new Network[breedingSample];
+            GenerationFittestNets = new Network[breedingSample];
 
             for (int i=0; i < PopulationSize; i++) {
-                Population[i] = new NeuralNet(networkLayersSizes);
+                Population[i] = new Network(networkLayersSizes);
             }
         }
 
@@ -133,7 +133,7 @@ namespace nfs.layered {
                     }
 
                 } else { // fresh blood (10%)
-                    Population[i] = new NeuralNet(baseNetLayersSizes);   
+                    Population[i] = new Network(baseNetLayersSizes);   
                 }
 
                 if(k>=breedingSample)
@@ -147,7 +147,7 @@ namespace nfs.layered {
         /// <returns>The mutated offspring.</returns>
         /// <param name="neuralNet">Neural net.</param>
         /// <param name="mutateCoef">Mutate coef.</param>
-        private NeuralNet CreateMutatedOffspring(NeuralNet neuralNet, int mutateCoef) {
+        private Network CreateMutatedOffspring(Network neuralNet, int mutateCoef) {
             
             int[] hiddenLayersSizes = neuralNet.HiddenLayersSizes;
             Matrix[] synapses = neuralNet.GetSynapsesClone();
@@ -175,7 +175,7 @@ namespace nfs.layered {
                 layerSizes[i] = hiddenLayersSizes[i-1];
             } 
 
-            NeuralNet mutadedOffspring = new NeuralNet(layerSizes);
+            Network mutadedOffspring = new Network(layerSizes);
 
             mutadedOffspring.InsertSynapses(synapses);
 
@@ -188,7 +188,7 @@ namespace nfs.layered {
 		/// <param name="neuralNet">Neural net.</param>
 		/// <param name="hiddenLayersSizes">Hidden layers sizes.</param>
 		/// <param name="synapses">Synapses.</param>
-        private void MutateNbOfHiddenLayer(NeuralNet neuralNet, int[] hiddenLayersSizes, Matrix[] synapses) {
+        private void MutateNbOfHiddenLayer(Network neuralNet, int[] hiddenLayersSizes, Matrix[] synapses) {
             
             if(Random.value < hiddenLayerNbMutationRate) {
                 if (Random.value < 0.5f && hiddenLayersSizes.Length > 1) { // random to get positive vs negative value
@@ -213,7 +213,7 @@ namespace nfs.layered {
 		/// <param name="neuralNet">Neural net.</param>
 		/// <param name="hiddenLayersSizes">Hidden layers sizes.</param>
 		/// <param name="synapses">Synapses.</param>
-        private void MutateNbOfHiddenLayerNeurons(NeuralNet neuralNet, int[] hiddenLayersSizes, Matrix[] synapses) {
+        private void MutateNbOfHiddenLayerNeurons(Network neuralNet, int[] hiddenLayersSizes, Matrix[] synapses) {
             if(Random.value < hiddenMbMutationRate) {
                 int layerNb = Random.Range(0, hiddenLayersSizes.Length - 1);
                 if (Random.value < 0.5f && hiddenLayersSizes[layerNb] > 1) { // random to get positive vs negative value
@@ -232,7 +232,7 @@ namespace nfs.layered {
 		/// </summary>
 		/// <param name="neuralNet">Neural net.</param>
 		/// <param name="synapses">Synapses.</param>
-        private void MutateSynapsesValues(NeuralNet neuralNet, Matrix[] synapses) {
+        private void MutateSynapsesValues(Network neuralNet, Matrix[] synapses) {
             for (int n=0; n<synapses.Length; n++) {
 
                 for (int i = 0; i < synapses[n].I; i++) {
@@ -304,7 +304,7 @@ namespace nfs.layered {
 		/// </summary>
 		/// <param name="fitnessRankings">Fitness rankings.</param>
 		/// <param name="fitnessContender">Fitness contender.</param>
-        private void CompareFitness (NeuralNet[] fitnessRankings, NeuralNet fitnessContender) {
+        private void CompareFitness (Network[] fitnessRankings, Network fitnessContender) {
             int last = fitnessRankings.Length-1;
 
             // first we take care of the first case of an empty array (no other contender yet)
@@ -323,7 +323,7 @@ namespace nfs.layered {
                         fitnessRankings[i] = fitnessContender;
                         fitnessRankings[i + 1] = null;
                     } else if(fitnessRankings[i].FitnessScore < fitnessContender.FitnessScore) {
-                        NeuralNet stepDown = fitnessRankings[i];
+                        Network stepDown = fitnessRankings[i];
                         fitnessRankings[i] = fitnessContender;
                         fitnessRankings[i + 1] = stepDown;
 
