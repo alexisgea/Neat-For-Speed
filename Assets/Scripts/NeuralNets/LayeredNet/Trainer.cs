@@ -4,6 +4,11 @@ using nfs.tools;
 
 namespace nfs.nets.layered{
 
+    ///<summary>
+    /// All the different time of synapses mutation.
+    ///</summary>
+    public enum MutationType { additive, multiply, reverse, replace, nullify }
+
 	public abstract class Trainer : MonoBehaviour {
 
 		// variables necessary for creating an instance of the trainer
