@@ -21,25 +21,6 @@ namespace nfs.nets.layered {
 		public event Action <Controller> Death;
 
 		// start
-		private void Start() {
-			
-			InitialiseController ();
-		}
-
-		// update
-		private void Update() {
-
-			InitInputAndOutputArrays();
-			UpdateInputValues ();
-
-			if(NeuralNet != null) {
-				outputValues = NeuralNet.PingFwd(inputValues);
-			}
-
-			UseOutputValues ();
-			CheckAliveStatus ();
-		}
-
 		protected abstract void InitInputAndOutputArrays();
 
 		/// <summary>
@@ -61,6 +42,26 @@ namespace nfs.nets.layered {
 		/// Checks the neural net alive status.
 		/// </summary>
 		protected abstract void CheckAliveStatus();
+		
+		protected virtual void Start() {
+			
+			InitialiseController ();
+		}
+
+		// update
+		protected virtual void Update() {
+
+			InitInputAndOutputArrays();
+			UpdateInputValues ();
+
+			if(NeuralNet != null) {
+				outputValues = NeuralNet.PingFwd(inputValues);
+			}
+
+			UseOutputValues ();
+			CheckAliveStatus ();
+		}
+
 
 		public virtual void Kill() {
 			NeuralNet.FitnessScore = CalculateFitness();

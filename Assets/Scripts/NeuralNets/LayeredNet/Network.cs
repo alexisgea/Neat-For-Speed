@@ -75,8 +75,6 @@ namespace nfs.nets.layered {
             }
         }
 
-        
-
         ///<summary>
         /// Layered neural network constructor.
         /// Requires a given number of input, number given of output
@@ -120,11 +118,6 @@ namespace nfs.nets.layered {
 
             return clone;
         }
-
-        // public float StandardSynapseRange (int J) {
-        //     return 2f / Mathf.Sqrt(J);
-        // }
-
 
         // this is to pass the activation function on the neuron value and on each layer
         // a layer cannot have more than one line so we don't loop through the I
@@ -212,13 +205,6 @@ namespace nfs.nets.layered {
         /// Get a specific neuron's value.
         ///</summary>
         public float GetNeuronValue(int layer, int neuron) {
-            // if(layer >= NumberOfLayers-1 || neuron >= GetNeuronLayerValues(layer).Length) {
-            //     Debug.LogError("Synapse layer or neuron requested is not in the neural net (too high). Returning 0.");
-            //     return 0f;
-
-            // } else {
-            //     return  GetNeuronLayerValues(layer)[neuron];
-            // }
             return  GetNeuronLayerValues(layer)[neuron];
 
         }
