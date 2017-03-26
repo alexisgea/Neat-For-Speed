@@ -146,6 +146,11 @@ namespace nfs.nets.layered {
         /// Process the inputs forward to get outputs in the network.
         ///</summary>
 		public float[] PingFwd(float[] sensorsValues) {
+
+			if (sensorsValues.Length == 0) {
+				Debug.LogError("Input values are null, returning from ping forward.");
+				return;
+			}
             
             // we set the inputs neurons values and ignore the missmatch as there is a bias neuron
             inputNeurons.SetLineValues(0, sensorsValues, true); 

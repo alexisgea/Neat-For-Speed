@@ -5,25 +5,24 @@ namespace nfs.car {
 
     /// <summary>
     /// Class controlling the car, acceleration, braking and turning.
-    /// The player controller or ANN can call the control function with an intensity optional parameter:
-    /// The intensity is 0.75 by default for a simple integration and can be between 0 and 1 for more complexity.
+    /// The player controller or ANN can call the control function.
     /// Available controls are Drive(), Turn(), Brake()
     /// </summary>
     [RequireComponent(typeof(Rigidbody))]
     public class CarBehaviour : MonoBehaviour {
 
         // car behavior related variables
-        private float steeringRate = 100f;
-        private float brakingRate = 20f;
-        private float acceleration = 30f;
+        [SerializeField] private float steeringRate = 100f;
+		[SerializeField] private float brakingRate = 20f;
+		[SerializeField] private float acceleration = 30f;
 
-        private float maxForwardSpeed = 30f;
+		[SerializeField] private float maxForwardSpeed = 30f;
         public float MaxForwardSpeed {get { return maxForwardSpeed; } }
 
-        private float maxReverseSpeed = -10f;
+		[SerializeField] private float maxReverseSpeed = -10f;
 		public float MaxReverseSpeed {get { return maxReverseSpeed; } }
 
-		private float aboutZero = 0.01f;
+		private const float aboutZero = 0.01f;
         private float speed = 0f;
         private float Speed {
             set {
@@ -33,11 +32,9 @@ namespace nfs.car {
             }
 			get { return speed; }
         }
-
-        public bool Stop { set; get; }
-
+			
 		// car controle intensity related variable (goes from -1 to 1)
-		private float controlChangeRate = 0.05f; // I made a script to check rate of value change of a keyboard axis and it was ~0.0495
+		private const float controlChangeRate = 0.05f; // I made a script to check rate of value change of a keyboard axis and it was ~0.0495
 		private float driveIntensity = 0f;
 		private float turnIntensity = 0f;
 
@@ -53,7 +50,10 @@ namespace nfs.car {
         public float TurnIntensity {
             get { return NormalizeControl(turnIntensity); }
         }
-
+		/// <summary>
+		/// Gets the normalized speed.
+		/// </summary>
+		/// <value>The normalized speed.</value>
 		public float NormalizedSpeed {
 			get { 
                 if(Speed >= 0f)
@@ -79,7 +79,7 @@ namespace nfs.car {
 		/// </summary>
         public float DistanceDriven { private set; get; }      
 
-        // reference to the car Rigidbody
+        // Reference to the car Rigidbody.
         private Rigidbody car;
 
 		/// <summary>
@@ -87,52 +87,65 @@ namespace nfs.car {
 		/// </summary>
         public event Action <string>HitSomething;
 
-        // initiate all sort of stuff
+        /// <summary>
+        /// Monobehaviour start.
+        /// </summary>
         private void Start() {
             car = GetComponent<Rigidbody>();
-            Stop = false;
             DistanceDriven = 0;
         }
 
-        // Updates the car movement if speed not at 0 and reset the car if necessary
+		/// <summary>
+		/// Monobehaviour update.
+		/// </summary>
         private void Update() {
-            if (Stop) {
-                Brake(1f);
-            }
 
-            if (Speed != 0f) {
+			if (Speed != 0f) {
                 MoveCar();
                 FrictionEffect();
             }
         }
 
-		// Both control (turn and drive) are actually axis values from -1 to 1 which we can normalize for the genetic algo.
+		/// <summary>
+		/// Both control (turn and drive) are actually axis values from -1 to 1 which we can normalize for the genetic algo.
+		/// </summary>
+		/// <returns>The control.</returns>
+		/// <param name="force">Force.</param>
         private float NormalizeControl(float force) {
             return (force + 1f) / 2f;
         }
 
-		// Default friction slow down effect running each frame
-        // it will completly compensate acceleration toward max speed, enforcing it
+		/// <summary>
+		/// Default friction slow down effect running each frame.
+		/// It will completly compensate acceleration toward max speed, enforcing it.
+		/// </summary>
         private void FrictionEffect() {
-			if(Speed > 0)
-                Speed -= acceleration * Speed/maxForwardSpeed * Time.deltaTime;
-			else
-				Speed += acceleration * Speed/maxReverseSpeed * Time.deltaTime;
+			if (Speed > 0) {
+				Speed -= acceleration * Speed / maxForwardSpeed * Time.deltaTime;
+
+			} else {
+				Speed += acceleration * Speed / maxReverseSpeed * Time.deltaTime;
+			}
         }
 
-
-		// Updates the car position each frame depending on speed.
+		/// <summary>
+		/// Updates the car position each frame depending on speed.
+		/// </summary>
         private void MoveCar() {
             car.MovePosition(transform.position + transform.forward * Speed * Time.deltaTime);
-            if(!Stop)
-                DistanceDriven += Speed * Time.deltaTime;
+			DistanceDriven += Speed * Time.deltaTime;
         }
 
-		// Modifies an axis intensity by reference. The idea being that an ANN should not be able
-        // to jump from one side of the wheel to the other to keep a human behavior.
-        // This is done naturally with a keyboard or joystick, so this function enforces
-        // this gradual change of value. I checked with a script to make sure this rate
-        // is similar to the one with a keyboard in unity.
+		/// <summary>
+		/// Modifies an axis intensity by reference. The idea being that an ANN should not be able
+		/// to jump from one side of the wheel to the other to keep a human behavior.
+		/// This is done naturally with a keyboard or joystick, so this function enforces
+		/// this gradual change of value. I checked with a script to make sure this rate
+		/// is similar to the one with a keyboard in unity.
+		/// </summary>
+		/// <returns>The control intensity.</returns>
+		/// <param name="currentIntensity">Current intensity.</param>
+		/// <param name="targeIntensity">Targe intensity.</param>
 		private float GetControlIntensity(ref float currentIntensity, float targeIntensity) {
 
             // if the target value is above the current value
@@ -154,8 +167,11 @@ namespace nfs.car {
             return currentIntensity;
         }
 
-		// called when there is a collision
-        private void OnTriggerEnter(Collider other) {
+        /// <summary>
+		/// Raises the trigger enter event when there is a collision.
+        /// </summary>
+        /// <param name="other">Other.</param>
+		private void OnTriggerEnter(Collider other) {
             RaiseHitSomething(other.gameObject.tag);
         }
 
@@ -173,11 +189,7 @@ namespace nfs.car {
         public void Reset() {
             car.velocity = Vector3.zero;
             DistanceDriven = 0;
-            Stop = false;
         }
-
-
-		// Public Control Intention Methods
 
 		/// <summary>
 		/// Is called from the control methods to update the speed value
@@ -187,12 +199,12 @@ namespace nfs.car {
             // gets the actual force gradually changed toward the targetForce
 			float intensity = GetControlIntensity(ref driveIntensity, targetIntensity);
 
-            if (!Stop){
-                if((Speed < 0f && intensity >= 0f) || (Speed > 0f && intensity < 0f))
-                    Brake(intensity);
-                else
-                    Speed += intensity * acceleration * Time.deltaTime;
-            }
+			if ((Speed < 0f && intensity >= 0f) || (Speed > 0f && intensity < 0f)) {
+				Brake (intensity);
+
+			} else {
+				Speed += intensity * acceleration * Time.deltaTime;
+			}
         }
 
         // TODO Need to somehow improve the function to not be just rotating on the axis but dependent on where the wheels are pointing
@@ -205,7 +217,7 @@ namespace nfs.car {
 			float intensity = GetControlIntensity(ref turnIntensity, targetIntensity);
 
             // if the speed is about zero we can't turn
-            if (!Stop && (Mathf.Abs(Speed)-aboutZero)> 0f) {
+            if ((Mathf.Abs(Speed)-aboutZero)> 0f) {
                 float relativeSpeed = Speed >= 0 ? Speed / maxForwardSpeed : Speed / maxReverseSpeed;
                 
                 float turnValue = 0f;

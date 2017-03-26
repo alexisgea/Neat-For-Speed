@@ -3,7 +3,7 @@ using System;
 
 namespace nfs.car {
 
-	// this is an example implementation of a base NeuralNetController
+	// this is an example implementation of a base layered net controller
 
     ///<summary>
 	/// Neural network controller class.
@@ -22,27 +22,34 @@ namespace nfs.car {
 
 		private float driveInput;
 		private float turnInput;
-		private float startTime;
-		private float maxDistFitness;
 
+		/// <summary>
+		/// Generation start time which needs to be set in the trainer implementation.
+		/// </summary>
+		/// <value>The start time.</value>
+		public float StartTime {set; get;}
+		/// <summary>
+		/// Distance use to get a normalised value in the fitness calculation, needs to be set in the trainer implementation.
+		/// </summary>
+		/// <value>The max dist fitness.</value>
+		public float MaxDistFitness {set; get;} 
+
+			
+		// we initialise inputs and outputs array for values and names
 		protected override void InitInputAndOutputArrays() {
+			// inputs and outputs values are already created from the neural net itself
+			// but we want a bias neuron so we will transpit one input length and thus re-initialise it
+			// output values NEEDS to be the same though, so no need to redo-it
 			inputValues = new float[3];
 			InputNames = new string[3] {"sensor NW", "sensor N", "sensor NE"};
-			outputValues = new float[2];
 			OutputNames = new string[2] {"Drive", "Turn"};
 		}
 
-		/// <summary>
-		/// Initialises the neural net controller.
-		/// </summary>
+		// we get the references to the necessary component and suscribe to some events
 		protected override void InitialiseController() {
 			car = GetComponent<CarBehaviour>();
 			sensors = GetComponent<CarSensors>();
 			car.HitSomething += OnCarHit;
-
-			// maybe use something like a signal for the time and GetTrackLengh for distance
-			startTime = Time.unscaledDeltaTime;
-			maxDistFitness = 500f;
 		}
 
 		/// <summary>
@@ -70,7 +77,7 @@ namespace nfs.car {
 		/// Checks the neural net alive status.
 		/// </summary>
 		protected override void CheckAliveStatus() {
-			if(driveInput < 0.1f && !car.Stop) {
+			if(driveInput < 0.1f /*&& !car.Stop*/) {
 				Kill();         
 			}
 		}
@@ -85,19 +92,10 @@ namespace nfs.car {
             }
         }
 
-
-		/// <summary>
-		/// Stop the car and invoke the "CarDeath" event.
-		/// </summary>
-        public override void Kill() {
-             base.Kill();
-			 car.Stop = true;	 
-        }
-
 		public override void Reset(Vector3 position, Quaternion orientation) {
 			base.Reset(position, orientation);
 			car.Reset();
-			startTime = Time.unscaledTime;
+			StartTime = Time.unscaledTime;
 		}
 
 		/// <summary>
@@ -105,9 +103,9 @@ namespace nfs.car {
 		/// In this case from a mix distance and average speed where distance is more important than speed.
 		/// </summary>
         protected override float CalculateFitness () {
-            float distanceFitness = car.DistanceDriven < 1f ? 0f :car.DistanceDriven / maxDistFitness;
+            float distanceFitness = car.DistanceDriven < 1f ? 0f :car.DistanceDriven / MaxDistFitness;
 
-            float timeElapsed = (Time.unscaledTime - startTime);
+            float timeElapsed = (Time.unscaledTime - StartTime);
             float speedFitness = timeElapsed <= 1? 0f : (car.DistanceDriven / timeElapsed) / car.MaxForwardSpeed;
 
             float fitness = distanceFitness + distanceFitness * speedFitness;

@@ -46,15 +46,17 @@ namespace nfs.nets.layered{
 
 
         // Abstract methods that HAVE TO be implemented
-        protected abstract void InitializeWorld();
+        protected abstract void InitialiseWorld();
+		protected abstract void PostInitialisation ();
         protected abstract void RefreshWorld();
-
+		protected abstract void RefreshHosts ();
 
 
 		 // Initialises the base popuplations
         protected virtual void Start() {
-            InitializeWorld();
+            InitialiseWorld();
             InitializePopulation();
+			PostInitialisation ();
             
         }
 
@@ -107,6 +109,7 @@ namespace nfs.nets.layered{
                         " all time best fitness:" + alltimeFittestNets[0].FitnessScore);
                         
             RefreshWorld();
+			RefreshHosts ();
             ResetHostsPositions();
 
             // all is ready and set to start for the training

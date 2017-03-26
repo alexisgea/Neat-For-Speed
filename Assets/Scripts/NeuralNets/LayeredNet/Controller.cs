@@ -4,11 +4,16 @@ using System;
 namespace nfs.nets.layered {
 
 	/// <summary>
-	/// Base implementation for a neural net controller.
+	/// Base class for a neural net controller to be inherited.
+	/// The input and output initialisation must be overriden but the rest is obtional.
+	/// You can find an example implementaiton in the car simulation.
 	/// </summary>
 	public abstract class Controller : MonoBehaviour {
 
-		// THE Neural Network
+		/// <summary>
+		/// THE Neural Net brain of this beautiful creature.
+		/// </summary>
+		/// <value>The neural net.</value>
 		public Network NeuralNet {set; get;}
 
 		// array to send an receive the data to the network
@@ -18,11 +23,17 @@ namespace nfs.nets.layered {
 		protected float[] outputValues;
 		public string[] OutputNames {protected set; get;}
 
+		/// <summary>
+		/// Death event of the controller and it's neural net
+		/// </summary>
 		public event Action <Controller> Death;
+		/// <summary>
+		/// Gets or sets a value indicating whether this instance is dead.
+		/// </summary>
+		/// <value><c>true</c> if this instance is dead; otherwise, <c>false</c>.</value>
+		public bool IsDead { set; get;}
 
-		// start
-		protected abstract void InitInputAndOutputArrays();
-
+	
 		/// <summary>
 		/// Initialises the neural net controller.
 		/// </summary>
@@ -42,41 +53,77 @@ namespace nfs.nets.layered {
 		/// Checks the neural net alive status.
 		/// </summary>
 		protected abstract void CheckAliveStatus();
-		
+
+		/// <summary>
+		/// Calculates the fitness.
+		/// </summary>
+		/// <returns>The fitness.</returns>
+		protected abstract float CalculateFitness ();
+
+		/// <summary>
+		/// Monobehaviour start.
+		/// </summary>
 		protected virtual void Start() {
-			
+			IsDead = false;
 			InitialiseController ();
+			InitInputAndOutputArrays();
 		}
 
-		// update
+
+		/// <summary>
+		/// Monobehaviour update.
+		/// </summary>
 		protected virtual void Update() {
 
-			InitInputAndOutputArrays();
-			UpdateInputValues ();
-
+			// every frame we ping the network forward
 			if(NeuralNet != null) {
+				UpdateInputValues ();
+				UpdateOutputValues ();
+				UseOutputValues ();
+				CheckAliveStatus ();
+			}
+		}
+
+		/// <summary>
+		/// Inits the input and output arrays.
+		/// </summary>
+		protected virtual void InitInputAndOutputArrays() {
+			inputValues = NeuralNet.GetInputValues ();
+			outputValues = NeuralNet.GetOutputValues ();
+		}
+
+		/// <summary>
+		/// Updates the output values.
+		/// </summary>
+		public virtual void UpdateOutputValues () {
+			if (!IsDead) {
 				outputValues = NeuralNet.PingFwd(inputValues);
 			}
-
-			UseOutputValues ();
-			CheckAliveStatus ();
 		}
 
-
+		/// <summary>
+		/// Calculates the fitness of the neural net instance and raise the death event.
+		/// </summary>
 		public virtual void Kill() {
 			NeuralNet.FitnessScore = CalculateFitness();
+			IsDead = true;
 			RaiseDeathEvent();
+
+			for(int i = 0; i < outputValues.Length; i++) {
+				outputValues [i] = 0f;
+			}
 		}
 
+		/// <summary>
+		/// Reset the specified position and orientation and other values of the controller.
+		/// </summary>
+		/// <param name="position">Position.</param>
+		/// <param name="orientation">Orientation.</param>
 		public virtual void Reset(Vector3 position, Quaternion orientation) {
 			transform.position = position;
 			transform.rotation = orientation;
+			IsDead = false;
 		}
-
-		/// Computes the fitness value of a network. 
-		/// In this case from a mix distance and average speed where distance is more important than speed.
-		/// </summary>
-        protected abstract float CalculateFitness ();
 
 		/// <summary>
 		/// If the network is dead, send a signal to whoever is listening.
@@ -86,7 +133,6 @@ namespace nfs.nets.layered {
 				Death.Invoke(this);
 			}
 		}
-
 
 	}
 }
