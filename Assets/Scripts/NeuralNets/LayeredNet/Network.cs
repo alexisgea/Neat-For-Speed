@@ -11,9 +11,12 @@ namespace nfs.nets.layered {
     public class Network {
 
         public float Id {set; get; }
-
         //public Queue[] Lineage = new Queue();
 
+		/// <summary>
+		/// Gets or sets the fitness score of this neural net.
+		/// </summary>
+		/// <value>The fitness score.</value>
         public float FitnessScore { set; get; }
 
         // layer properties
@@ -119,9 +122,13 @@ namespace nfs.nets.layered {
             return clone;
         }
 
-        // this is to pass the activation function on the neuron value and on each layer
-        // a layer cannot have more than one line so we don't loop through the I
+		/// <summary>
+		/// Processes the activation function on a neuron value.
+		/// </summary>
+		/// <param name="mat">Mat.</param>
         private void ProcessActivation (Matrix mat) {
+			// TODO enable chosing a random fitness function
+			// a layer cannot have more than one line so we don't loop through the I
             for(int j=0; j < mat.J; j++) {
                 //mat.Mtx[0][j] = Sigmoid(mat.Mtx[0][j]);
                 //mat.Mtx[0][j] = Linear(mat.Mtx[0][j]);
@@ -129,15 +136,28 @@ namespace nfs.nets.layered {
                 mat.SetValue(0, j, TanH(mat.GetValue(0, j)));
             }
         }
-			
+
+		/// <summary>
+		/// Tans the h.
+		/// </summary>
+		/// <returns>The h.</returns>
+		/// <param name="t">T.</param>
         private float TanH (float t) {
             return (2f / (1f + Mathf.Exp(-2f*t))) - 1f;
         }
 
+		/// <summary>
+		/// Sigmoid the specified t.
+		/// </summary>
+		/// <param name="t">T.</param>
         private float Sigmoid(float t) {
             return 1f / (1f + Mathf.Exp(-t));
         }
 
+		/// <summary>
+		/// Linear the specified t.
+		/// </summary>
+		/// <param name="t">T.</param>
         private float Linear(float t) {
             return t;
         }
@@ -149,7 +169,7 @@ namespace nfs.nets.layered {
 
 			if (sensorsValues.Length == 0) {
 				Debug.LogError("Input values are null, returning from ping forward.");
-				return;
+				return null;
 			}
             
             // we set the inputs neurons values and ignore the missmatch as there is a bias neuron
@@ -211,7 +231,6 @@ namespace nfs.nets.layered {
         ///</summary>
         public float GetNeuronValue(int layer, int neuron) {
             return  GetNeuronLayerValues(layer)[neuron];
-
         }
 
         ///<summary>
@@ -255,6 +274,7 @@ namespace nfs.nets.layered {
             for (int i = 0; i < synapses.Length; i++) {
                 synapsesCopy[i] = synapses[i].GetClone();
             }
+
             return synapsesCopy;
         }
 
@@ -266,7 +286,8 @@ namespace nfs.nets.layered {
             if(synapses.Length == newSynapses.Length){
                 for (int i = 0; i < synapses.Length; i++) {
                     synapses[i].SetAllValues(newSynapses[i]);
-                }  
+                } 
+
             } else {
                 Debug.LogWarning("The number of synapses matrices to insert does not match the number of this network: "
                                 + newSynapses.Length + " vs " + synapses.Length  + ", doing nothing.");

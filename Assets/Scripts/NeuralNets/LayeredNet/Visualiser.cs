@@ -5,16 +5,28 @@ using System.Linq;
 namespace nfs.nets.layered {
 
 	/// <summary>
-	/// Display the neural network layout on a canvas and update it.
+	/// Display the neural network layout on a canvas and update it,
+	/// requires a camera for raycast purpose and drawing the synapses.
 	/// </summary>
+	[RequireComponent(typeof(Camera))]
 	public class Visualiser : MonoBehaviour {
 
-		// reference to a camera for choosing a network
+		/// <summary>
+		/// Reference to the camera on which the canvas will be drawn.
+		/// </summary>
 		[SerializeField] private Camera cam;
 
-		// prefabs of object to display on the canvas
+		/// <summary>
+		/// Prefab of the base layer object.
+		/// </summary>
 		[SerializeField] private GameObject baseLayer;
+		/// <summary>
+		/// Prefab of a base neuron object.
+		/// </summary>
 		[SerializeField] private GameObject baseNeuron;
+		/// <summary>
+		/// Prefab of a base synapse object.
+		/// </summary>
 		[SerializeField] private GameObject baseSynapse;
 
 		// reference to the layers sizes of the current neural net to go faster
@@ -27,16 +39,13 @@ namespace nfs.nets.layered {
 
 		// the current neural net
 		private Controller focus;
-
-		//bool buildingVisualisation = false;
 		
-		// Update is called once per frame
-		void Update () {
 
-			// if (buildingVisualisation) {
-			// 	InstantiateSynapses();
-			// 	buildingVisualisation = false;
-			// }
+		/// <summary>
+		/// Mono update.
+		/// </summary>
+		private void Update () {
+			CheckFocusNetwork ();
 
 			if (focus != null /*&& !buildingVisualisation*/) {
 				UpdateVisualisation();
@@ -54,7 +63,6 @@ namespace nfs.nets.layered {
 
 			for (int L=0; L < layers.Length; L++) {
 				for (int n=0; n < layersSizes[L]; n++) {
-					//neurons[N].GetComponentInChildren<Text>().text = neuralNet.GetNeuronValue(L, n).ToString("F2");
 					neurons[N].transform.FindChild("value").GetComponent<Text>().text = focus.NeuralNet.GetNeuronValue(L, n).ToString("F2");
 					
 					if (focus.NeuralNet.GetNeuronValue(L, n) >= 0) {
@@ -88,7 +96,6 @@ namespace nfs.nets.layered {
 			InstantiateLayers();
 			InstantiateNeurons();
 			InstantiateSynapses();
-			//buildingVisualisation = true;
 		}
 
 		/// <summary>
@@ -170,7 +177,6 @@ namespace nfs.nets.layered {
 					if (L < layers.Length-1) {
 						for (int s=0; s < layersSizes[L+1]; s++) {
 
-
 							// we create the synapse and set it's parent as the current neuron
 							synapses[S] = GameObject.Instantiate(baseSynapse);
 							synapses[S].transform.SetParent(neurons[N].transform, false);
@@ -193,8 +199,6 @@ namespace nfs.nets.layered {
 								line.material.color = Color.red;
 							}
 
-							// synapses[N].GetComponentInChildren<Text>().text = neuralNet.GetSynapseValue(L, n, s).ToString("F2");
-
 							S++;
 						}
 					}
@@ -203,6 +207,23 @@ namespace nfs.nets.layered {
 				NLsum += layersSizes[L];
 			}
 
+		}
+
+		/// <summary>
+		/// Checks if the player clicked on a network to focus it.
+		/// </summary>
+		private void CheckFocusNetwork() { // add an overall "if not Input.GetMouseButton(1)"
+			if (Input.GetMouseButtonDown(0)) {
+				RaycastHit hitInfo = new RaycastHit();
+				bool hit = Physics.Raycast(cam.ScreenPointToRay(Input.mousePosition), out hitInfo);
+
+				if (hit && hitInfo.transform.tag == "car" && hitInfo.transform.GetComponent<Controller>() != null)	{
+					Controller focusNet = hitInfo.transform.GetComponent<Controller>();
+					AssignFocusNetwork(focusNet);
+				}
+			} else if (Input.GetMouseButtonDown(1)) { // change to mouse wheel click if to many errors
+				ClearCurrentVisualisation();
+			}
 		}
 
 		/// <summary>

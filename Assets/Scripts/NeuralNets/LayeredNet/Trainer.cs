@@ -3,56 +3,127 @@ using UnityEngine;
 
 namespace nfs.nets.layered{
 
-    ///<summary>
-    /// All the different time of synapses mutation.
-    ///</summary>
-    public enum MutationType { additive, multiply, reverse, replace, nullify }
-
+    /// <summary>
+    /// Neural network trainer base class.
+    /// </summary>
 	public abstract class Trainer : MonoBehaviour {
 
-		// neural netowrk popuplation variables
-        [SerializeField] protected int population = 20;
+		// neural netowrk popuplation variables and constants
+
+		/// <summary>
+		/// The amount of neural net and hosts
+		/// </summary>
+        [SerializeField] protected const int population = 20;
+		/// <summary>
+		/// The transform under which to parent the instanced population.
+		/// </summary>
         [SerializeField] protected Transform populationGroup;
+		/// <summary>
+		/// The prefab containing a nets.layered.Controller implementation.
+		/// </summary>
         [SerializeField] protected GameObject networkHost;
+
+		// reference to the host population
 		protected GameObject[] hostPopulation;
 		protected int hostAlive { private set; get; }
 		protected Stack<Controller> deadHosts = new Stack<Controller>();
+
+		/// <summary>
+		/// The base layers sizes of the neural networks.
+		/// </summary>
         [SerializeField] protected int[] baseLayersSizes = new int[] {4, 4, 5, 2};
 
 
-        // neural network mutation variables
+        // neural network mutation variables and constants
+
+		/// <summary>
+		/// The proportion of top performing network that will be selected for breeding.
+		/// </summary>
         [SerializeField] protected float survivorRate = 0.25f;
+		/// <summary>
+		/// How much of the new generation will be from the all time best network,
+		/// while the rest will be from this generation's best and some fresh blood.
+		/// </summary>
         [SerializeField] protected float breedingRepartitionCoef = 0.6f;
-        [SerializeField] protected float freshBloodCoef = 0.1f;
+		/// <summary>
+		/// The fresh blood proportion in the new generation.
+		/// </summary>
+        [SerializeField] protected float freshBloodProportion = 0.1f;
+		/// <summary>
+		/// The probability a synapse will mutate.
+		/// </summary>
         [SerializeField] protected float synapsesMutationRate = 0.1f;
+		/// <summary>
+		/// How much can a synapse change it's value at maximum (this depends on the type of mutation, check the code).
+		/// </summary>
         [SerializeField] protected float synapsesMutationRange = 0.1f;
+		/// <summary>
+		/// Can the network mutate and discover it's number of inputs.
+		/// </summary>
         [SerializeField] protected bool inputNbMutation = false;
+		/// <summary>
+		/// The probability the number of input will mutate.
+		/// </summary>
         [SerializeField] protected float inputNbMutationRate = 0.01f;
+		/// <summary>
+		/// Can the network mutate the number of hidden neuron in a hidden layer.
+		/// </summary>
         [SerializeField] protected bool hiddenNbMutation = true;
+		/// <summary>
+		/// The probability the number of hidden neuron in a layer will mutate.
+		/// </summary>
         [SerializeField] protected float hiddenMbMutationRate = 0.01f;
+		/// <summary>
+		/// Can the network mutate the number of hidden layer.
+		/// </summary>
         [SerializeField] protected bool hiddenLayerNbMutation = true;
+		/// <summary>
+		/// The probability the number of hidden layer will mutate.
+		/// </summary>
         [SerializeField] protected float hiddenLayerNbMutationRate = 0.001f;
+
+		// the number of network selected for breeding from the survivor rate.
         protected int breedingSampleNb;
         protected  Network[] alltimeFittestNets;
         protected Network[] generationFittestNets;
 
         // generation vaiables
 		public int Generation { private set; get; }
+		/// <summary>
+		/// The algorythm will force the next generation after this time in seconds.
+		/// </summary>
         [SerializeField] protected float maxGenerationTime = 90;
         protected float generationStartTime;
 	
-        // world and race tracks references
+        /// <summary>
+        /// The transform underwich to parent any instanctiated world element.
+        /// </summary>
         [SerializeField] protected Transform worldGroup;
 
 
         // Abstract methods that HAVE TO be implemented
+
+		/// <summary>
+		/// Initialises the world.
+		/// </summary>
         protected abstract void InitialiseWorld();
+		/// <summary>
+		/// After the population has been initialised, this function will be called to initialise other specific things.
+		/// </summary>
 		protected abstract void PostInitialisation ();
+		/// <summary>
+		/// Refreshs the world for a new generation.
+		/// </summary>
         protected abstract void RefreshWorld();
+		/// <summary>
+		/// Refreshs the hosts and reset some variables for a new generation.
+		/// </summary>
 		protected abstract void RefreshHosts ();
 
 
-		 // Initialises the base popuplations
+		/// <summary>
+		/// Monobehaviour start.
+		/// </summary>
         protected virtual void Start() {
             InitialiseWorld();
             InitializePopulation();
@@ -60,7 +131,9 @@ namespace nfs.nets.layered{
             
         }
 
-        // starts the next generation when the time has come
+        /// <summary>
+        /// Monobehavirous update.
+        /// </summary>
         protected virtual void Update() {
             if (hostAlive <= 0 || Time.unscaledTime - generationStartTime > maxGenerationTime) {
                 NextGeneration();
@@ -82,6 +155,7 @@ namespace nfs.nets.layered{
             alltimeFittestNets = new Network[breedingSampleNb];
             generationFittestNets = new Network[breedingSampleNb];
 
+			// loops through the popuplation to initialise the neural networks
             for (int i=0; i < population; i++) {
                 hostPopulation[i] = GameObject.Instantiate(networkHost, CalculateStartPosition(i), CalculateStartOrientation (i));
                 hostPopulation[i].transform.SetParent(populationGroup);
@@ -89,12 +163,18 @@ namespace nfs.nets.layered{
                 hostPopulation[i].GetComponent<Controller>().Death += OnHostDeath; // we register to each car's signal for collision
             }
 
-            // all is ready and set to start for the training
-            Generation = 1;
-            hostAlive = population;
-            generationStartTime = Time.unscaledTime;
-
+			Generation = 1;
+			ResetTrainerVariables ();
         }
+
+		/// <summary>
+		/// Initialises the trainer variables.
+		/// </summary>
+		protected virtual void ResetTrainerVariables() {
+			// all is ready and set to start for the training
+			hostAlive = population;
+			generationStartTime = Time.unscaledTime;
+		}
 
 		///<summary>
         /// Initiate the new generation by breeding offspring and inserting them in the current popuplation.
@@ -108,15 +188,13 @@ namespace nfs.nets.layered{
             Debug.Log(  "Generation " + Generation +  " best fitness:" + generationFittestNets[0].FitnessScore +
                         " all time best fitness:" + alltimeFittestNets[0].FitnessScore);
                         
+			ResetTrainerVariables ();
+
             RefreshWorld();
 			RefreshHosts ();
             ResetHostsPositions();
 
-            // all is ready and set to start for the training
-            Generation += 1;
-            hostAlive = population;
-            generationStartTime = Time.unscaledTime;
-
+			Generation += 1;
         }
 
 		///<summary>
@@ -132,6 +210,9 @@ namespace nfs.nets.layered{
             }
         }
 
+		/// <summary>
+		/// Kills any survivor.
+		/// </summary>
         protected virtual void KillAnySurvivor() {
             for (int i=0; i < population; i++) {
                 Controller host = hostPopulation[i].GetComponent<Controller>();
@@ -186,7 +267,7 @@ namespace nfs.nets.layered{
                         k += 1;
                     }
 
-                } else if (i < population * (1 - freshBloodCoef)) { // this generation
+                } else if (i < population * (1 - freshBloodProportion)) { // this generation
                     hostPopulation[i].GetComponent<Controller>().NeuralNet = Evolution.CreateMutatedOffspring(
                                     generationFittestNets[k], l+1,
                                     hiddenLayerNbMutation, hiddenLayerNbMutationRate,
@@ -194,7 +275,7 @@ namespace nfs.nets.layered{
                                     synapsesMutationRate, synapsesMutationRange);
 
                     l += 1;
-                    if (l > population * (1 - freshBloodCoef) / breedingSampleNb){
+                    if (l > population * (1 - freshBloodProportion) / breedingSampleNb){
                         l = 0;
                         k += 1;
                     }
@@ -208,6 +289,9 @@ namespace nfs.nets.layered{
             }
         } 
 
+		/// <summary>
+		/// Resets the hosts positions.
+		/// </summary>
         protected virtual void ResetHostsPositions() {
             // we reset the car position and insert new neural nets
             for (int i=0; i < population; i++) {
@@ -222,6 +306,12 @@ namespace nfs.nets.layered{
         protected virtual Vector3 CalculateStartPosition(int i) {
             return Vector3.zero;
         }
+
+		/// <summary>
+		/// Calculates the start orientation.
+		/// </summary>
+		/// <returns>The start orientation.</returns>
+		/// <param name="i">The index.</param>
         protected virtual Quaternion CalculateStartOrientation (int i) {
             return Quaternion.identity;
         }

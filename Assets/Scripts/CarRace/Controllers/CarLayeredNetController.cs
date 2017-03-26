@@ -6,7 +6,7 @@ namespace nfs.car {
 	// this is an example implementation of a base layered net controller
 
     ///<summary>
-	/// Neural network controller class.
+	/// Implementation of a layered neural network controller.
     /// Owns an instance of a neural network and updates it (ping forward).
 	///</summary>
     [RequireComponent(typeof(CarSensors))]
@@ -35,7 +35,10 @@ namespace nfs.car {
 		public float MaxDistFitness {set; get;} 
 
 			
-		// we initialise inputs and outputs array for values and names
+		/// <summary>
+		/// Inits the input and output arrays.
+		/// we initialise inputs and outputs array for values and names.
+		/// </summary>
 		protected override void InitInputAndOutputArrays() {
 			// inputs and outputs values are already created from the neural net itself
 			// but we want a bias neuron so we will transpit one input length and thus re-initialise it
@@ -45,7 +48,10 @@ namespace nfs.car {
 			OutputNames = new string[2] {"Drive", "Turn"};
 		}
 
-		// we get the references to the necessary component and suscribe to some events
+		/// <summary>
+		/// Initialises the neural net controller.
+		/// We get the references to the necessary component and suscribe to some events.
+		/// </summary>
 		protected override void InitialiseController() {
 			car = GetComponent<CarBehaviour>();
 			sensors = GetComponent<CarSensors>();
@@ -77,7 +83,7 @@ namespace nfs.car {
 		/// Checks the neural net alive status.
 		/// </summary>
 		protected override void CheckAliveStatus() {
-			if(driveInput < 0.1f /*&& !car.Stop*/) {
+			if(driveInput < 0.1f || Mathf.Abs (transform.position.y) > 1f) {
 				Kill();         
 			}
 		}
@@ -92,10 +98,14 @@ namespace nfs.car {
             }
         }
 
+		/// <summary>
+		/// Reset the specified position and orientation and other values of the controller.
+		/// </summary>
+		/// <param name="position">Position.</param>
+		/// <param name="orientation">Orientation.</param>
 		public override void Reset(Vector3 position, Quaternion orientation) {
 			base.Reset(position, orientation);
 			car.Reset();
-			StartTime = Time.unscaledTime;
 		}
 
 		/// <summary>

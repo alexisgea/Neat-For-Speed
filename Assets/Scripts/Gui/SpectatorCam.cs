@@ -9,25 +9,27 @@ namespace nfs.gui {
 	[RequireComponent(typeof(Camera))]
 	public class SpectatorCam : MonoBehaviour {
 
-		// camera specific variables
+		// camera constants
 		[SerializeField] private const float rotationSpeed = 100;
 		[SerializeField] private const float normalSpeed = 25;
 		[SerializeField] private const float fastSpeed = 50;
+		private const float sensitivityX = 15F;
+		private const float sensitivityY = 15F;
+		private const float minimumY = -60F;
+		private const float maximumY = 60F;
 
+		// cam motion variables
 		private float camSpeed = normalSpeed;
-		private float sensitivityX = 15F;
-		private float sensitivityY = 15F;
-		private float minimumY = -60F;
-		private float maximumY = 60F;
 		private float rotationY = 0F;
 
-		
-		// Update is called once per frame
+
+		/// <summary>
+		/// Monobehaviour update.
+		/// </summary>
 		private void Update () {
 			CheckSpeedSwitch();
 			CheckTranslateCam();
 			CheckRotateCam();
-			CheckFocusNetwork();
 		}
 
 		/// <summary>
@@ -36,6 +38,7 @@ namespace nfs.gui {
 		private void CheckSpeedSwitch() {
 			if (Input.GetButtonDown("SpeedSwitch")) {
 				camSpeed = fastSpeed;
+
 			} else if (Input.GetButtonUp("SpeedSwitch")){
 				camSpeed = normalSpeed;
 			}
@@ -56,7 +59,6 @@ namespace nfs.gui {
 			if(Input.GetAxis("Yaxis") != 0) {
 				transform.position += transform.up * Input.GetAxis("Yaxis") * camSpeed * Time.deltaTime;
 			}
-
 		}
 			
 		/// <summary>
@@ -73,24 +75,6 @@ namespace nfs.gui {
 				rotationY = Mathf.Clamp (rotationY, minimumY, maximumY);
 				
 				transform.localEulerAngles = new Vector3(-rotationY, rotationX, 0);
-				
-			}
-		}
-
-		/// <summary>
-		/// Checks if the player clicked on a network to focus it.
-		/// </summary>
-		private void CheckFocusNetwork() { // add an overall "if not Input.GetMouseButton(1)"
-			if (Input.GetMouseButtonDown(0)) {
-				RaycastHit hitInfo = new RaycastHit();
-				bool hit = Physics.Raycast(GetComponent<Camera>().ScreenPointToRay(Input.mousePosition), out hitInfo);
-
-				if (hit && hitInfo.transform.tag == "car" && hitInfo.transform.GetComponent<nets.layered.Controller>() != null)	{
-					nets.layered.Controller focusNet = hitInfo.transform.GetComponent<nets.layered.Controller>();
-					FindObjectOfType<nets.layered.Visualiser>().AssignFocusNetwork(focusNet);
-				}
-			} else if (Input.GetMouseButtonDown(1)) { // change to mouse wheel click if to many errors
-				FindObjectOfType<nets.layered.Visualiser>().ClearCurrentVisualisation();
 			}
 		}
 

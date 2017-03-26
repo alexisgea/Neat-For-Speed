@@ -3,7 +3,14 @@ using nfs.tools;
 
 namespace nfs.nets.layered {
 
-	
+	///<summary>
+	/// All the different time of synapses mutation.
+	///</summary>
+	public enum MutationType { additive, multiply, reverse, replace, nullify }
+
+	/// <summary>
+	/// Evolution static class containing functions for mutating a Layered neural network.
+	/// </summary>
 	public static class Evolution {
 
 		/// <summary>
@@ -181,8 +188,8 @@ namespace nfs.nets.layered {
         }
 
 		/// <summary>
-		// Compares a given neural network to a list of other and if better stores it at the correct rank.
-		// Compares the network to the current generation as well as overall best network in all generations.
+		/// Compares a given neural network to a list of other and if better stores it at the correct rank.
+		/// Compares the network to the current generation as well as overall best network in all generations.
 		/// </summary>
 		/// <param name="fitnessRankings">Fitness rankings.</param>
 		/// <param name="fitnessContender">Fitness contender.</param>

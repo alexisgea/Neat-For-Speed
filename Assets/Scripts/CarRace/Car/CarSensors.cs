@@ -13,7 +13,7 @@ namespace nfs.car {
 	[RequireComponent (typeof (CarBehaviour))]
 	public class CarSensors : MonoBehaviour {
 
-		private int sensorLength = 10;
+		private const int sensorLength = 10;
 
         // Car internal control sensors
         private CarBehaviour car;

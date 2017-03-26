@@ -13,12 +13,23 @@ namespace nfs.tools {
 
         // the matrix itself as an array of array
         private float[][] matrix;
-        // the number of row
+
+        /// <summary>
+        /// The number of rows I.
+        /// </summary>
+        /// <value>The i.</value>
 		public int I { private set; get; }
-        // the number of column
+        /// <summary>
+        /// The number of column J.
+        /// </summary>
+        /// <value>The j.</value>
 		public int J { private set; get; }
 
-        // Constructor
+        /// <summary>
+        /// Initializes a new instance of the <see cref="nfs.tools.Matrix"/> class.
+        /// </summary>
+        /// <param name="i">The index.</param>
+        /// <param name="j">J.</param>
         public Matrix(int i, int j) {
             I = i;
             J = j;
@@ -90,6 +101,11 @@ namespace nfs.tools {
             return (matrixA.I == matrixB.I && matrixA.J == matrixB.J) ? true : false;
         }
 
+		/// <summary>
+		/// Standards the synapse range.
+		/// </summary>
+		/// <returns>The synapse range.</returns>
+		/// <param name="matJ">Mat j.</param>
         public static float StandardSynapseRange (int matJ) {
             return 2f / Mathf.Sqrt(matJ);
         }
@@ -102,7 +118,6 @@ namespace nfs.tools {
             clone.SetAllValues(this);
             return clone;
         }
-
 
         ///<summary>
 	    /// Set all values to 0.

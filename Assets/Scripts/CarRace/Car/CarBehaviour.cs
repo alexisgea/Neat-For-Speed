@@ -11,18 +11,22 @@ namespace nfs.car {
     [RequireComponent(typeof(Rigidbody))]
     public class CarBehaviour : MonoBehaviour {
 
-        // car behavior related variables
-        [SerializeField] private float steeringRate = 100f;
-		[SerializeField] private float brakingRate = 20f;
-		[SerializeField] private float acceleration = 30f;
+        // car behavior related constants and accessors
+        [SerializeField] private const float steeringRate = 100f;
+		[SerializeField] private const float brakingRate = 20f;
+		[SerializeField] private const float acceleration = 30f;
 
-		[SerializeField] private float maxForwardSpeed = 30f;
+		[SerializeField] private const float maxForwardSpeed = 30f;
         public float MaxForwardSpeed {get { return maxForwardSpeed; } }
 
-		[SerializeField] private float maxReverseSpeed = -10f;
+		[SerializeField] private const float maxReverseSpeed = -10f;
 		public float MaxReverseSpeed {get { return maxReverseSpeed; } }
 
+		// I made a script to check rate of value change of a keyboard axis and it was ~0.0495
+		private const float controlChangeRate = 0.05f; 
 		private const float aboutZero = 0.01f;
+
+		// car behaviour related variables
         private float speed = 0f;
         private float Speed {
             set {
@@ -34,16 +38,14 @@ namespace nfs.car {
         }
 			
 		// car controle intensity related variable (goes from -1 to 1)
-		private const float controlChangeRate = 0.05f; // I made a script to check rate of value change of a keyboard axis and it was ~0.0495
 		private float driveIntensity = 0f;
-		private float turnIntensity = 0f;
-
         /// <summary>
         /// How much the car controller is pressing on the accelerating pedal.
         /// </summary>
         public float DriveIntensity {
             get { return NormalizeControl(driveIntensity); }
         }
+		private float turnIntensity = 0f;
 		/// <summary>
 		/// How much the car controller is turning the wheel.
 		/// </summary>
@@ -86,6 +88,7 @@ namespace nfs.car {
 		/// Occurs when the car hit something.
 		/// </summary>
         public event Action <string>HitSomething;
+
 
         /// <summary>
         /// Monobehaviour start.
