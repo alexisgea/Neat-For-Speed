@@ -8,13 +8,24 @@ namespace nfs.nets.layered {
 	/// Display the neural network layout on a canvas and update it,
 	/// requires a camera for raycast purpose and drawing the synapses.
 	/// </summary>
-	[RequireComponent(typeof(Camera))]
 	public class Visualiser : MonoBehaviour {
 
 		/// <summary>
 		/// Reference to the camera on which the canvas will be drawn.
 		/// </summary>
-		[SerializeField] private Camera cam;
+		public Camera Cam {set; get;}
+		/// <summary>
+		/// The text labelon which to display the current focus.
+		/// </summary>
+		[SerializeField] private Text networkIdLabel;
+		/// <summary>
+		/// The text label on which to display the lineage.
+		/// </summary>
+		[SerializeField] private Text networkLineageLabel;
+		/// <summary>
+		/// The panel on which to display and parent the network nodes and synapses.
+		/// </summary>
+		[SerializeField] private Transform networkDisplay;
 
 		/// <summary>
 		/// Prefab of the base layer object.
@@ -37,17 +48,18 @@ namespace nfs.nets.layered {
 		private GameObject[] neurons;
 		private GameObject[] synapses;
 
-		// the current neural net
+
 		private Controller focus;
+		// the current neural net
+		public Controller Focus { get { return focus; } }
 		
 
 		/// <summary>
 		/// Mono update.
 		/// </summary>
 		private void Update () {
-			CheckFocusNetwork ();
 
-			if (focus != null /*&& !buildingVisualisation*/) {
+			if (focus != null) {
 				UpdateVisualisation();
 			}
 		}
@@ -55,7 +67,7 @@ namespace nfs.nets.layered {
 		/// <summary>
 		/// Updates the neural net visualisation.
 		/// </summary>
-		void UpdateVisualisation () {
+		private void UpdateVisualisation () {
 
 			int N = 0; // neuron counter
 			int S = 0; // synapse counter
@@ -63,7 +75,8 @@ namespace nfs.nets.layered {
 
 			for (int L=0; L < layers.Length; L++) {
 				for (int n=0; n < layersSizes[L]; n++) {
-					neurons[N].transform.FindChild("value").GetComponent<Text>().text = focus.NeuralNet.GetNeuronValue(L, n).ToString("F2");
+					Text neuronValue = neurons [N].transform.FindChild ("value").GetComponent<Text> ();
+					neuronValue.text = focus.NeuralNet.GetNeuronValue(L, n).ToString("F2");
 					
 					if (focus.NeuralNet.GetNeuronValue(L, n) >= 0) {
 						neurons[N].GetComponent<Image>().color = Color.green * focus.NeuralNet.GetNeuronValue(L, n);
@@ -75,8 +88,8 @@ namespace nfs.nets.layered {
 					if (L < layers.Length-1) {
 						for (int s=0; s < layersSizes[L+1]; s++) {
 							Vector3[] linePoints = new Vector3[] {
-									neurons[N].transform.position + cam.transform.forward * 0.1f,
-									neurons[NLsum + layersSizes[L] + s].transform.position + cam.transform.forward * 0.1f
+									neurons[N].transform.position + Cam.transform.forward * 0.1f,
+									neurons[NLsum + layersSizes[L] + s].transform.position + Cam.transform.forward * 0.1f
 									};
 								synapses[S].GetComponent<LineRenderer>().SetPositions(linePoints);
 
@@ -92,7 +105,7 @@ namespace nfs.nets.layered {
 		/// <summary>
 		/// Builds the neural net visualisation.
 		/// </summary>
-		void BuildVisualisation () {
+		private void BuildVisualisation () {
 			InstantiateLayers();
 			InstantiateNeurons();
 			InstantiateSynapses();
@@ -101,13 +114,13 @@ namespace nfs.nets.layered {
 		/// <summary>
 		/// Instantiates the neural net layers on the canvas.
 		/// </summary>
-		void InstantiateLayers() {
+		private void InstantiateLayers() {
 			layers = new GameObject[focus.NeuralNet.NumberOfLayers];
 			layersSizes = focus.NeuralNet.LayersSizes;
 
 			for (int i = 0; i < layers.Length; i++) {
 				layers[i] = GameObject.Instantiate(baseLayer);
-				layers[i].transform.SetParent(transform, false);
+				layers[i].transform.SetParent(networkDisplay, false);
 				
 			}
 		}
@@ -115,7 +128,7 @@ namespace nfs.nets.layered {
 		/// <summary>
 		/// Instantiates the neurons in the layers on the canvas.
 		/// </summary>
-		void InstantiateNeurons() {
+		private void InstantiateNeurons() {
 			int totalNeurons = layersSizes.Sum();
 
 			neurons = new GameObject[totalNeurons];
@@ -125,23 +138,27 @@ namespace nfs.nets.layered {
 			for (int i=0; i < neurons.Length; i++) {
 				neurons[i] = GameObject.Instantiate(baseNeuron);
 				neurons[i].transform.SetParent(layers[L].transform, false);
+				Text label = neurons[i].transform.FindChild("label").GetComponent<Text>();
+
 				
 				if (L == 0) {
+
 					if(i < focus.InputNames.Length) {
-						neurons[i].transform.FindChild("label").GetComponent<Text>().text = focus.InputNames[i];						
+						label.text = focus.InputNames[i];						
 					} else {
-						neurons[i].transform.FindChild("label").GetComponent<Text>().text = "Bias";
+						label.text = "Bias";
 					}
 
 				} else 	if (L == layersSizes.Length -1) { // last layer
+
 					if(neurons.Length-1 - i < focus.OutputNames.Length) {
-						neurons[i].transform.FindChild("label").GetComponent<Text>().text = focus.OutputNames[neurons.Length-1 - i];						
+						label.text = focus.OutputNames[neurons.Length-1 - i];						
 					} else {
-						neurons[i].transform.FindChild("label").GetComponent<Text>().text = "";
+						label.text = "";
 					}
 
 				} else {
-					neurons[i].transform.FindChild("label").GetComponent<Text>().text = "";
+					label.text = "";
 
 				}
 			
@@ -156,7 +173,7 @@ namespace nfs.nets.layered {
 		/// <summary>
 		/// Instantiates the synapses as child of neurons on the canvas.
 		/// </summary>
-		void InstantiateSynapses() {
+		private void InstantiateSynapses() {
 			int totalSynapses = 0;
 
 			// -1 as there are no synapses on the last layer
@@ -183,10 +200,11 @@ namespace nfs.nets.layered {
 							LineRenderer line = synapses[S].GetComponent<LineRenderer>();
 
 							// we get the position values of the "from" and "to" neuron for the synapse
-							// the next neuron is equal to the sum of neuron of all previous processed layer + the number of neuron in the current layer + the current synapse fo this neuron
+							// the next neuron is equal to the sum of neuron of all previous processed layer
+							// + the number of neuron in the current layer + the current synapse fo this neuron
 							Vector3[] linePoints = new Vector3[] {
-								neurons[N].transform.position + cam.transform.forward * 0.1f,
-								neurons[NLsum + layersSizes[L] + s].transform.position + cam.transform.forward * 0.1f
+								neurons[N].transform.position + Cam.transform.forward * 0.1f,
+								neurons[NLsum + layersSizes[L] + s].transform.position + Cam.transform.forward * 0.1f
 								};
 							line.SetPositions(linePoints);
 
@@ -209,24 +227,7 @@ namespace nfs.nets.layered {
 
 		}
 
-		/// <summary>
-		/// Checks if the player clicked on a network to focus it.
-		/// </summary>
-		private void CheckFocusNetwork() { // add an overall "if not Input.GetMouseButton(1)"
-			if (Input.GetMouseButtonDown(0)) {
-				RaycastHit hitInfo = new RaycastHit();
-				bool hit = Physics.Raycast(cam.ScreenPointToRay(Input.mousePosition), out hitInfo);
 
-				if (hit && hitInfo.transform.tag == "car" && hitInfo.transform.GetComponent<Controller>() != null)	{
-					Controller focusNet = hitInfo.transform.GetComponent<Controller>();
-					AssignFocusNetwork(focusNet);
-				}
-			} else if (Input.GetMouseButtonDown(1)) { // change to mouse wheel click if to many errors
-				ClearCurrentVisualisation();
-			}
-		}
-
-		/// <summary>
 		/// Assigns the focus network.
 		/// </summary>
 		/// <param name="newFocusNet">New focus net.</param>
@@ -235,6 +236,7 @@ namespace nfs.nets.layered {
 			focus = newFocusNet;
 			BuildVisualisation ();
 		}
+
 
 		/// <summary>
 		/// Clears the current visualisation.

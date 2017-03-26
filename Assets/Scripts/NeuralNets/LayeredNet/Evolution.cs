@@ -70,14 +70,16 @@ namespace nfs.nets.layered {
 				hiddenLayersSizes = RedimentionLayersNb(hiddenLayersSizes, -1);
 
 				synapses = RedimentionLayersNb(synapses, -1);
-				synapses[synapses.Length - 1] = Matrix.Redimension(synapses[synapses.Length - 1], hiddenLayersSizes[hiddenLayersSizes.Length - 1], neuralNet.OutputSize);
+				synapses[synapses.Length - 1] = Matrix.Redimension(synapses[synapses.Length - 1],
+												hiddenLayersSizes[hiddenLayersSizes.Length - 1], neuralNet.OutputSize);
 
 			} else {
 				hiddenLayersSizes = RedimentionLayersNb(hiddenLayersSizes, +1);
 				hiddenLayersSizes[hiddenLayersSizes.Length - 1] = neuralNet.OutputSize;
 
 				synapses = RedimentionLayersNb(synapses, +1);
-				synapses[synapses.Length - 1] = new Matrix(hiddenLayersSizes[hiddenLayersSizes.Length - 1], neuralNet.OutputSize).SetAsSynapse();
+				synapses[synapses.Length - 1] = new Matrix(hiddenLayersSizes[hiddenLayersSizes.Length - 1],
+												neuralNet.OutputSize).SetAsSynapse();
             }
 
 			return hiddenLayersSizes;
@@ -109,7 +111,8 @@ namespace nfs.nets.layered {
 		/// </summary>
 		/// <param name="neuralNet">Neural net.</param>
 		/// <param name="synapses">Synapses.</param>
-        private static Matrix[] MutateSynapsesValues(Network neuralNet, Matrix[] synapses, float synapsesMutationRate, float synapsesMutationRange) {
+        private static Matrix[] MutateSynapsesValues(Network neuralNet, Matrix[] synapses,
+													float synapsesMutationRate, float synapsesMutationRange) {
             
 			for (int n=0; n<synapses.Length; n++) {
                 for (int i = 0; i < synapses[n].I; i++) {

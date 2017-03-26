@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
-using nfs.car;
 
-namespace nfs.gui {
+namespace nfs.tools {
 
 	/// <summary>
 	/// Basic control for a spectator camera during training sessions.

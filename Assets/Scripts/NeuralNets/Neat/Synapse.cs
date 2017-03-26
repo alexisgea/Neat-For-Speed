@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // The correct NEAT implementation has not yet been done
-namespace nfs.neat {
+namespace nfs.nets.neat {
 	public class Synapse {
         
 		public uint InnovationMaker { private set; get; }
