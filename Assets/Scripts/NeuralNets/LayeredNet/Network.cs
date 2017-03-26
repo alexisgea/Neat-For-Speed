@@ -83,7 +83,7 @@ namespace nfs.nets.layered {
         /// Requires a given number of input, number given of output
         /// and an array for the hidden layers with each element being the size of a different hidden layer.!--
         ///</summary>
-		public Network(int[] layersSizes, string id) {
+		public Network (int[] layersSizes, string id = "") {
 
             if(layersSizes == null || layersSizes.Length < 2) {
                 Debug.LogError("Cannot create a network that has less than 2 layer.");
