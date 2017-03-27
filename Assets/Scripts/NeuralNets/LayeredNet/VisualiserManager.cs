@@ -58,13 +58,16 @@ namespace nfs.nets.layered {
 					}
 
 					visualisers [0].AssignFocusNetwork (controller);
-					lastI = i;
+					lastI = i+1;
 					break;
 				}
 			}
 		}
 
 		private void ResetForNewGen() {
+			foreach(Visualiser visualiser in visualisers) {
+				visualiser.ClearCurrentVisualisation();
+			}
 			lastI = 0;
 		}
 
@@ -81,9 +84,7 @@ namespace nfs.nets.layered {
 					visualisers[0].AssignFocusNetwork (focusNet);
 				}
 			} else if (Input.GetMouseButtonDown(1)) { // change to mouse wheel click if to many errors
-				foreach(Visualiser visualiser in visualisers) {
-					visualiser.ClearCurrentVisualisation();
-				}
+				ResetForNewGen ();
 			}
 		}
 

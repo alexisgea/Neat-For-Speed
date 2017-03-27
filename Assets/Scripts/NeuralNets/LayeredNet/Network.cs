@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Collections;
 using nfs.tools;
 
 namespace nfs.nets.layered {
@@ -11,7 +12,8 @@ namespace nfs.nets.layered {
     public class Network {
 
         public string Id {private set; get; }
-        //public Queue[] Lineage = new Queue();
+		//public Queue Lineage = new Queue();
+		public string[] Lineage {private set; get;}
 
 		/// <summary>
 		/// Gets or sets the fitness score of this neural net.
@@ -83,7 +85,7 @@ namespace nfs.nets.layered {
         /// Requires a given number of input, number given of output
         /// and an array for the hidden layers with each element being the size of a different hidden layer.!--
         ///</summary>
-		public Network (int[] layersSizes, string id = "") {
+		public Network (int[] layersSizes, string id) {
 
             if(layersSizes == null || layersSizes.Length < 2) {
                 Debug.LogError("Cannot create a network that has less than 2 layer.");
@@ -115,7 +117,8 @@ namespace nfs.nets.layered {
         ///</summary>
         public Network GetClone () {
 
-            Network clone = new Network(this.LayersSizes);
+			Network clone = new Network(this.LayersSizes, this.Id);
+			clone.InsertLineage (this.Lineage); 
             clone.InsertSynapses(this.GetSynapsesClone());
             clone.FitnessScore = this.FitnessScore;
 
@@ -293,5 +296,9 @@ namespace nfs.nets.layered {
                                 + newSynapses.Length + " vs " + synapses.Length  + ", doing nothing.");
             }
         }
+
+		public void InsertLineage(string[] lineage) {
+			Lineage = lineage;
+		}
     }
 }

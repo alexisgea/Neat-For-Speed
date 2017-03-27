@@ -25,9 +25,15 @@ namespace nfs.nets.layered{
 		/// </summary>
         [SerializeField] protected GameObject networkHost;
 
+		public int TotalNetworkGenerated { private set; get;}
+		public int TotalNetworkSelectedForBreeding { set; get;}
+		public int CurrentLiveNetworks {get {return population - deadHosts.Count;}}
+		public int CurrentDeadNetworks {get {return deadHosts.Count;}}
+
+
 		// reference to the host population
 		public GameObject[] HostPopulation {private set; get;}
-		protected int hostAlive { private set; get; }
+		//protected int hostAlive { private set; get; }
 		protected Stack<Controller> deadHosts = new Stack<Controller>();
 
 		/// <summary>
@@ -144,7 +150,7 @@ namespace nfs.nets.layered{
         /// Monobehavirous update.
         /// </summary>
         protected virtual void Update() {
-            if (hostAlive <= 0 || Time.unscaledTime - generationStartTime > maxGenerationTime) {
+            if (CurrentLiveNetworks == 0 || Time.unscaledTime - generationStartTime > maxGenerationTime) {
                 NextGeneration();
             }
         }
@@ -165,16 +171,19 @@ namespace nfs.nets.layered{
             GenerationFittestNets = new Network[breedingSampleNb];
 			NetworkGenealogy = new Dictionary<string, Network> ();
 
+			//GenerationNb = 1;
+			ResetTrainerVariables ();
+
 			// loops through the popuplation to initialise the neural networks
             for (int i=0; i < population; i++) {
                 HostPopulation[i] = GameObject.Instantiate(networkHost, CalculateStartPosition(i), CalculateStartOrientation (i));
                 HostPopulation[i].transform.SetParent(populationGroup);
-                HostPopulation[i].GetComponent<Controller>().NeuralNet = new Network(baseLayersSizes);
+                HostPopulation[i].GetComponent<Controller>().NeuralNet = new Network(baseLayersSizes, GenerateNeworktId (i));
                 HostPopulation[i].GetComponent<Controller>().Death += OnHostDeath; // we register to each car's signal for collision
+
+				TotalNetworkGenerated++;
             }
 
-			GenerationNb = 1;
-			ResetTrainerVariables ();
             RaiseNextGenerationTraining();
         }
 
@@ -183,7 +192,8 @@ namespace nfs.nets.layered{
 		/// </summary>
 		protected virtual void ResetTrainerVariables() {
 			// all is ready and set to start for the training
-			hostAlive = population;
+			//hostAlive = population;
+			GenerationNb += 1;
 			generationStartTime = Time.unscaledTime;
 		}
 
@@ -200,14 +210,14 @@ namespace nfs.nets.layered{
                         " all time best fitness:" + AlltimeFittestNets[0].FitnessScore);
 
             // get the next generation ready            
-			BreedNextGeneration();
 			ResetTrainerVariables ();
+			//GenerationNb += 1;
+			BreedNextGeneration();
 
             RefreshWorld();
 			RefreshHosts ();
             ResetHostsPositions();
 
-			GenerationNb += 1;
             RaiseNextGenerationTraining();
         }
 
@@ -219,7 +229,7 @@ namespace nfs.nets.layered{
             // first we make sure the car hit a wall
             if(!deadHosts.Contains(host)) {
 
-                hostAlive -= 1;
+                //hostAlive -= 1;
                 deadHosts.Push(host);
             }
         }
@@ -276,7 +286,7 @@ namespace nfs.nets.layered{
 
                 if (i < population * breedingRepartitionCoef) { // all time generation
                     HostPopulation[i].GetComponent<Controller>().NeuralNet = Evolution.CreateMutatedOffspring(
-                                    AlltimeFittestNets[k], l+1,
+									AlltimeFittestNets[k], GenerateNeworktId (i), l+1,
                                     hiddenLayerNbMutation, hiddenLayerNbMutationRate,
                                     hiddenNbMutation, hiddenLayerNbMutationRate,
                                     synapsesMutationRate, synapsesMutationRange); // l+1 as mutate coef to make each version more propable to mutate a lot
@@ -289,10 +299,12 @@ namespace nfs.nets.layered{
 
                 } else if (i < population * (1 - freshBloodProportion)) { // this generation
                     HostPopulation[i].GetComponent<Controller>().NeuralNet = Evolution.CreateMutatedOffspring(
-                                    GenerationFittestNets[k], l+1,
+									GenerationFittestNets[k], GenerateNeworktId (i), l+1,
                                     hiddenLayerNbMutation, hiddenLayerNbMutationRate,
                                     hiddenNbMutation, hiddenLayerNbMutationRate,
                                     synapsesMutationRate, synapsesMutationRange);
+
+
 
                     l += 1;
                     if (l > population * (1 - freshBloodProportion) / breedingSampleNb){
@@ -301,13 +313,25 @@ namespace nfs.nets.layered{
                     }
 
                 } else { // fresh blood (10%)
-                    HostPopulation[i].GetComponent<Controller>().NeuralNet = new Network(baseLayersSizes);   
+                    HostPopulation[i].GetComponent<Controller>().NeuralNet = new Network(baseLayersSizes, GenerateNeworktId (i));   
                 }
 
-                if(k>=breedingSampleNb)
-                    k = 0;
+				if(k>=breedingSampleNb) {
+					k = 0;
+				}
+
+				TotalNetworkGenerated++;
             }
-        } 
+        }
+
+		/// <summary>
+		/// Generates the neworkt identifier.
+		/// </summary>
+		/// <returns>The neworkt identifier.</returns>
+		/// <param name="i">The index.</param>
+		protected virtual string GenerateNeworktId(int i) {
+			return (string)(GenerationNb + "-" + i);
+		}
 
 		/// <summary>
 		/// Resets the hosts positions.

@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Collections;
 using nfs.tools;
 
 namespace nfs.nets.layered {
@@ -19,7 +20,7 @@ namespace nfs.nets.layered {
         /// <returns>The mutated offspring.</returns>
         /// <param name="neuralNet">Neural net.</param>
         /// <param name="mutateCoef">Mutate coef.</param>
-        public static Network CreateMutatedOffspring(Network neuralNet, int mutateCoef,
+		public static Network CreateMutatedOffspring(Network neuralNet, string newNetId, int mutateCoef,
 													bool hiddenLayerNbMutation, float hiddenLayerNbMutationRate,
 													bool hiddenNbMutation, float hiddenMbMutationRate,
 													float synapsesMutationRate, float synapsesMutationRange) {
@@ -51,7 +52,8 @@ namespace nfs.nets.layered {
                 layerSizes[i] = hiddenLayersSizes[i-1];
             }
 
-            Network mutadedOffspring = new Network(layerSizes);
+            Network mutadedOffspring = new Network(layerSizes, newNetId);
+			mutadedOffspring.InsertLineage (ExtendLineage (neuralNet.Lineage, neuralNet.Id));
             mutadedOffspring.InsertSynapses(synapses);
 
             return mutadedOffspring;
@@ -159,20 +161,45 @@ namespace nfs.nets.layered {
         }
 
 		/// <summary>
+		/// Extends the lineage.
+		/// </summary>
+		/// <returns>The lineage.</returns>
+		/// <param name="currentLineage">Current lineage.</param>
+		/// <param name="parentId">Parent identifier.</param>
+		public static string[] ExtendLineage (string[] currentLineage, string parentId) {
+			string[] extendedLineage;
+
+			if(currentLineage == null) {
+				extendedLineage = new string[1] { parentId };
+
+			} else {
+				extendedLineage = new string[currentLineage.Length + 1];
+				for (int i = 0; i < currentLineage.Length; i++) {
+					extendedLineage[i] = currentLineage[i];
+				}
+				
+				extendedLineage [extendedLineage.Length - 1] = parentId;
+				
+			}
+
+			return extendedLineage;
+        }
+
+		/// <summary>
 		/// Redimension an array of in for the hidden layers.
 		/// </summary>
 		/// <returns>The layers nb.</returns>
 		/// <param name="currentLayers">Current layers.</param>
 		/// <param name="sizeMod">Size mod.</param>
-        public static int[] RedimentionLayersNb (int[] currentLayers, int sizeMod) {
+		public static int[] RedimentionLayersNb (int[] currentLayers, int sizeMod) {
 
-            int[] newLayers = new int[currentLayers.Length + sizeMod];
-            for (int i = 0; i < Mathf.Min(currentLayers.Length, newLayers.Length); i++) {
-                newLayers[i] = currentLayers[i];
-            }
+			int[] newLayers = new int[currentLayers.Length + sizeMod];
+			for (int i = 0; i < Mathf.Min(currentLayers.Length, newLayers.Length); i++) {
+				newLayers[i] = currentLayers[i];
+			}
 
-            return newLayers;
-        }
+			return newLayers;
+		}
 
 		/// <summary>
 		/// Redimension an array of matrix for the synapses.

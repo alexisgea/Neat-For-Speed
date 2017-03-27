@@ -23,6 +23,10 @@ namespace nfs.nets.layered {
 		/// </summary>
 		[SerializeField] private Text networkLineageLabel;
 		/// <summary>
+		/// The network fitness label.
+		/// </summary>
+		[SerializeField] private Text networkFitnessLabel;
+		/// <summary>
 		/// The panel on which to display and parent the network nodes and synapses.
 		/// </summary>
 		[SerializeField] private Transform networkDisplay;
@@ -52,6 +56,8 @@ namespace nfs.nets.layered {
 		private Controller focus;
 		// the current neural net
 		public Controller Focus { get { return focus; } }
+
+		private bool inConstruction = false;
 		
 
 		/// <summary>
@@ -59,8 +65,12 @@ namespace nfs.nets.layered {
 		/// </summary>
 		private void Update () {
 
-			if (focus != null) {
+			if (focus != null && !inConstruction) {
 				UpdateVisualisation();
+			}
+
+			if(inConstruction) {
+				inConstruction = false;
 			}
 		}
 
@@ -109,6 +119,24 @@ namespace nfs.nets.layered {
 			InstantiateLayers();
 			InstantiateNeurons();
 			InstantiateSynapses();
+			UpdateLabels ();
+		}
+
+		private void UpdateLabels() {
+			networkIdLabel.text = "Id: " + focus.NeuralNet.Id;
+
+			string lineage = "";
+			if(focus.NeuralNet.Lineage != null) {
+				foreach(string ancestor in focus.NeuralNet.Lineage) {
+					lineage += ancestor + ", ";
+				}
+			}
+
+			if(lineage != ""){
+				lineage.Remove (lineage.Length - 1);
+			}
+
+			networkLineageLabel.text = "Lineage: " + lineage;
 		}
 
 		/// <summary>
@@ -242,6 +270,7 @@ namespace nfs.nets.layered {
 		/// Clears the current visualisation.
 		/// </summary>
 		public void ClearCurrentVisualisation() {
+			inConstruction = true;
 			focus = null;
 
 			if (synapses != null) {
@@ -261,6 +290,10 @@ namespace nfs.nets.layered {
 					GameObject.Destroy(layers[i]);
 				}
 			}
+
+			networkIdLabel.text = "Id: ";
+			networkLineageLabel.text = "Lineage: ";
+
 		}
 
 	}
