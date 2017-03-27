@@ -26,7 +26,7 @@ namespace nfs.car {
 		protected override void PostInitialisation() {
 			for (int i = 0; i < HostPopulation.Length; i++) {
 				HostPopulation [i].GetComponent<CarLayeredNetController> ().MaxDistFitness = maxDistanceFitness;
-				HostPopulation [i].GetComponent<CarLayeredNetController> ().StartTime = generationStartTime;
+				HostPopulation [i].GetComponent<CarLayeredNetController> ().StartTime = GenerationStartTime;
 			}
 		}
 
@@ -39,7 +39,7 @@ namespace nfs.car {
 		// we set the same start time to every one.
 		protected override void RefreshHosts() {
 			for (int i = 0; i < HostPopulation.Length; i++) {
-				HostPopulation [i].GetComponent<CarLayeredNetController> ().StartTime = generationStartTime;
+				HostPopulation [i].GetComponent<CarLayeredNetController> ().StartTime = GenerationStartTime;
 			}
 		}
 

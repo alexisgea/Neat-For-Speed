@@ -108,7 +108,7 @@ namespace nfs.nets.layered{
         /// The algorythm will force the next generation after this time in seconds.
         /// </summary>
         [SerializeField] protected float maxGenerationTime = 90;
-        protected float generationStartTime;
+		public float GenerationStartTime { private set; get; }
 	
         /// <summary>
         /// The transform underwich to parent any instanctiated world element.
@@ -150,7 +150,7 @@ namespace nfs.nets.layered{
         /// Monobehavirous update.
         /// </summary>
         protected virtual void Update() {
-            if (CurrentLiveNetworks == 0 || Time.unscaledTime - generationStartTime > maxGenerationTime) {
+            if (CurrentLiveNetworks == 0 || Time.unscaledTime - GenerationStartTime > maxGenerationTime) {
                 NextGeneration();
             }
         }
@@ -194,7 +194,7 @@ namespace nfs.nets.layered{
 			// all is ready and set to start for the training
 			//hostAlive = population;
 			GenerationNb += 1;
-			generationStartTime = Time.unscaledTime;
+			GenerationStartTime = Time.unscaledTime;
 		}
 
 		///<summary>
@@ -267,6 +267,15 @@ namespace nfs.nets.layered{
                 Evolution.RankFitnessContender(AlltimeFittestNets, fitnessContender.GetClone());
                 Evolution.RankFitnessContender(GenerationFittestNets, fitnessContender.GetClone());
             }
+
+			for (int i = 0; i < breedingSampleNb; i++) {
+				if(!NetworkGenealogy.ContainsKey (AlltimeFittestNets[i].Id)){
+					NetworkGenealogy.Add (AlltimeFittestNets[i].Id, AlltimeFittestNets[i]);
+				}
+				if(!NetworkGenealogy.ContainsKey (GenerationFittestNets[i].Id)){
+					NetworkGenealogy.Add (GenerationFittestNets[i].Id, GenerationFittestNets[i]);
+				}
+			}
         }
 
         protected virtual void RaiseNextGenerationTraining() {

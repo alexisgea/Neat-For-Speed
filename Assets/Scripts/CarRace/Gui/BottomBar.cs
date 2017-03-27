@@ -10,7 +10,8 @@ namespace nfs.car{
 
         [SerializeField] private Text generationLabel;
         [SerializeField] private Text allTimeBestLabel;
-        [SerializeField] private Text generationBestLabel;
+        [SerializeField] private Text generationTimer;
+		[SerializeField] private Text liveNetworkCounter;
 
         private nets.layered.Trainer trainer;
 
@@ -20,15 +21,21 @@ namespace nfs.car{
             trainer.NextGenerationTraining += UpdateLabels;
         }
 
+		private void Update() {
+			liveNetworkCounter.text = "live cars " + trainer.CurrentLiveNetworks;
+			generationTimer.text = "Time: " + (Time.unscaledTime - trainer.GenerationStartTime).ToString ("F2");
+		}
+
 		/// <summary>
 		/// Updates the labels.
 		/// </summary>
 		private void UpdateLabels () {
             generationLabel.text = "Generation: " + trainer.GenerationNb;
             if(trainer.GenerationNb > 1) {
-            	allTimeBestLabel.text = "All-time best: " + trainer.AlltimeFittestNets[0].FitnessScore.ToString("F2");
-            	generationBestLabel.text = "Last-gen best: " + trainer.GenerationFittestNets[0].FitnessScore.ToString("F2");
+				allTimeBestLabel.text = "All-time best: " + trainer.AlltimeFittestNets[0].Id + " : " + trainer.AlltimeFittestNets[0].FitnessScore.ToString("F2");
 			}
+
+			generationTimer.text = "0.00";
         }
 	}
 }
