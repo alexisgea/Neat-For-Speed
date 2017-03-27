@@ -80,6 +80,7 @@ namespace nfs.nets.layered {
 				UpdateInputValues ();
 				UpdateOutputValues ();
 				UseOutputValues ();
+				UpdateFitnessScore ();
 				CheckAliveStatus ();
 			}
 		}
@@ -101,11 +102,17 @@ namespace nfs.nets.layered {
 			}
 		}
 
+		public virtual void UpdateFitnessScore() {
+			if (!IsDead) {
+				NeuralNet.FitnessScore = CalculateFitness();
+			}
+		}
+
 		/// <summary>
 		/// Calculates the fitness of the neural net instance and raise the death event.
 		/// </summary>
 		public virtual void Kill() {
-			NeuralNet.FitnessScore = CalculateFitness();
+			//NeuralNet.FitnessScore = CalculateFitness();
 			IsDead = true;
 			RaiseDeathEvent();
 

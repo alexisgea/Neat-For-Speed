@@ -79,6 +79,8 @@ namespace nfs.nets.layered {
 		/// </summary>
 		private void UpdateVisualisation () {
 
+			networkFitnessLabel.text = "Fitness: " + focus.NeuralNet.FitnessScore.ToString ("F2");
+
 			int N = 0; // neuron counter
 			int S = 0; // synapse counter
 			int NLsum = 0;
@@ -293,6 +295,7 @@ namespace nfs.nets.layered {
 
 			networkIdLabel.text = "Id: ";
 			networkLineageLabel.text = "Lineage: ";
+			networkFitnessLabel.text = "Fitness: ";
 
 		}
 

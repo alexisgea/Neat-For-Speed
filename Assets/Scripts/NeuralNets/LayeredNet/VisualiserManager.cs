@@ -25,6 +25,7 @@ namespace nfs.nets.layered {
 			}
 
 			FindObjectOfType<Trainer> ().NextGenerationTraining += ResetForNewGen;
+			ResetForNewGen ();
 
 		}
 
