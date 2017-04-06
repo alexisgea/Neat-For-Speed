@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using System.Collections;
+using System;
 using nfs.tools;
 
 namespace nfs.nets.layered {
@@ -250,6 +250,19 @@ namespace nfs.nets.layered {
         }
 
         ///<summary>
+        /// Get all synapses values of the network.
+        ///</summary>
+        public float[][][] GetAllSynapseLayerValues() {
+            float[][][] allSynapseValues = new float[synapses.Length][][];
+
+            for (int i = 0; i < synapses.Length; i++) {
+                allSynapseValues[i] = synapses[i].GetAllValues();
+            }
+
+            return allSynapseValues;
+        }
+
+        ///<summary>
         /// Get all out synapses values of a neuron.
         ///</summary>
         public float[] GetNeuronSynapsesValues(int layer, int neuron) {
@@ -300,5 +313,32 @@ namespace nfs.nets.layered {
 		public void InsertLineage(string[] lineage) {
 			Lineage = lineage;
 		}
+
+        public SerializedNetwork Serialize(string nickname = "") {
+            SerializedNetwork serializedNetwork = new SerializedNetwork();
+
+            serializedNetwork.Nickname = nickname;
+            serializedNetwork.Id = this.Id;
+            serializedNetwork.Lineage = this.Lineage;
+            serializedNetwork.FitnessScore = this.FitnessScore;
+            serializedNetwork.LayersSizes = this.LayersSizes;
+            serializedNetwork.Synapsesvalues = this.GetAllSynapseLayerValues();
+
+            return serializedNetwork;
+        }
+
     }
+
+    [Serializable]
+    public class SerializedNetwork {
+
+        public string Nickname;
+        public string Id;
+        public string[] Lineage;
+        public float FitnessScore;
+        public int[] LayersSizes;
+        public float[][][] Synapsesvalues;
+
+    }
+
 }
