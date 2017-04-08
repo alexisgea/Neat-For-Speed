@@ -18,10 +18,6 @@ namespace nfs.nets.layered {
         public bool ShowBest { set; get;}
 
 
-
-
-
-
         private void Start() {
 			SecurityCheck ();
 
@@ -36,6 +32,7 @@ namespace nfs.nets.layered {
 
             originalSize = visualisers[0].GetComponent<RectTransform>().sizeDelta;
             minSize = visualisers[0].transform.FindChild("Top Info").GetComponent<RectTransform>().sizeDelta.y;
+			CollapseView();
 
         }
 
