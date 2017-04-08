@@ -1,12 +1,12 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-namespace nfs.car{
+namespace nfs.net.layered{
 
 	/// <summary>
 	/// Bottom UI bar.
 	/// </summary>
-	public class BottomBar : MonoBehaviour {
+	public class TrainerUI : MonoBehaviour {
 
         [SerializeField] private Text generationLabel;
         [SerializeField] private Text allTimeBestLabel;
@@ -22,7 +22,7 @@ namespace nfs.car{
         }
 
 		private void Update() {
-			liveNetworkCounter.text = "live cars " + trainer.CurrentLiveNetworks;
+			liveNetworkCounter.text = "live nets: " + trainer.CurrentLiveNetworks;
 			generationTimer.text = "Time: " + (Time.unscaledTime - trainer.GenerationStartTime).ToString ("F2");
 		}
 
@@ -37,5 +37,11 @@ namespace nfs.car{
 
 			generationTimer.text = "0.00";
         }
+
+		public void GoToSceneMain() {
+			MainScreen.GoToScene(SceneName.MainScreen);
+		}
+
+
 	}
 }
