@@ -13,8 +13,11 @@ public class Cell : MonoBehaviour {
 	/// </summary>
 	public float rotationSpeed = 180f;
 
-	private Rigidbody2D rb;
-	private ICellInput input;
+	public Collider2D cellCollider;
+	public ContactFilter2D foodFilter;
+
+	Rigidbody2D rb;
+	ICellInput input;
 
 	void Awake ()
 	{
@@ -22,8 +25,22 @@ public class Cell : MonoBehaviour {
 		input = new PlayerCellInput ();
 	}
 			
-	void FixedUpdate () {
+	void FixedUpdate ()
+	{
 		rb.AddRelativeForce (Vector2.up * moveForwardForce * input.GetMoveForward ());
 		rb.MoveRotation (rb.rotation + input.GetTurn () * -rotationSpeed * Time.deltaTime);
+
+		Eat ();
+	}
+
+	void Eat ()
+	{
+		print ("yo"); 
+		var results = new Collider2D[10];
+		int count = cellCollider.OverlapCollider (foodFilter, results);
+
+		for (int i = 0; i < count; i++) {
+			Destroy (results[i].gameObject);
+		}
 	}
 }
