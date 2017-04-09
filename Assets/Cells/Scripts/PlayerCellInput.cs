@@ -2,13 +2,18 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerCellInput : ICellInput {
+namespace nfs.cells
+{
+	public class PlayerCellInput : ICellInput
+	{
+		public float GetMoveForward ()
+		{
+			return Input.GetAxis ("Vertical");
+		}
 
-	public float GetMoveForward () {
-		return Input.GetAxis ("Vertical");
-	}
-
-	public float GetTurn () {
-		return Input.GetAxis ("Horizontal");
+		public float GetTurn ()
+		{
+			return Input.GetAxis ("Horizontal");
+		}
 	}
 }

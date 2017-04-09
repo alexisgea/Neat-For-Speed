@@ -2,9 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-interface ICellInput
+namespace nfs.cells
 {
-	float GetMoveForward ();
-	float GetTurn ();
+	interface ICellInput
+	{
+		float GetMoveForward ();
+		float GetTurn ();
+	}
 }
-

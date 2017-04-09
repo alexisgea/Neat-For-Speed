@@ -3,45 +3,47 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
-public class CellSensor : MonoBehaviour {
-
-	public BoxCollider2D sensor;
-	public float radius;
-
-	ContactFilter2D contactFilter;
-
-	Collider2D[] overlapping;
-
-	void Awake ()
+namespace nfs.cells
+{
+	public class CellSensor : MonoBehaviour
 	{
-		contactFilter = new ContactFilter2D ();
-		overlapping = new Collider2D[10];
-	}
+		public BoxCollider2D sensor;
+		public float radius;
 
-	void Update ()
-	{
-		Evaluate ();
-	}
+		ContactFilter2D contactFilter;
 
-	public float Evaluate ()
-	{
-		float totalWeight = 0f;
+		Collider2D[] overlapping;
 
-		int count = sensor.OverlapCollider (contactFilter, overlapping);
-		for (int i = 0; i < count; i++) {
-			var distance = Vector2.Distance (transform.position, overlapping [i].transform.position);
-			var weight = 1 - (distance / radius);
-			Debug.DrawLine (transform.position, overlapping [i].transform.position, Color.yellow);
-			totalWeight += weight;
-			//Debug.Log (overlapping [i].name);
-
-			//DrawText ((transform.position + overlapping [i].transform.position) * 0.5f, weight.ToString ());
+		void Awake ()
+		{
+			contactFilter = new ContactFilter2D ();
+			overlapping = new Collider2D[10];
 		}
 
-		//Debug.Log (totalWeight);
-		return totalWeight;
-	}
+		void Update ()
+		{
+			Evaluate ();
+		}
 
+		public float Evaluate ()
+		{
+			float totalWeight = 0f;
+
+			int count = sensor.OverlapCollider (contactFilter, overlapping);
+			for (int i = 0; i < count; i++) {
+				var distance = Vector2.Distance (transform.position, overlapping [i].transform.position);
+				var weight = 1 - (distance / radius);
+				Debug.DrawLine (transform.position, overlapping [i].transform.position, Color.yellow);
+				totalWeight += weight;
+				//Debug.Log (overlapping [i].name);
+
+				//DrawText ((transform.position + overlapping [i].transform.position) * 0.5f, weight.ToString ());
+			}
+
+			//Debug.Log (totalWeight);
+			return totalWeight;
+		}
+	}
 //	void OnDrawGizmos ()
 //	{
 //		DrawText (transform.position, "hey!");
