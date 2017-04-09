@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-namespace nfs.net.layered{
+namespace nfs.nets.layered{
 
 	/// <summary>
 	/// Bottom UI bar.
@@ -13,17 +13,25 @@ namespace nfs.net.layered{
         [SerializeField] private Text generationTimer;
 		[SerializeField] private Text liveNetworkCounter;
 
-        private nets.layered.Trainer trainer;
+		Trainer trainer;
 
         // Use this for initialization
         private void Start () {
-            trainer = FindObjectOfType<nets.layered.Trainer>();
+
+			trainer = FindObjectOfType<Trainer>();
+			if(trainer == null)
+				Debug.LogError("No object Trainer found!");
+
             trainer.NextGenerationTraining += UpdateLabels;
         }
 
 		private void Update() {
 			liveNetworkCounter.text = "live nets: " + trainer.CurrentLiveNetworks;
 			generationTimer.text = "Time: " + (Time.unscaledTime - trainer.GenerationStartTime).ToString ("F2");
+
+			if(Input.GetButtonDown("Cancel")) {
+            	MainScreen.GoToScene(Scenes.MainScreen);
+        	}
 		}
 
 		/// <summary>
@@ -38,9 +46,16 @@ namespace nfs.net.layered{
 			generationTimer.text = "0.00";
         }
 
-		public void GoToSceneMain() {
-			MainScreen.GoToScene(SceneName.MainScreen);
+		public void JumpToNextGeneration() {
+			trainer.NextGeneration();
 		}
+
+		public void EndTraining() {
+			//trainer.SaveBestNetwork();
+			MainScreen.GoToScene(Scenes.MainScreen);
+		}
+
+
 
 
 	}
