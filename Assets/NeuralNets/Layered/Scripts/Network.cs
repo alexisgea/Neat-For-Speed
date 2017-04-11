@@ -100,10 +100,8 @@ namespace nfs.nets.layered {
 
         private void ConstructTopology(int[] layersSizes) {
 
-            if(layersSizes == null || layersSizes.Length < 2) {
-                Debug.LogError("Cannot create a network that has less than 2 layer.");
-                return;
-            }
+            Debug.Assert(layersSizes != null && layersSizes.Length >= 2, "Cannot create a network that has less than 2 layer.");
+
             // each layer is one line of neuron
             inputNeurons = new Matrix(1, layersSizes[0]).SetToOne();
             outputNeurons = new Matrix(1, layersSizes[layersSizes.Length-1]).SetToOne();
@@ -183,10 +181,7 @@ namespace nfs.nets.layered {
         ///</summary>
 		public float[] PingFwd(float[] sensorsValues) {
 
-			if (sensorsValues.Length == 0) {
-				Debug.LogError("Input values are null, returning from ping forward.");
-				return null;
-			}
+            Debug.Assert(sensorsValues.Length > 0, "Input values are null, returning from ping forward.");
             
             // we set the inputs neurons values and ignore the missmatch as there is a bias neuron
             inputNeurons.SetLineValues(0, sensorsValues, true); 
@@ -213,11 +208,9 @@ namespace nfs.nets.layered {
         /// Get all values of a layer of neurons.
         ///</summary>
         public float[] GetNeuronLayerValues(int layer) {
-            if(layer >= NumberOfLayers) {
-                Debug.LogError("Neuron layer requested is not in the neural net (too high). Returning empty array.");
-                return new float[] {};
+            Debug.Assert(layer < NumberOfLayers, "Neuron layer requested is not in the neural net (too high).");
 
-            } else if (layer == 0){
+            if (layer == 0){
                 return GetInputValues();
 
             } else if (layer == NumberOfLayers-1) {
@@ -253,13 +246,9 @@ namespace nfs.nets.layered {
         /// Get all out synapses values of a layer of neurons.
         ///</summary>
         public float[][] GetSynapseLayerValues(int layer) {
-            if(layer >= NumberOfLayers-1) {
-                Debug.LogError("Synapse layer requested is not in the neural net (too high). Returning emtpy array of array.");
-                return new float[][]{}; // is it possible to create an array of lenght 0?
+            Debug.Assert(layer < NumberOfLayers-1 , "Synapse layer requested is not in the neural net (too high).");
 
-            } else {
-                return synapses[layer].GetAllValues();
-            }
+            return synapses[layer].GetAllValues();
         }
 
         ///<summary>
@@ -279,13 +268,9 @@ namespace nfs.nets.layered {
         /// Get all out synapses values of a neuron.
         ///</summary>
         public float[] GetNeuronSynapsesValues(int layer, int neuron) {
-            if(layer >= NumberOfLayers-1 || neuron >= synapses[layer].J) {
-                Debug.LogError("Synapse layer or neuron requested is not in the neural net (too high). Returning empty array.");
-                return new float[]{};
+            Debug.Assert(layer < NumberOfLayers-1 && neuron < synapses[layer].J, "Synapse layer or neuron requested is not in the neural net (too high).");
 
-            } else {
-                return synapses[layer].GetLineValues(neuron);
-            }
+            return synapses[layer].GetLineValues(neuron);
         }
 
         ///<summary>
@@ -311,31 +296,21 @@ namespace nfs.nets.layered {
         /// Replace the synapse values with new ones from an array of Matrices.
         ///</summary>
         public void InsertSynapses(Matrix[] newSynapses) {
+            Debug.Assert(synapses.Length == newSynapses.Length, "The number of synapses matrices to insert does not match the number of this network: " + newSynapses.Length + " vs " + synapses.Length  + ".");
 
-            if(synapses.Length == newSynapses.Length){
-                for (int i = 0; i < synapses.Length; i++) {
-                    synapses[i].SetAllValues(newSynapses[i]);
-                } 
-
-            } else {
-                Debug.LogWarning("The number of synapses matrices to insert does not match the number of this network: "
-                                + newSynapses.Length + " vs " + synapses.Length  + ", doing nothing.");
-            }
+            for (int i = 0; i < synapses.Length; i++) {
+                synapses[i].SetAllValues(newSynapses[i]);
+            } 
         }
 
         ///<summary>
         /// Replace the synapse values with new ones from an array of Matrices.
         ///</summary>
         public void InsertSynapses(float[][][] newSynapses) {
+            Debug.Assert(synapses.Length == newSynapses.Length, "The number of synapses matrices to insert does not match the number of this network: " + newSynapses.Length + " vs " + synapses.Length  + ".");
 
-            if(synapses.Length == newSynapses.Length){
-                for (int i = 0; i < synapses.Length; i++) {
-                    synapses[i].SetAllValues(newSynapses[i]);
-                } 
-
-            } else {
-                Debug.LogWarning("The number of synapses matrices to insert does not match the number of this network: "
-                                + newSynapses.Length + " vs " + synapses.Length  + ", doing nothing.");
+            for (int i = 0; i < synapses.Length; i++) {
+                synapses[i].SetAllValues(newSynapses[i]);
             }
         }
 

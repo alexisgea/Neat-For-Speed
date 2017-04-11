@@ -50,25 +50,21 @@ namespace nfs.tools {
         /// If matrix B has value 01 then the new one will as well.
 	    ///</summary>
 		public static Matrix Multiply (Matrix matrixA, Matrix matrixB, bool normalize = false) {
-            if (matrixA.J == matrixB.I) { 
-				Matrix resultMatrix = new Matrix(matrixA.I, matrixB.J);
+            Debug.Assert(matrixA.J == matrixB.I, "Matrix multiplication error due to size missmatch.");
 
-                for (int i = 0; i < matrixA.I; i++) {
-					for(int j = 0; j < matrixB.J; j++) {
+            Matrix resultMatrix = new Matrix(matrixA.I, matrixB.J);
 
-                        float weightedSum = 0f;
-						for(int k = 0; k < matrixA.J; k ++) {
-                            weightedSum += matrixA.matrix[i][k] * matrixB.matrix[k][j];
-                        }
-                        resultMatrix.matrix[i][j] = normalize? weightedSum/matrixA.J : weightedSum;
+            for (int i = 0; i < matrixA.I; i++) {
+                for(int j = 0; j < matrixB.J; j++) {
+
+                    float weightedSum = 0f;
+                    for(int k = 0; k < matrixA.J; k ++) {
+                        weightedSum += matrixA.matrix[i][k] * matrixB.matrix[k][j];
                     }
-				}
-                return resultMatrix;
-
-            } else {
-                Debug.LogWarning("Matrix multiplication error due to size missmatch. Matrix A returned.");
-                return matrixA;
-			}
+                    resultMatrix.matrix[i][j] = normalize? weightedSum/matrixA.J : weightedSum;
+                }
+            }
+            return resultMatrix;
         }
 
         ///<summary>
@@ -76,22 +72,18 @@ namespace nfs.tools {
         /// IF there is a mismatch of size, the matrix A will be returned.
 	    ///</summary>
         public static Matrix Add (Matrix matrixA, Matrix matrixB) {
-            if (CheckDimention(matrixA, matrixB)) {
-                Matrix newMat = new Matrix(matrixA.I, matrixA.J);
+            Debug.Assert(CheckDimention(matrixA, matrixB), "Matrix addition error due to size missmatch.");
 
-                for (int i = 0; i < matrixA.I; i++) {
-					for(int j = 0; j < matrixA.J; j++) {
-                        float sum = matrixA.matrix[i][j] + matrixB.matrix[i][j];
-                        newMat.matrix[i][j] = sum;
-                    }
-				}
+            Matrix newMat = new Matrix(matrixA.I, matrixA.J);
 
-                return newMat;
+            for (int i = 0; i < matrixA.I; i++) {
+                for(int j = 0; j < matrixA.J; j++) {
+                    float sum = matrixA.matrix[i][j] + matrixB.matrix[i][j];
+                    newMat.matrix[i][j] = sum;
+                }
+            }
 
-            } else {
-                Debug.LogWarning("Matrix addition error due to size missmatch. Matrix A returned.");
-                return matrixA;
-			}
+            return newMat;
         }
 
         ///<summary>
@@ -197,72 +189,49 @@ namespace nfs.tools {
 	    /// Returns all float values from a requested line.
 	    ///</summary>
         public float[] GetLineValues(int line = 0) {
+            Debug.Assert(line <= I, "There is no line " + line + " in this matrix.");
+
             float[] lineValues = new float[J];
 
-            if(line <= I) {
-                for(int j=0; j<J; j++){
-                    lineValues[j] = matrix[line][j];
-                }
-                return lineValues;
-
-            } else {
-                Debug.LogError("There is no line " + line + " in this matrix. Returning null.");
-                return null;
+            for(int j=0; j<J; j++){
+                lineValues[j] = matrix[line][j];
             }
+            return lineValues;
         }
 
         ///<summary>
 	    /// Returns all float values from a requested column.
 	    ///</summary>
         public float[] GetColumnValues(int col = 0) {
+            Debug.Assert(col <= J, "There is no col " + col + " in this matrix.");
+            
             float[] colValues = new float[I];
 
-            if(col <= J) {
-                for(int i=0; i<I; i++){
-                    colValues[i] = matrix[i][col];
-                }
-                return colValues;
-
-            } else {
-                Debug.LogError("There is no col " + col + " in this matrix. Returning null.");
-                return null;
+            for(int i=0; i<I; i++){
+                colValues[i] = matrix[i][col];
             }
+            return colValues;
         }
 
         ///<summary>
 	    /// Get one specific value in the matrix.
 	    ///</summary>
         public float GetValue(int line, int col) {
-            if(line <= I && col <= J) {
-                return matrix[line][col];
-            } else {
-                Debug.LogWarning("There is no col " + col + " or line " + line + " for this matrix. Returning 0.");
-                return 0f;
-            }
+            Debug.Assert(line <= I && col <= J, "There is no col " + col + " or line " + line + " for this matrix.");
+
+            return matrix[line][col];
         }
 
         ///<summary>
 	    /// Set all values from another matrix.
 	    ///</summary>
         public void SetAllValues(Matrix other, bool ignoreMissmatch = false) {
+            Debug.Assert(ignoreMissmatch || CheckDimention(this, other), "Matrix dimention not equal, cannot copy values. Do you want to ignore missmatch?");
 
-            if(!ignoreMissmatch && !CheckDimention(this, other)){
-                Debug.LogWarning("Matrix dimention not equal, cannot copy values. Doing nothing.");
-            }
-            else if(!ignoreMissmatch){
-                for (int i = 0; i < I; i++) {
-                    for (int j = 0; j < J; j++) {
-                        matrix[i][j] = other.matrix[i][j];
-                    }
+            for (int i = 0; i < Mathf.Min(I, other.I); i++) {
+                for (int j = 0; j < Mathf.Min(J, other.J); j++) {
+                    matrix[i][j] = other.matrix[i][j];
                 }
-            }
-            else if(ignoreMissmatch) {
-                for (int i = 0; i < Mathf.Min(I, other.I); i++) {
-                    for (int j = 0; j < Mathf.Min(J, other.J); j++) {
-                        matrix[i][j] = other.matrix[i][j];
-                    }
-                }
-
             }
         }
 
@@ -270,25 +239,14 @@ namespace nfs.tools {
 	    /// Set all values from another matrix.
 	    ///</summary>
         public void SetAllValues(float[][] other, bool ignoreMissmatch = false) {
+            Debug.Assert(ignoreMissmatch || CheckDimention(this, other), "Matrix dimention not equal, cannot copy values. Do you want to ignore missmatch?");
 
-            if(!ignoreMissmatch && !CheckDimention(this, other)){
-                Debug.LogWarning("Matrix dimention not equal, cannot copy values. Doing nothing.");
-            }
-            else if(!ignoreMissmatch){
-                for (int i = 0; i < I; i++) {
-                    for (int j = 0; j < J; j++) {
-                        matrix[i][j] = matrix[i][j];
-                    }
+            for (int i = 0; i < Mathf.Min(I, other.Length); i++) {
+                for (int j = 0; j < Mathf.Min(J, other[0].Length); j++) {
+                    matrix[i][j] = matrix[i][j];
                 }
             }
-            else if(ignoreMissmatch) {
-                for (int i = 0; i < Mathf.Min(I, other.Length); i++) {
-                    for (int j = 0; j < Mathf.Min(J, other[0].Length); j++) {
-                        matrix[i][j] = matrix[i][j];
-                    }
-                }
 
-            }
         }
 
 
@@ -297,18 +255,11 @@ namespace nfs.tools {
         /// It is possible to ignore size missmatch.
 	    ///</summary>
         public void SetLineValues (int line, float[] values, bool ignoreMissmatch = false) {
-            if(line <= I && values.Length <= this.J) {
+            Debug.Assert(line <= I && values.Length <= this.J, "There is no line " + line + " or the number of columns mismatch (" + values.Length + " vs " + this.J + ") for this matrix.");
+            Debug.Assert(J == values.Length || ignoreMissmatch, "Array given not equal to size of line: " + values.Length + " vs " + this.J + ". Do you want to ignore missmatch?");
 
-                for(int j=0; j<Mathf.Min(J, values.Length); j++){
-                    matrix[line][j] = values[j];
-                }
-
-                if(J != values.Length && !ignoreMissmatch)
-                    Debug.LogWarning("Array given not equal to size of line: " + values.Length + " vs " + this.J + ", doing nothing.");
-
-            } else {
-                Debug.LogWarning("There is no line " + line + " or the number of columns mismatch ("
-                                 + values.Length + " vs " + this.J + ") for this matrix. Doing nothing.");
+            for(int j=0; j<Mathf.Min(J, values.Length); j++){
+                matrix[line][j] = values[j];
             }
         }
 
@@ -317,18 +268,11 @@ namespace nfs.tools {
         /// It is possible to ignore size missmatch.
 	    ///</summary>
         public void SetColumnValues (int col, float[] values, bool ignoreMissmatch = false) {
+            Debug.Assert(col <= J && values.Length <= this.I, "There is no col " + col + " or the number of lines mismatch (" + values.Length + " vs " + this.I + ") for this matrix.");
+            Debug.Assert(I == values.Length || ignoreMissmatch, "Array given not equal to size of column: " + values.Length + " vs " + this.I + ". Do you want to ignore missmatch?");
 
-            if(col <= J && values.Length <= this.I) {
-                for(int i=0; i<Mathf.Min(I, values.Length); i++){
-                    matrix[i][col] = values[i];
-                }
-
-                if(I != values.Length && !ignoreMissmatch)
-                    Debug.LogWarning("Array given not equal to size of column: " + values.Length + " vs " + this.I + ", doing nothing.");
-
-            } else {
-                Debug.LogWarning("There is no col " + col + " or the number of lines mismatch ("
-                                 + values.Length + " vs " + this.I + ") for this matrix. Doing nothing.");
+            for(int i=0; i<Mathf.Min(I, values.Length); i++){
+                matrix[i][col] = values[i];
             }
         }
 
@@ -336,11 +280,9 @@ namespace nfs.tools {
 	    /// Set one specific value in the matrix.
 	    ///</summary>
         public void SetValue(int line, int col, float value) {
-            if(line <= I && col <= J) {
-                matrix[line][col] = value;
-            } else {
-                Debug.LogWarning("There is no col " + col + " or line " + line + " for this matrix. Doing nothing.");
-            }
+            Debug.Assert(line <= I && col <= J, "There is no col " + col + " or line " + line + " for this matrix.");
+
+            matrix[line][col] = value;
         }
 
         ///<summary>
