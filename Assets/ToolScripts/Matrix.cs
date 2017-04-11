@@ -28,8 +28,8 @@ namespace nfs.tools {
         /// <summary>
         /// Initializes a new instance of the <see cref="nfs.tools.Matrix"/> class.
         /// </summary>
-        /// <param name="i">The index.</param>
-        /// <param name="j">J.</param>
+        /// <param name="i">The number of rows.</param>
+        /// <param name="j">The number of column.</param>
         public Matrix(int i, int j) {
             I = i;
             J = j;
@@ -99,6 +99,20 @@ namespace nfs.tools {
 	    ///</summary>
         public static bool CheckDimention (Matrix matrixA, Matrix matrixB) {
             return (matrixA.I == matrixB.I && matrixA.J == matrixB.J) ? true : false;
+        }
+
+        ///<summary>
+	    /// Check if another matrix is of the same dimention as this one.
+	    ///</summary>
+        public static bool CheckDimention (Matrix matrixA, float[][] matrixB) {
+            return (matrixA.I == matrixB.Length && matrixA.J == matrixB[0].Length) ? true : false;
+        }
+
+        ///<summary>
+	    /// Check if another matrix is of the same dimention as this one.
+	    ///</summary>
+        public static bool CheckDimention (float[][] matrixA, float[][] matrixB) {
+            return (matrixA.Length == matrixB.Length && matrixA[0].Length == matrixB[0].Length) ? true : false;
         }
 
 		/// <summary>
@@ -230,17 +244,53 @@ namespace nfs.tools {
         ///<summary>
 	    /// Set all values from another matrix.
 	    ///</summary>
-        public void SetAllValues(Matrix other) {
-            if (CheckDimention(this, other)) {
+        public void SetAllValues(Matrix other, bool ignoreMissmatch = false) {
+
+            if(!ignoreMissmatch && !CheckDimention(this, other)){
+                Debug.LogWarning("Matrix dimention not equal, cannot copy values. Doing nothing.");
+            }
+            else if(!ignoreMissmatch){
                 for (int i = 0; i < I; i++) {
                     for (int j = 0; j < J; j++) {
                         matrix[i][j] = other.matrix[i][j];
                     }
                 }
-            } else {
-                Debug.LogWarning("Matrix dimention not equal, cannot copy values. Doing nothing.");
+            }
+            else if(ignoreMissmatch) {
+                for (int i = 0; i < Mathf.Min(I, other.I); i++) {
+                    for (int j = 0; j < Mathf.Min(J, other.J); j++) {
+                        matrix[i][j] = other.matrix[i][j];
+                    }
+                }
+
             }
         }
+
+        ///<summary>
+	    /// Set all values from another matrix.
+	    ///</summary>
+        public void SetAllValues(float[][] other, bool ignoreMissmatch = false) {
+
+            if(!ignoreMissmatch && !CheckDimention(this, other)){
+                Debug.LogWarning("Matrix dimention not equal, cannot copy values. Doing nothing.");
+            }
+            else if(!ignoreMissmatch){
+                for (int i = 0; i < I; i++) {
+                    for (int j = 0; j < J; j++) {
+                        matrix[i][j] = matrix[i][j];
+                    }
+                }
+            }
+            else if(ignoreMissmatch) {
+                for (int i = 0; i < Mathf.Min(I, other.Length); i++) {
+                    for (int j = 0; j < Mathf.Min(J, other[0].Length); j++) {
+                        matrix[i][j] = matrix[i][j];
+                    }
+                }
+
+            }
+        }
+
 
         ///<summary>
 	    /// Set all float values of a line.

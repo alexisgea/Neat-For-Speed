@@ -86,13 +86,24 @@ namespace nfs.nets.layered {
         /// and an array for the hidden layers with each element being the size of a different hidden layer.!--
         ///</summary>
 		public Network (int[] layersSizes, string id) {
+            ConstructTopology(layersSizes);
+            Id = id;
+        }
+
+        public Network (SerializedNetwork serializedNetwork) {
+            ConstructTopology(serializedNetwork.LayersSizes);
+            InsertSynapses(serializedNetwork.Synapsesvalues);
+            Id = serializedNetwork.Id;
+            Lineage = serializedNetwork.Lineage;
+            FitnessScore = serializedNetwork.FitnessScore;
+        }
+
+        private void ConstructTopology(int[] layersSizes) {
 
             if(layersSizes == null || layersSizes.Length < 2) {
                 Debug.LogError("Cannot create a network that has less than 2 layer.");
                 return;
             }
-
-            Id = id;
             // each layer is one line of neuron
             inputNeurons = new Matrix(1, layersSizes[0]).SetToOne();
             outputNeurons = new Matrix(1, layersSizes[layersSizes.Length-1]).SetToOne();
@@ -110,7 +121,9 @@ namespace nfs.nets.layered {
             for (int i = 0; i < synapses.Length; i++) {
                 synapses[i] = new Matrix(layersSizes[i], layersSizes[i+1]).SetAsSynapse();
             }
+
         }
+        
 
         ///<summary>
         /// Creates and return a deep clone of the network.
@@ -310,21 +323,34 @@ namespace nfs.nets.layered {
             }
         }
 
+        ///<summary>
+        /// Replace the synapse values with new ones from an array of Matrices.
+        ///</summary>
+        public void InsertSynapses(float[][][] newSynapses) {
+
+            if(synapses.Length == newSynapses.Length){
+                for (int i = 0; i < synapses.Length; i++) {
+                    synapses[i].SetAllValues(newSynapses[i]);
+                } 
+
+            } else {
+                Debug.LogWarning("The number of synapses matrices to insert does not match the number of this network: "
+                                + newSynapses.Length + " vs " + synapses.Length  + ", doing nothing.");
+            }
+        }
+
 		public void InsertLineage(string[] lineage) {
 			Lineage = lineage;
 		}
 
-        public SerializedNetwork Serialize(string nickname = "") {
-            SerializedNetwork serializedNetwork = new SerializedNetwork();
+        public static string Serialize(Network network, string nickname = "") {
+            SerializedNetwork serializedNetwork = new SerializedNetwork(nickname, network);
+            return JsonUtility.ToJson(serializedNetwork);
+        }
 
-            serializedNetwork.Nickname = nickname;
-            serializedNetwork.Id = this.Id;
-            serializedNetwork.Lineage = this.Lineage;
-            serializedNetwork.FitnessScore = this.FitnessScore;
-            serializedNetwork.LayersSizes = this.LayersSizes;
-            serializedNetwork.Synapsesvalues = this.GetAllSynapseLayerValues();
-
-            return serializedNetwork;
+        public static Network Deserialize(string jsonSerializedNetwork) {
+            SerializedNetwork serializedNetwork =  JsonUtility.FromJson<SerializedNetwork>(jsonSerializedNetwork);
+            return new Network(serializedNetwork);
         }
 
     }
@@ -332,12 +358,23 @@ namespace nfs.nets.layered {
     [Serializable]
     public class SerializedNetwork {
 
-        public string Nickname;
-        public string Id;
-        public string[] Lineage;
-        public float FitnessScore;
-        public int[] LayersSizes;
-        public float[][][] Synapsesvalues;
+        public string Nickname {private set; get;}
+        public string Id {private set; get;}
+        public string[] Lineage {private set; get;}
+        public float FitnessScore {private set; get;}
+        public int[] LayersSizes {private set; get;}
+        public float[][][] Synapsesvalues {private set; get;}
+
+        public SerializedNetwork(string nickname, Network network) {
+            Nickname = nickname;
+            Id = network.Id;
+            Lineage = network.Lineage;
+            FitnessScore = network.FitnessScore;
+            LayersSizes = network.LayersSizes;
+            Synapsesvalues = network.GetAllSynapseLayerValues();
+        }
+
+
 
     }
 
