@@ -19,8 +19,8 @@ namespace nfs.nets.layered{
         private void Start () {
 
 			trainer = FindObjectOfType<Trainer>();
-			if(trainer == null)
-				Debug.LogError("No object Trainer found!");
+
+            Debug.Assert(trainer != null, "No object Trainer found!");
 
             trainer.NextGenerationTraining += UpdateLabels;
         }

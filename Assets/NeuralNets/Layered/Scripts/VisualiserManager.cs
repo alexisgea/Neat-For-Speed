@@ -19,7 +19,8 @@ namespace nfs.nets.layered {
 
 
         private void Start() {
-			SecurityCheck ();
+			Debug.Assert(visualisers.Length > 0, "No visualisers referenced in the manager!");
+            Debug.Assert(cam != null, "You need to assign a camera to the visualiser manager");
 
 			trainer = FindObjectOfType<Trainer> ();
 
@@ -43,17 +44,6 @@ namespace nfs.nets.layered {
             	BestNetwork();
 
         }
-
-		private void SecurityCheck() {
-			if(visualisers.Length == 0) {
-				Debug.LogError ("No visualisers referenced in the manager!");
-			}
-
-			if(cam == null) {
-				Debug.LogError ("You need to assign a camera to the visualiser manager");
-			}
-
-		}
 
 		public void NextAliveNetwork() {
 
