@@ -34,19 +34,6 @@ namespace nfs.car {
 		/// <value>The max dist fitness.</value>
 		public float MaxDistFitness {set; get;} 
 
-			
-		/// <summary>
-		/// Inits the input and output arrays.
-		/// we initialise inputs and outputs array for values and names.
-		/// </summary>
-		protected override void InitInputAndOutputArrays() {
-			// inputs and outputs values are already created from the neural net itself
-			// but we want a bias neuron so we will transpit one input length and thus re-initialise it
-			// output values NEEDS to be the same though, so no need to redo-it
-			inputValues = new float[3];
-			InputNames = new string[3] {"sensor NW", "sensor N", "sensor NE"};
-			OutputNames = new string[2] {"Drive", "Turn"};
-		}
 
 		/// <summary>
 		/// Initialises the neural net controller.

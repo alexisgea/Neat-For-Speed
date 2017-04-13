@@ -61,7 +61,7 @@ namespace nfs.nets.layered {
 						}
 					}
 
-					visualisers [0].AssignFocusNetwork (controller);
+					visualisers [0].AssignFocusNetwork (controller.NeuralNet);
 					lastI = i+1;
 					break;
 				}
@@ -83,8 +83,8 @@ namespace nfs.nets.layered {
 				}
 			}
 
-			if(bestController != null && bestController != visualisers[0].Focus) {
-				visualisers [0].AssignFocusNetwork (bestController);
+			if(bestController != null && bestController.NeuralNet != visualisers[0].Focus) {
+				visualisers [0].AssignFocusNetwork (bestController.NeuralNet);
 			}
 		}
 
@@ -102,7 +102,7 @@ namespace nfs.nets.layered {
 
                     bool alreadyFocused = false;
                     for (int j = 0; j < visualisers.Length; j++) {
-						if(visualisers [j].Focus == controller ) {
+						if(visualisers [j].Focus == controller.NeuralNet ) {
 							alreadyFocused = true;
 						}
 					}
@@ -116,7 +116,7 @@ namespace nfs.nets.layered {
 			}
 
 			if(bestController != null) {
-				visualisers [0].AssignFocusNetwork (bestController);
+				visualisers [0].AssignFocusNetwork (bestController.NeuralNet);
 			}
 		}
 
@@ -159,9 +159,9 @@ namespace nfs.nets.layered {
 				RaycastHit hitInfo = new RaycastHit();
 				bool hit = Physics.Raycast(cam.ScreenPointToRay(Input.mousePosition), out hitInfo);
 
-				if (hit && hitInfo.transform.tag == "car" && hitInfo.transform.GetComponent<Controller>() != null)	{
+				if (hitInfo.transform.GetComponent<Controller>() != null)	{
 					Controller focusNet = hitInfo.transform.GetComponent<Controller>();
-					visualisers[0].AssignFocusNetwork (focusNet);
+					visualisers[0].AssignFocusNetwork (focusNet.NeuralNet);
 				}
 			}
 			else if (Input.GetMouseButtonDown(1)) { // change to mouse wheel click if to many errors

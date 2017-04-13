@@ -53,7 +53,7 @@ namespace nfs.nets.layered {
             }
 
             Network mutadedOffspring = new Network(layerSizes, newNetId);
-			mutadedOffspring.InsertLineage (ExtendLineage (neuralNet.Lineage, neuralNet.Id));
+			mutadedOffspring.InsertLineage (ExtendLineage (neuralNet.Ancestors, neuralNet.Id));
             mutadedOffspring.InsertSynapses(synapses);
 
             return mutadedOffspring;

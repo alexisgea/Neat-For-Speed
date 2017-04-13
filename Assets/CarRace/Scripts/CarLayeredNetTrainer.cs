@@ -14,6 +14,8 @@ namespace nfs.car {
         [SerializeField] private Vector3 startPosition = Vector3.zero;
         [SerializeField] private float startPositioSpread = 2f;
 		[SerializeField] private float maxDistanceFitness = 500f;
+		[SerializeField] private string[] inputNames = new string[4] {"sensor NW", "sensor N", "sensor NE", "Bias"};
+		[SerializeField] private string[] outputNames = new string[2] {"Drive", "Turn"};
 
 		// we create a track for the cars
         protected override void InitialiseWorld() {
@@ -27,6 +29,8 @@ namespace nfs.car {
 			for (int i = 0; i < HostPopulation.Length; i++) {
 				HostPopulation [i].GetComponent<CarLayeredNetController> ().MaxDistFitness = maxDistanceFitness;
 				HostPopulation [i].GetComponent<CarLayeredNetController> ().StartTime = GenerationStartTime;
+				HostPopulation [i].GetComponent<CarLayeredNetController> ().NeuralNet.InputsNames = inputNames;
+				HostPopulation [i].GetComponent<CarLayeredNetController> ().NeuralNet.OutputsNames = outputNames;
 			}
 		}
 
@@ -40,6 +44,8 @@ namespace nfs.car {
 		protected override void RefreshHosts() {
 			for (int i = 0; i < HostPopulation.Length; i++) {
 				HostPopulation [i].GetComponent<CarLayeredNetController> ().StartTime = GenerationStartTime;
+				HostPopulation [i].GetComponent<CarLayeredNetController> ().NeuralNet.InputsNames = inputNames;
+				HostPopulation [i].GetComponent<CarLayeredNetController> ().NeuralNet.OutputsNames = outputNames;
 			}
 		}
 

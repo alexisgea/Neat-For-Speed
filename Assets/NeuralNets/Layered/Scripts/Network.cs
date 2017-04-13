@@ -13,25 +13,22 @@ namespace nfs.nets.layered {
 
         public string Id {private set; get; }
 		//public Queue Lineage = new Queue();
-		public string[] Lineage {private set; get;}
+		public string[] Ancestors {private set; get;}
 
 		/// <summary>
 		/// Gets or sets the fitness score of this neural net.
 		/// </summary>
 		/// <value>The fitness score.</value>
-        public float FitnessScore { set; get; }
+        public float FitnessScore {set; get; }
 
-        // layer properties
-        private Matrix inputNeurons;
-        private Matrix[] hiddenLayersNeurons;
-        private Matrix outputNeurons;
-        private Matrix[] synapses;
+        public string[] InputsNames {set; get;}
+        public string[] OutputsNames {set; get;}
 
         ///<summary>
         /// Get the total number of layers including input and output.
         ///</summary>
         public int NumberOfLayers { get{ return hiddenLayersNeurons.Length + 2; } }
-        
+
         ///<summary>
         /// Get the number of neurons in each layers.
         ///</summary>
@@ -66,6 +63,7 @@ namespace nfs.nets.layered {
         ///</summary>
         public int OutputSize{ get{ return this.outputNeurons.J;} }
 
+
         ///<summary>
         /// Get the number of neurons in each hidden layers.
         ///</summary>
@@ -80,6 +78,13 @@ namespace nfs.nets.layered {
             }
         }
 
+        // layer properties
+        private Matrix inputNeurons;
+        private Matrix[] hiddenLayersNeurons;
+        private Matrix outputNeurons;
+        private Matrix[] synapses;
+
+
         ///<summary>
         /// Layered neural network constructor.
         /// Requires a given number of input, number given of output
@@ -90,12 +95,22 @@ namespace nfs.nets.layered {
             Id = id;
         }
 
+        public Network (int[] layersSizes, string id, string[] inputsNames, string[] outputsNames) {
+            ConstructTopology(layersSizes);
+            Id = id;
+            InputsNames = inputsNames;
+            OutputsNames = outputsNames;
+        }
+
         public Network (SerializedNetwork serializedNetwork) {
             ConstructTopology(serializedNetwork.LayersSizes);
             InsertSynapses(serializedNetwork.Synapsesvalues);
             Id = serializedNetwork.Id;
-            Lineage = serializedNetwork.Lineage;
+            Ancestors = serializedNetwork.Ancestors;
             FitnessScore = serializedNetwork.FitnessScore;
+            InputsNames = serializedNetwork.InputsNames;
+            OutputsNames = serializedNetwork.OutputsNames;
+
         }
 
         private void ConstructTopology(int[] layersSizes) {
@@ -129,7 +144,7 @@ namespace nfs.nets.layered {
         public Network GetClone () {
 
 			Network clone = new Network(this.LayersSizes, this.Id);
-			clone.InsertLineage (this.Lineage); 
+			clone.InsertLineage (this.Ancestors); 
             clone.InsertSynapses(this.GetSynapsesClone());
             clone.FitnessScore = this.FitnessScore;
 
@@ -315,7 +330,7 @@ namespace nfs.nets.layered {
         }
 
 		public void InsertLineage(string[] lineage) {
-			Lineage = lineage;
+			Ancestors = lineage;
 		}
 
         public static string Serialize(Network network, string nickname = "") {
@@ -335,22 +350,40 @@ namespace nfs.nets.layered {
 
         public string Nickname {private set; get;}
         public string Id {private set; get;}
-        public string[] Lineage {private set; get;}
+        public string[] Ancestors {private set; get;}
         public float FitnessScore {private set; get;}
         public int[] LayersSizes {private set; get;}
         public float[][][] Synapsesvalues {private set; get;}
+        public string[] InputsNames {private set; get;}
+        public string[] OutputsNames {private set; get;}
 
         public SerializedNetwork(string nickname, Network network) {
             Nickname = nickname;
             Id = network.Id;
-            Lineage = network.Lineage;
+            Ancestors = network.Ancestors;
             FitnessScore = network.FitnessScore;
             LayersSizes = network.LayersSizes;
             Synapsesvalues = network.GetAllSynapseLayerValues();
+            InputsNames = network.InputsNames;
+            OutputsNames = network.OutputsNames;
+            
         }
-
-
-
     }
+
+
+    [Serializable]
+    public class SerializedSpecie {
+
+        public string Name {private set; get;}
+        public SerializedNetwork[] Lineage {private set; get;}
+
+        public SerializedSpecie(string name, SerializedNetwork[] networks) {
+            Name = name;
+            Lineage = networks;           
+        }
+    }
+
+
+
 
 }

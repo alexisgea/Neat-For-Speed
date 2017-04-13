@@ -53,9 +53,9 @@ namespace nfs.nets.layered {
 		private GameObject[] synapses;
 
 
-		private Controller focus;
+		private Network focus;
 		// the current neural net
-		public Controller Focus { get { return focus; } }
+		public Network Focus { get { return focus; } }
 
 		private bool inConstruction = false;
 		
@@ -79,7 +79,7 @@ namespace nfs.nets.layered {
 		/// </summary>
 		private void UpdateVisualisation () {
 
-			networkFitnessLabel.text = "Fitness: " + focus.NeuralNet.FitnessScore.ToString ("F2");
+			networkFitnessLabel.text = "Fitness: " + focus.FitnessScore.ToString ("F2");
 
 			int N = 0; // neuron counter
 			int S = 0; // synapse counter
@@ -88,12 +88,12 @@ namespace nfs.nets.layered {
 			for (int L=0; L < layers.Length; L++) {
 				for (int n=0; n < layersSizes[L]; n++) {
 					Text neuronValue = neurons [N].transform.FindChild ("value").GetComponent<Text> ();
-					neuronValue.text = focus.NeuralNet.GetNeuronValue(L, n).ToString("F2");
+					neuronValue.text = focus.GetNeuronValue(L, n).ToString("F2");
 					
-					if (focus.NeuralNet.GetNeuronValue(L, n) >= 0) {
-						neurons[N].GetComponent<Image>().color = Color.green * focus.NeuralNet.GetNeuronValue(L, n);
+					if (focus.GetNeuronValue(L, n) >= 0) {
+						neurons[N].GetComponent<Image>().color = Color.green * focus.GetNeuronValue(L, n);
 					} else {
-						neurons[N].GetComponent<Image>().color = Color.red * -focus.NeuralNet.GetNeuronValue(L, n);						
+						neurons[N].GetComponent<Image>().color = Color.red * -focus.GetNeuronValue(L, n);						
 					}
 
 					// the last layer doesn't have any synapses
@@ -125,11 +125,11 @@ namespace nfs.nets.layered {
 		}
 
 		private void UpdateLabels() {
-			networkIdLabel.text = "Id: " + focus.NeuralNet.Id;
+			networkIdLabel.text = "Id: " + focus.Id;
 
 			string lineage = "";
-			if(focus.NeuralNet.Lineage != null) {
-				foreach(string ancestor in focus.NeuralNet.Lineage) {
+			if(focus.Ancestors != null) {
+				foreach(string ancestor in focus.Ancestors) {
 					lineage += ancestor + ", ";
 				}
 			}
@@ -145,8 +145,8 @@ namespace nfs.nets.layered {
 		/// Instantiates the neural net layers on the canvas.
 		/// </summary>
 		private void InstantiateLayers() {
-			layers = new GameObject[focus.NeuralNet.NumberOfLayers];
-			layersSizes = focus.NeuralNet.LayersSizes;
+			layers = new GameObject[focus.NumberOfLayers];
+			layersSizes = focus.LayersSizes;
 
 			for (int i = 0; i < layers.Length; i++) {
 				layers[i] = GameObject.Instantiate(baseLayer);
@@ -173,16 +173,16 @@ namespace nfs.nets.layered {
 				
 				if (L == 0) {
 
-					if(i < focus.InputNames.Length) {
-						label.text = focus.InputNames[i];						
+					if(i < focus.InputsNames.Length) {
+						label.text = focus.InputsNames[i];						
 					} else {
-						label.text = "Bias";
+						label.text = "";
 					}
 
 				} else 	if (L == layersSizes.Length -1) { // last layer
 
-					if(neurons.Length-1 - i < focus.OutputNames.Length) {
-						label.text = focus.OutputNames[neurons.Length-1 - i];						
+					if(neurons.Length-1 - i < focus.OutputsNames.Length) {
+						label.text = focus.OutputsNames[neurons.Length-1 - i];						
 					} else {
 						label.text = "";
 					}
@@ -238,10 +238,10 @@ namespace nfs.nets.layered {
 								};
 							line.SetPositions(linePoints);
 
-							float width = Mathf.Abs(focus.NeuralNet.GetSynapseValue(L, n, s))*0.05f;
+							float width = Mathf.Abs(focus.GetSynapseValue(L, n, s))*0.05f;
 							line.widthMultiplier = width;
 
-							if (focus.NeuralNet.GetSynapseValue(L, n, s) >= 0 ) {
+							if (focus.GetSynapseValue(L, n, s) >= 0 ) {
 								line.material.color = Color.green;
 							} else {
 								line.material.color = Color.red;
@@ -261,7 +261,7 @@ namespace nfs.nets.layered {
 		/// Assigns the focus network.
 		/// </summary>
 		/// <param name="newFocusNet">New focus net.</param>
-		public void AssignFocusNetwork (Controller newFocusNet) {
+		public void AssignFocusNetwork (Network newFocusNet) {
 			ClearCurrentVisualisation();
 			focus = newFocusNet;
 			BuildVisualisation ();
@@ -294,7 +294,7 @@ namespace nfs.nets.layered {
 			}
 
 			networkIdLabel.text = "Id: ";
-			networkLineageLabel.text = "Lineage: ";
+			networkLineageLabel.text = "Ancestors: ";
 			networkFitnessLabel.text = "Fitness: ";
 
 		}
