@@ -54,6 +54,11 @@ namespace nfs.car {
             return startPosition + new Vector3( (i%2 -0.5f) * startPositioSpread, 0, - Mathf.Floor(i/2f) * startPositioSpread);
         }
 
+		public override void SaveBestNetwork() {
+            Debug.Assert(AlltimeFittestNets[0] != null, "There does not seem to be a best network to save yet.");
+            nets.layered.Serializer.SaveNetworkAsSpecies(AlltimeFittestNets[0], nets.layered.Simulation.Car);
+        }
+
 	}
 
 }

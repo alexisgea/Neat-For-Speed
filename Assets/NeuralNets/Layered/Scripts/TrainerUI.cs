@@ -51,7 +51,7 @@ namespace nfs.nets.layered{
 		}
 
 		public void EndTraining() {
-			//trainer.SaveBestNetwork();
+			trainer.SaveBestNetwork();
 			MainScreen.GoToScene(Scenes.MainScreen);
 		}
 
