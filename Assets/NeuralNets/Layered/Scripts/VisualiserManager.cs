@@ -157,7 +157,7 @@ namespace nfs.nets.layered {
 
 			if (Input.GetMouseButtonDown(0)) {
 				RaycastHit hitInfo = new RaycastHit();
-				bool hit = Physics.Raycast(cam.ScreenPointToRay(Input.mousePosition), out hitInfo);
+				Physics.Raycast(cam.ScreenPointToRay(Input.mousePosition), out hitInfo);
 
 				if (hitInfo.transform.GetComponent<Controller>() != null)	{
 					Controller focusNet = hitInfo.transform.GetComponent<Controller>();

@@ -145,7 +145,7 @@ namespace nfs.nets.layered {
 		/// Instantiates the neural net layers on the canvas.
 		/// </summary>
 		private void InstantiateLayers() {
-			layers = new GameObject[focus.NumberOfLayers];
+			layers = new GameObject[focus.NumberOfNeuronLayers];
 			layersSizes = focus.LayersSizes;
 
 			for (int i = 0; i < layers.Length; i++) {
