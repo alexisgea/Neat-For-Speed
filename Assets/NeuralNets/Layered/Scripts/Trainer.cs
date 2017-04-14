@@ -14,7 +14,7 @@ namespace nfs.nets.layered{
 		/// <summary>
 		/// The amount of neural net and hosts
 		/// </summary>
-        [SerializeField] protected const int population = 20;
+        [SerializeField] protected int population = 20;
 		/// <summary>
 		/// The transform under which to parent the instanced population.
 		/// </summary>
@@ -175,9 +175,10 @@ namespace nfs.nets.layered{
 
 			// loops through the popuplation to initialise the neural networks
             for (int i=0; i < population; i++) {
-                HostPopulation[i] = GameObject.Instantiate(networkHost, CalculateStartPosition(i), CalculateStartOrientation (i));
+                HostPopulation[i] = GameObject.Instantiate(networkHost, CalculateStartPosition(i), CalculateStartOrientation(i));
                 HostPopulation[i].transform.SetParent(populationGroup);
-                HostPopulation[i].GetComponent<Controller>().NeuralNet = new Network(baseLayersSizes, GenerateNeworktId (i));
+                HostPopulation[i].GetComponent<Controller>().NeuralNet = new Network(baseLayersSizes, GenerateNeworktId(i));
+                HostPopulation[i].GetComponent<Controller>().NeuralNet.Colorisation = new Color(UnityEngine.Random.value, UnityEngine.Random.value, UnityEngine.Random.value);
                 HostPopulation[i].GetComponent<Controller>().Death += OnHostDeath; // we register to each car's signal for collision
 
 				TotalNetworkGenerated++;
@@ -367,5 +368,8 @@ namespace nfs.nets.layered{
         protected virtual Quaternion CalculateStartOrientation (int i) {
             return Quaternion.identity;
         }
+
+        public abstract void SaveBestNetwork();
+
 	}
 }
