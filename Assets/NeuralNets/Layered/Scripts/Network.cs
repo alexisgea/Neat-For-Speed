@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
-using System;
+using System.Collections.Generic;
 using nfs.tools;
+using System.Linq;
 
 namespace nfs.nets.layered {
 
@@ -11,9 +12,13 @@ namespace nfs.nets.layered {
     ///</summary>
     public class Network {
 
-        public string Id {private set; get; }
+        public string Nickname {set; get;}
+        public string Id {private set; get;}
 		//public Queue Lineage = new Queue();
-		public string[] Ancestors {private set; get;}
+        public Color Colorisation {set; get;}
+		public string[] Ancestors {set; get;}
+        // public SerializedNetwork[] SpeciesLineage {set; get;}
+        public Stack<SrNetwork> SpeciesLineage = new Stack<SrNetwork>();
 
 		/// <summary>
 		/// Gets or sets the fitness score of this neural net.
@@ -27,14 +32,25 @@ namespace nfs.nets.layered {
         ///<summary>
         /// Get the total number of layers including input and output.
         ///</summary>
-        public int NumberOfLayers { get{ return hiddenLayersNeurons.Length + 2; } }
+        public int NumberOfNeuronLayers { get{ return hiddenLayersNeurons.Length + 2; } }
+        public int NumberOfSynapseLayers { get{ return hiddenLayersNeurons.Length + 1; } }
+        public int NumberOfNeurons {get {return LayersSizes.Sum(); } }
+        public int NumberOfSynapses {
+            get {
+                int synapseNb = 0;
+                for(int i = 0; i < NumberOfSynapseLayers; i++) {
+                    synapseNb += LayersSizes[i]*LayersSizes[i+1];
+                }
+                return synapseNb;
+            }
+        }
 
         ///<summary>
         /// Get the number of neurons in each layers.
         ///</summary>
         public int[] LayersSizes {
             get {
-                int[] layersSizes = new int[NumberOfLayers];
+                int[] layersSizes = new int[NumberOfNeuronLayers];
 
                 int[] hiddenLayersSizes = HiddenLayersSizes;
 
@@ -42,7 +58,7 @@ namespace nfs.nets.layered {
 
                     if (i == 0) {
                         layersSizes[i] = InputSize;
-                    } else if (i == NumberOfLayers-1) {
+                    } else if (i == NumberOfNeuronLayers-1) {
                         layersSizes[i] = OutputSize;
                     } else {
                         layersSizes[i] = hiddenLayersSizes[i-1];
@@ -95,21 +111,24 @@ namespace nfs.nets.layered {
             Id = id;
         }
 
-        public Network (int[] layersSizes, string id, string[] inputsNames, string[] outputsNames) {
+        public Network (int[] layersSizes, string id, Color color, string[] inputsNames, string[] outputsNames) {
             ConstructTopology(layersSizes);
             Id = id;
+            Colorisation = color;
             InputsNames = inputsNames;
             OutputsNames = outputsNames;
         }
 
-        public Network (SerializedNetwork serializedNetwork) {
-            ConstructTopology(serializedNetwork.LayersSizes);
-            InsertSynapses(serializedNetwork.Synapsesvalues);
-            Id = serializedNetwork.Id;
-            Ancestors = serializedNetwork.Ancestors;
-            FitnessScore = serializedNetwork.FitnessScore;
-            InputsNames = serializedNetwork.InputsNames;
-            OutputsNames = serializedNetwork.OutputsNames;
+        public Network (SrNetwork srNetwork) {
+            ConstructTopology(srNetwork.LayersSizes);
+            //InsertSynapses(srNetwork.Synapsesvalues);
+            Nickname = srNetwork.Nickname;
+            Id = srNetwork.Id;
+            Colorisation = srNetwork.Colorisation;
+            Ancestors = srNetwork.Ancestors;
+            FitnessScore = srNetwork.FitnessScore;
+            InputsNames = srNetwork.InputsNames;
+            OutputsNames = srNetwork.OutputsNames;
 
         }
 
@@ -143,10 +162,12 @@ namespace nfs.nets.layered {
         ///</summary>
         public Network GetClone () {
 
-			Network clone = new Network(this.LayersSizes, this.Id);
-			clone.InsertLineage (this.Ancestors); 
-            clone.InsertSynapses(this.GetSynapsesClone());
-            clone.FitnessScore = this.FitnessScore;
+			Network clone = new Network(LayersSizes, Id);
+            clone.Colorisation = Colorisation;
+			clone.Ancestors = Ancestors;
+            clone.SpeciesLineage.Push(Serializer.SerializeNetwork(this));
+            clone.InsertSynapses(GetSynapsesClone());
+            clone.FitnessScore = FitnessScore;
 
             return clone;
         }
@@ -223,12 +244,12 @@ namespace nfs.nets.layered {
         /// Get all values of a layer of neurons.
         ///</summary>
         public float[] GetNeuronLayerValues(int layer) {
-            Debug.Assert(layer < NumberOfLayers, "Neuron layer requested is not in the neural net (too high).");
+            Debug.Assert(layer < NumberOfNeuronLayers, "Neuron layer requested is not in the neural net (too high).");
 
             if (layer == 0){
                 return GetInputValues();
 
-            } else if (layer == NumberOfLayers-1) {
+            } else if (layer == NumberOfNeuronLayers-1) {
                 return GetOutputValues();
 
             } else {
@@ -261,7 +282,7 @@ namespace nfs.nets.layered {
         /// Get all out synapses values of a layer of neurons.
         ///</summary>
         public float[][] GetSynapseLayerValues(int layer) {
-            Debug.Assert(layer < NumberOfLayers-1 , "Synapse layer requested is not in the neural net (too high).");
+            Debug.Assert(layer < NumberOfSynapseLayers , "Synapse layer requested is not in the neural net (too high).");
 
             return synapses[layer].GetAllValues();
         }
@@ -283,7 +304,8 @@ namespace nfs.nets.layered {
         /// Get all out synapses values of a neuron.
         ///</summary>
         public float[] GetNeuronSynapsesValues(int layer, int neuron) {
-            Debug.Assert(layer < NumberOfLayers-1 && neuron < synapses[layer].J, "Synapse layer or neuron requested is not in the neural net (too high).");
+            Debug.Assert(layer < NumberOfSynapseLayers, "Synapse layer is not in the neural net (too high).");            
+            Debug.Assert(neuron < synapses[layer].I, "Neuron requested is not in the layer (too high).");
 
             return synapses[layer].GetLineValues(neuron);
         }
@@ -329,61 +351,5 @@ namespace nfs.nets.layered {
             }
         }
 
-		public void InsertLineage(string[] lineage) {
-			Ancestors = lineage;
-		}
-
-        public static string Serialize(Network network, string nickname = "") {
-            SerializedNetwork serializedNetwork = new SerializedNetwork(nickname, network);
-            return JsonUtility.ToJson(serializedNetwork);
-        }
-
-        public static Network Deserialize(string jsonSerializedNetwork) {
-            SerializedNetwork serializedNetwork =  JsonUtility.FromJson<SerializedNetwork>(jsonSerializedNetwork);
-            return new Network(serializedNetwork);
-        }
-
     }
-
-    [Serializable]
-    public class SerializedNetwork {
-
-        public string Nickname {private set; get;}
-        public string Id {private set; get;}
-        public string[] Ancestors {private set; get;}
-        public float FitnessScore {private set; get;}
-        public int[] LayersSizes {private set; get;}
-        public float[][][] Synapsesvalues {private set; get;}
-        public string[] InputsNames {private set; get;}
-        public string[] OutputsNames {private set; get;}
-
-        public SerializedNetwork(string nickname, Network network) {
-            Nickname = nickname;
-            Id = network.Id;
-            Ancestors = network.Ancestors;
-            FitnessScore = network.FitnessScore;
-            LayersSizes = network.LayersSizes;
-            Synapsesvalues = network.GetAllSynapseLayerValues();
-            InputsNames = network.InputsNames;
-            OutputsNames = network.OutputsNames;
-            
-        }
-    }
-
-
-    [Serializable]
-    public class SerializedSpecie {
-
-        public string Name {private set; get;}
-        public SerializedNetwork[] Lineage {private set; get;}
-
-        public SerializedSpecie(string name, SerializedNetwork[] networks) {
-            Name = name;
-            Lineage = networks;           
-        }
-    }
-
-
-
-
 }
