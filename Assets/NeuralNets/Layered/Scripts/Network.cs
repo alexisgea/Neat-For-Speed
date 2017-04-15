@@ -121,7 +121,6 @@ namespace nfs.nets.layered {
 
         public Network (SrNetwork srNetwork) {
             ConstructTopology(srNetwork.LayersSizes);
-            //InsertSynapses(srNetwork.Synapsesvalues);
             Nickname = srNetwork.Nickname;
             Id = srNetwork.Id;
             Colorisation = srNetwork.Colorisation;
@@ -129,6 +128,13 @@ namespace nfs.nets.layered {
             FitnessScore = srNetwork.FitnessScore;
             InputsNames = srNetwork.InputsNames;
             OutputsNames = srNetwork.OutputsNames;
+
+            // set synapse values
+            for(int l = 0; l < srNetwork.SynapseValues.Layers.Length; l++){
+                for(int n = 0; n < srNetwork.SynapseValues.Layers[l].Neurons.Length; n++) {
+                    synapses[l].SetLineValues(n, srNetwork.SynapseValues.Layers[l].Neurons[n].Synapes);
+                }
+            }
 
         }
 

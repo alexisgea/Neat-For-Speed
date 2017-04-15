@@ -5,19 +5,22 @@ using UnityEngine.SceneManagement;
 
 namespace nfs {
 
-    public enum Scenes {MainScreen, TrainForCar}
-    public enum Panels {MainMenu, CreditsPanel}
+    public enum Scenes {MainScreen, TrainForCar, Cells}
+    public enum Simulations {CarRace, Cells}
+    public enum Panels {MainMenu, SimulationList, SimulationModes, BrowsePanel, GetReadyPanel, CreditsPanel}
 
     public class MainScreen : MonoBehaviour {
 
-        public static Dictionary<string, string> ScenesPaths = new Dictionary<string, string>() {
-            {"MainScreen", "MainScreen/Scenes/MainScreen"},
-            {"TrainForCar", "CarRace/Scenes/TrainForCar"}
+        public static Dictionary<Scenes, string> ScenesPaths = new Dictionary<Scenes, string>() {
+            {Scenes.MainScreen, "MainScreen/Scenes/MainScreen"},
+            {Scenes.TrainForCar, "CarRace/Scenes/TrainForCar"},
+            {Scenes.Cells, "Cells/Scenes/Cells"}
         };
 
         [SerializeField] private RectTransform[] panels;
         private Stack<Panels> panelsStack = new Stack<Panels>();
         private Panels currentPanel = Panels.MainMenu;
+        private Simulations currentSim;
 
         private void Update() {
 
@@ -52,24 +55,55 @@ namespace nfs {
 
         private void GoToPreviousPanel() {
             GoToPanel(panelsStack.Pop());
+        } 
+
+        private string GetSimulationTrainScenePath() {
+            switch(currentSim) {
+                case Simulations.CarRace:
+                    return ScenesPaths[Scenes.TrainForCar];
+                case Simulations.Cells:
+                    return ScenesPaths[Scenes.Cells];
+                default:
+                    Debug.LogError("No current simumlation designated for loading.");
+                    return "";
+            }
         }
 
-        public static void GoToScene(Scenes scene) {
-            SceneManager.LoadScene(ScenesPaths[scene.ToString()]);
+        public static void LoadMainScreen() {
+            SceneManager.LoadScene(ScenesPaths[Scenes.MainScreen]);
         }
 
         public void GoToCredits() {
             GoToNewPanel(Panels.CreditsPanel);
         }
 
-        public void LoadTrain() {
-            GoToScene(Scenes.TrainForCar);
+        public void GoToSimulationList() {
+            GoToNewPanel(Panels.SimulationList);
         }
 
-        
+        public void GotToCarRaceModes() {
+            currentSim = Simulations.CarRace;
+            GoToNewPanel(Panels.SimulationModes);
+        }
+         public void GotToCellsModes() {
+            currentSim = Simulations.Cells;
+            GoToNewPanel(Panels.SimulationModes);
+        }
+
+        public void GoToGetReadyPanel() {
+            GoToNewPanel(Panels.GetReadyPanel);
+        }
+
+        public void LoadTrain() {
+            SceneManager.LoadScene(GetSimulationTrainScenePath());
+        }
+
         public void Quit() {
             Application.Quit();
         }
+
+
+
     }
 }
 

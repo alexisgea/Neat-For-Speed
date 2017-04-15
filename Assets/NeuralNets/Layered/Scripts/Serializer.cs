@@ -15,6 +15,10 @@ namespace nfs.nets.layered {
             return new SrNetwork(network, allSynapseValues);
         }
 
+		public static Network DeserializeNetwork(SrNetwork serializedNetwork) {
+			return new Network(serializedNetwork);
+		}
+
 		public static SrSpecies SerializeSpecies(Network network) {
 			Stack<SrNetwork> speciesLineage =  network.SpeciesLineage;
 			speciesLineage.Push(SerializeNetwork(network));
@@ -45,18 +49,21 @@ namespace nfs.nets.layered {
 			List<SrSpecies> serializedSpeciesList = new List<SrSpecies>();
 
 			if(File.Exists(GetPath(simulation))) {
-				Debug.LogWarning("save file exist, loading data");
 				SrLife savedSpecies = LoadAllSpecies(simulation);
 				foreach(SrSpecies species in savedSpecies.Species){
 					serializedSpeciesList.Add(species);
 				}
 			}
+			else {
+				System.IO.FileInfo file = new System.IO.FileInfo(GetPath(simulation));
+				file.Directory.Create(); // If the directory already exists, this method does nothing.
+			}
 
 			serializedSpeciesList.Add(SerializeSpecies(network));
 			SrLife allSpecies = new SrLife(serializedSpeciesList.ToArray());
 			string jsonString = JsonUtility.ToJson(allSpecies);
-			// File.WriteAllText(GetPath(simulation), jsonString);
-			Debug.Log("json test: " + jsonString);		
+			System.IO.File.WriteAllText(GetPath(simulation), jsonString);
+			Debug.Log(jsonString);		
 		}
 
 		public static SrLife LoadAllSpecies(Simulation simulation) {
@@ -71,12 +78,8 @@ namespace nfs.nets.layered {
 		}
 
 		private static string GetPath(Simulation simulation) {
-
-			Debug.Log("saving at path: " + Application.persistentDataPath + "/" + simulation.ToString() + "/Layered Networks.txt");
 			return Application.persistentDataPath + simulation.ToString() + "/Layered Networks.json";
 		}
-
-
 
 	}
 

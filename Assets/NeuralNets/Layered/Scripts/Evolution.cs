@@ -65,7 +65,7 @@ namespace nfs.nets.layered {
 			synapsesChanged += Mathf.Abs(mutatedOffspring.NumberOfSynapses - originalSynapseNb);
 			float synapsesChangedRatio = (float)(synapsesChanged / mutatedOffspring.NumberOfSynapses);
 
-			if(neuralNet.Colorisation != null) {
+			if(neuralNet.Colorisation != null) { // useless says unity?
 				Color newColor = MutateColor(neuralNet.Colorisation, synapsesChangedRatio);
 				mutatedOffspring.Colorisation = newColor;
 			}

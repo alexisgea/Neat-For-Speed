@@ -30,7 +30,7 @@ namespace nfs.nets.layered{
 			generationTimer.text = "Time: " + (Time.unscaledTime - trainer.GenerationStartTime).ToString ("F2");
 
 			if(Input.GetButtonDown("Cancel")) {
-            	MainScreen.GoToScene(Scenes.MainScreen);
+            	MainScreen.LoadMainScreen();
         	}
 		}
 
@@ -52,7 +52,7 @@ namespace nfs.nets.layered{
 
 		public void EndTraining() {
 			trainer.SaveBestNetwork();
-			MainScreen.GoToScene(Scenes.MainScreen);
+			MainScreen.LoadMainScreen();
 		}
 
 
