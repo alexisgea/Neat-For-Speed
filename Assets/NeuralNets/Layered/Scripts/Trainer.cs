@@ -91,9 +91,9 @@ namespace nfs.nets.layered{
 
 		// the number of network selected for breeding from the survivor rate.
         protected int breedingSampleNb;
-        public Network[] AlltimeFittestNets { private set; get; }
-        public Network[] GenerationFittestNets { private set; get; }
-		public Dictionary<string, Network> NetworkGenealogy { private set; get;}
+        public NeuralNetwork[] AlltimeFittestNets { private set; get; }
+        public NeuralNetwork[] GenerationFittestNets { private set; get; }
+		public Dictionary<string, NeuralNetwork> NetworkGenealogy { private set; get;}
 
         // generation vaiables
         public int GenerationNb { private set; get; }
@@ -166,9 +166,9 @@ namespace nfs.nets.layered{
             breedingSampleNb = breedingSampleNb < 1 ? 1 : breedingSampleNb;
             
             // create the best fitness reference
-            AlltimeFittestNets = new Network[breedingSampleNb];
-            GenerationFittestNets = new Network[breedingSampleNb];
-			NetworkGenealogy = new Dictionary<string, Network> ();
+            AlltimeFittestNets = new NeuralNetwork[breedingSampleNb];
+            GenerationFittestNets = new NeuralNetwork[breedingSampleNb];
+			NetworkGenealogy = new Dictionary<string, NeuralNetwork> ();
 
 			//GenerationNb = 1;
 			ResetTrainerVariables ();
@@ -177,7 +177,7 @@ namespace nfs.nets.layered{
             for (int i=0; i < population; i++) {
                 HostPopulation[i] = GameObject.Instantiate(networkHost, CalculateStartPosition(i), CalculateStartOrientation(i));
                 HostPopulation[i].transform.SetParent(populationGroup);
-                HostPopulation[i].GetComponent<Controller>().NeuralNet = new Network(baseLayersSizes, GenerateNeworktId(i));
+                HostPopulation[i].GetComponent<Controller>().NeuralNet = new NeuralNetwork(baseLayersSizes, GenerateNeworktId(i));
                 HostPopulation[i].GetComponent<Controller>().NeuralNet.Colorisation = new Color(UnityEngine.Random.value, UnityEngine.Random.value, UnityEngine.Random.value);
                 HostPopulation[i].GetComponent<Controller>().Death += OnHostDeath; // we register to each car's signal for collision
 
@@ -262,7 +262,7 @@ namespace nfs.nets.layered{
             }
 
             for (int i = 0; i< HostPopulation.Length; i++) {
-                layered.Network fitnessContender = HostPopulation[i].GetComponent<Controller>().NeuralNet;
+                layered.NeuralNetwork fitnessContender = HostPopulation[i].GetComponent<Controller>().NeuralNet;
                 
                 Evolution.RankFitnessContender(AlltimeFittestNets, fitnessContender.GetClone());
                 Evolution.RankFitnessContender(GenerationFittestNets, fitnessContender.GetClone());
@@ -322,7 +322,7 @@ namespace nfs.nets.layered{
                     }
 
                 } else { // fresh blood (10%)
-                    HostPopulation[i].GetComponent<Controller>().NeuralNet = new Network(baseLayersSizes, GenerateNeworktId (i));   
+                    HostPopulation[i].GetComponent<Controller>().NeuralNet = new NeuralNetwork(baseLayersSizes, GenerateNeworktId (i));   
                 }
 
 				if(k>=breedingSampleNb) {

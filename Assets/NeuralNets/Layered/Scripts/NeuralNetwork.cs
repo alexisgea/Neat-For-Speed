@@ -10,7 +10,7 @@ namespace nfs.nets.layered {
     /// It can have varying number of neurons and layers.
     /// The network always has a single bias input neuron.
     ///</summary>
-    public class Network {
+    public class NeuralNetwork {
 
         public string Nickname {set; get;}
         public string Id {private set; get;}
@@ -106,16 +106,16 @@ namespace nfs.nets.layered {
         /// Requires a given number of input, number given of output
         /// and an array for the hidden layers with each element being the size of a different hidden layer.!--
         ///</summary>
-        public Network (int[] layersSizes) {
+        public NeuralNetwork (int[] layersSizes) {
             ConstructTopology(layersSizes);
         }
 
-		public Network (int[] layersSizes, string id) {
+		public NeuralNetwork (int[] layersSizes, string id) {
             ConstructTopology(layersSizes);
             Id = id;
         }
 
-        public Network (int[] layersSizes, string id, Color color, string[] inputsNames, string[] outputsNames) {
+        public NeuralNetwork (int[] layersSizes, string id, Color color, string[] inputsNames, string[] outputsNames) {
             ConstructTopology(layersSizes);
             Id = id;
             Colorisation = color;
@@ -123,7 +123,7 @@ namespace nfs.nets.layered {
             OutputsNames = outputsNames;
         }
 
-        public Network (SrNetwork srNetwork) {
+        public NeuralNetwork (SrNetwork srNetwork) {
             ConstructTopology(srNetwork.LayersSizes);
             Nickname = srNetwork.Nickname;
             Id = srNetwork.Id;
@@ -170,9 +170,9 @@ namespace nfs.nets.layered {
         ///<summary>
         /// Creates and return a deep clone of the network.
         ///</summary>
-        public Network GetClone () {
+        public NeuralNetwork GetClone () {
 
-			Network clone = new Network(LayersSizes, Id);
+			NeuralNetwork clone = new NeuralNetwork(LayersSizes, Id);
             clone.Colorisation = Colorisation;
 			clone.Ancestors = Ancestors;
             clone.SpeciesLineage.Push(Serializer.SerializeNetwork(this));
@@ -227,13 +227,14 @@ namespace nfs.nets.layered {
         ///</summary>
 		public float[] PingFwd(float[] sensorsValues) {
 
-            Debug.Assert(sensorsValues.Length > 0, "Input values are null, returning from ping forward.");
+            Debug.Assert(sensorsValues.Length > 0, "Input values are null.");
             
             // we set the inputs neurons values and ignore the missmatch as there is a bias neuron
             inputNeurons.SetLineValues(0, sensorsValues, true); 
 
             // we ping the network
             for (int i = 0; i < hiddenLayersNeurons.Length + 1; i++) {
+                    Debug.Assert(hiddenLayersNeurons.Length > 0, "No hidden layers, this will create bug in this loop currently.");
                     if (i == 0) {
                         hiddenLayersNeurons[0] = Matrix.Multiply(inputNeurons, synapses[0]);
                         ProcessActivation(hiddenLayersNeurons[0]);
@@ -248,6 +249,20 @@ namespace nfs.nets.layered {
                 }
 
             return outputNeurons.GetLineValues();
+        }
+
+        ///<summary>
+        /// Process the inputs forward with values of 1 to update neuron values.
+        /// Useful for the visualiser.
+        ///</summary>
+		public void DummyPingFwd() {
+
+            float[] dummyValues = new float[InputSize];
+            for (int i = 0; i < InputSize; i++) {
+                dummyValues[i] = 1f;
+            }
+
+            PingFwd(dummyValues);
         }
 
         ///<summary>

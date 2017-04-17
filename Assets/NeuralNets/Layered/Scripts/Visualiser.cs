@@ -62,9 +62,9 @@ namespace nfs.nets.layered {
 		private GameObject[] synapses;
 
 
-		private Network focus;
+		private NeuralNetwork focus;
 		// the current neural net
-		public Network Focus { get { return focus; } }
+		public NeuralNetwork Focus { get { return focus; } }
 
 		private bool inConstruction = false;
 		
@@ -269,7 +269,7 @@ namespace nfs.nets.layered {
 		/// Assigns the focus network.
 		/// </summary>
 		/// <param name="newFocusNet">New focus net.</param>
-		public void SetFocusNetwork (Network newFocusNet) {
+		public void SetFocusNetwork (NeuralNetwork newFocusNet) {
 			ClearCurrentVisualisation();
 			focus = newFocusNet;
 			BuildVisualisation ();

@@ -20,7 +20,7 @@ namespace nfs {
         [SerializeField] private RectTransform[] panels;
         private Stack<Panels> panelsStack = new Stack<Panels>();
         private Panels currentPanel = Panels.MainMenu;
-        public Simulations CurrentSim {private set; get;}
+        public static Simulations CurrentSim {private set; get;}
 
         private void Update() {
 

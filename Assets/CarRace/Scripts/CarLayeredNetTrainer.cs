@@ -31,6 +31,16 @@ namespace nfs.car {
 				HostPopulation [i].GetComponent<CarLayeredNetController> ().StartTime = GenerationStartTime;
 				HostPopulation [i].GetComponent<CarLayeredNetController> ().NeuralNet.InputsNames = inputNames;
 				HostPopulation [i].GetComponent<CarLayeredNetController> ().NeuralNet.OutputsNames = outputNames;
+
+				if(nets.layered.Serializer.PreLoadedNetwork != null) {
+
+					HostPopulation [i].GetComponent<CarLayeredNetController> ().NeuralNet = nets.layered.Evolution.CreateMutatedOffspring(
+							nets.layered.Serializer.PreLoadedNetwork, GenerateNeworktId (i), 1,
+							hiddenLayerNbMutation, hiddenLayerNbMutationRate,
+							hiddenNbMutation, hiddenLayerNbMutationRate,
+							synapsesMutationRate, synapsesMutationRange );
+
+				}
 			}
 		}
 

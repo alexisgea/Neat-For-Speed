@@ -8,22 +8,24 @@ namespace nfs.nets.layered {
 
 	public static class Serializer {
 
-		public static SrNetwork SerializeNetwork(Network network) {
+		public static NeuralNetwork PreLoadedNetwork {set; get;}
+
+		public static SrNetwork SerializeNetwork(NeuralNetwork network) {
 			SrSynapseNetwork allSynapseValues = SerializeSynapses(network);
             return new SrNetwork(network, allSynapseValues);
         }
 
-		public static Network DeserializeNetwork(SrNetwork serializedNetwork) {
-			return new Network(serializedNetwork);
+		public static NeuralNetwork DeserializeNetwork(SrNetwork serializedNetwork) {
+			return new NeuralNetwork(serializedNetwork);
 		}
 
-		public static SrSpecies SerializeSpecies(Network network) {
+		public static SrSpecies SerializeSpecies(NeuralNetwork network) {
 			Stack<SrNetwork> speciesLineage =  network.SpeciesLineage;
 			speciesLineage.Push(SerializeNetwork(network));
 			return new SrSpecies(speciesLineage.ToArray());
 		}
 
-		public static SrSynapseNetwork SerializeSynapses(Network network) {
+		public static SrSynapseNetwork SerializeSynapses(NeuralNetwork network) {
 
 			int synpaseLayerNb = network.NumberOfSynapseLayers;
 			SrSynapseLayer[] synapseLayers = new SrSynapseLayer[synpaseLayerNb];
@@ -43,7 +45,7 @@ namespace nfs.nets.layered {
 			return new SrSynapseNetwork(synapseLayers);
 		}
 
-		public static void SaveNetworkAsSpecies(Network network, Simulations simulation) {
+		public static void SaveNetworkAsSpecies(NeuralNetwork network, Simulations simulation) {
 			List<SrSpecies> serializedSpeciesList = new List<SrSpecies>();
 
 			if(File.Exists(GetPath(simulation))) {
@@ -124,7 +126,7 @@ namespace nfs.nets.layered {
         public string[] InputsNames;
         public string[] OutputsNames;
 
-        public SrNetwork(Network network, SrSynapseNetwork synapseValues) {
+        public SrNetwork(NeuralNetwork network, SrSynapseNetwork synapseValues) {
             Nickname = network.Nickname;
             Id = network.Id;
 			Colorisation = network.Colorisation;

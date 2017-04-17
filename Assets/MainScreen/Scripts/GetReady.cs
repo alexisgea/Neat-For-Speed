@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using nfs.nets.layered;
 using System.Linq;
+using UnityEngine.UI;
 
 
 namespace nfs {
@@ -14,6 +15,8 @@ namespace nfs {
 		[SerializeField] private GameObject networkItemPrefab;
 		[SerializeField] private int maxNbHiddenLayer = 7;
 		[SerializeField] private int maxHiddenLayerSize = 7;
+
+		private GameObject[] networkItems;
 
 		private SrLife loadedData;		
 
@@ -28,7 +31,10 @@ namespace nfs {
 		}
 
 		private void LoadNetworksAndSetPanel() {
-			loadedData = Serializer.LoadAllSpecies(GetComponentInParent<MainScreen>().CurrentSim);
+			//loadedData = Serializer.LoadAllSpecies(GetComponentInParent<MainScreen>().CurrentSim);
+			loadedData = Serializer.LoadAllSpecies(MainScreen.CurrentSim);
+
+			networkItems = new GameObject[loadedData.Species.Length];
 
 			for (int i = 0; i < loadedData.Species.Length; i++) {
 				GameObject newNetItem = Instantiate(networkItemPrefab);
@@ -38,20 +44,28 @@ namespace nfs {
 				SrSpecies sp = loadedData.Species[i];
 				newNetItem.GetComponent<NetListItem>().SetFields(sp.Name, sp.Lineage[0].Id, sp.Lineage[0].FitnessScore.ToString("F2"), i);
 				newNetItem.GetComponent<NetListItem>().Selected += OnNetworkSelected;
+				networkItems[i] = newNetItem;
 			}
 			
 		}
 
 		private void OnNetworkSelected (int index) {
 
-			nets.layered.Network selectedNetwork = Serializer.DeserializeNetwork(loadedData.Species[index].Lineage[0]);
-
+			NeuralNetwork selectedNetwork = Serializer.DeserializeNetwork(loadedData.Species[index].Lineage[0]);
+			Serializer.PreLoadedNetwork = selectedNetwork;
+			selectedNetwork.DummyPingFwd();
 			visualiser.SetFocusNetwork(selectedNetwork);
+
+			for(int i = 0; i < networkItems.Length; i++) {
+				if(i != index)
+					networkItems[i].GetComponent<Image>().enabled = false;;
+			}
+
 		}
 
 		public void CreateRandomNetwork() {
 
-			int[] layerSizes = new int[2 + Random.Range(0,maxNbHiddenLayer)];
+			int[] layerSizes = new int[2 + Random.Range(1,maxNbHiddenLayer)]; // we need a minimum of one layer to avoid bug with ping forward
 			layerSizes[0] = 3;
 			layerSizes[layerSizes.Length-1] = 2;
 
@@ -65,9 +79,9 @@ namespace nfs {
 			//String.Join(",", layerSizes.Select(p=>p.ToString()).ToArray())
 			Debug.Log("layer sizes: " + string.Join(", ", layerSizes.Select(x=>x.ToString()).ToArray()));
 
-
-			nets.layered.Network randomNetwork = new nets.layered.Network(layerSizes);
-			randomNetwork.PingFwd(new float[3] {1, 1, 1});
+			NeuralNetwork randomNetwork = new NeuralNetwork(layerSizes);
+			Serializer.PreLoadedNetwork = randomNetwork;
+			randomNetwork.DummyPingFwd();
 			visualiser.SetFocusNetwork(randomNetwork);
 		}
 	}

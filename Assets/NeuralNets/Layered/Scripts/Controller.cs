@@ -14,7 +14,7 @@ namespace nfs.nets.layered {
 		/// THE Neural Net brain of this beautiful creature.
 		/// </summary>
 		/// <value>The neural net.</value>
-		public Network NeuralNet {set; get;}
+		public NeuralNetwork NeuralNet {set; get;}
 
 		// array to send an receive the data to the network
 		protected float[] inputValues;
