@@ -56,7 +56,7 @@ namespace nfs.car {
 
 		public override void SaveBestNetwork() {
             Debug.Assert(AlltimeFittestNets[0] != null, "There does not seem to be a best network to save yet.");
-            nets.layered.Serializer.SaveNetworkAsSpecies(AlltimeFittestNets[0], nets.layered.Simulation.Car);
+            nets.layered.Serializer.SaveNetworkAsSpecies(AlltimeFittestNets[0], Simulations.Car);
         }
 
 	}

@@ -57,11 +57,11 @@ namespace nfs.nets.layered {
 
 					for (int j = visualisers.Length-1; j > 0; j--) {
 						if(visualisers [j-1].Focus != null) {
-							visualisers [j].AssignFocusNetwork (visualisers [j-1].Focus);
+							visualisers [j].SetFocusNetwork (visualisers [j-1].Focus);
 						}
 					}
 
-					visualisers [0].AssignFocusNetwork (controller.NeuralNet);
+					visualisers [0].SetFocusNetwork (controller.NeuralNet);
 					lastI = i+1;
 					break;
 				}
@@ -84,7 +84,7 @@ namespace nfs.nets.layered {
 			}
 
 			if(bestController != null && bestController.NeuralNet != visualisers[0].Focus) {
-				visualisers [0].AssignFocusNetwork (bestController.NeuralNet);
+				visualisers [0].SetFocusNetwork (bestController.NeuralNet);
 			}
 		}
 
@@ -116,7 +116,7 @@ namespace nfs.nets.layered {
 			}
 
 			if(bestController != null) {
-				visualisers [0].AssignFocusNetwork (bestController.NeuralNet);
+				visualisers [0].SetFocusNetwork (bestController.NeuralNet);
 			}
 		}
 
@@ -127,7 +127,7 @@ namespace nfs.nets.layered {
 
             for (int j = visualisers.Length-1; j > 0; j--) {
 				if(visualisers [j-1].Focus != null) {
-					visualisers [j].AssignFocusNetwork (visualisers [j-1].Focus);
+					visualisers [j].SetFocusNetwork (visualisers [j-1].Focus);
 				}
 			}
 
@@ -161,7 +161,7 @@ namespace nfs.nets.layered {
 
 				if (hitInfo.transform.GetComponent<Controller>() != null)	{
 					Controller focusNet = hitInfo.transform.GetComponent<Controller>();
-					visualisers[0].AssignFocusNetwork (focusNet.NeuralNet);
+					visualisers[0].SetFocusNetwork (focusNet.NeuralNet);
 				}
 			}
 			else if (Input.GetMouseButtonDown(1)) { // change to mouse wheel click if to many errors

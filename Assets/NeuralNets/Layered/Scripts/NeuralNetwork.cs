@@ -106,6 +106,10 @@ namespace nfs.nets.layered {
         /// Requires a given number of input, number given of output
         /// and an array for the hidden layers with each element being the size of a different hidden layer.!--
         ///</summary>
+        public Network (int[] layersSizes) {
+            ConstructTopology(layersSizes);
+        }
+
 		public Network (int[] layersSizes, string id) {
             ConstructTopology(layersSizes);
             Id = id;

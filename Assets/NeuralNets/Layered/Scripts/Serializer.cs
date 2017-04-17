@@ -6,8 +6,6 @@ using UnityEngine;
 
 namespace nfs.nets.layered {
 
-	public enum Simulation {Car, Cells }
-
 	public static class Serializer {
 
 		public static SrNetwork SerializeNetwork(Network network) {
@@ -45,7 +43,7 @@ namespace nfs.nets.layered {
 			return new SrSynapseNetwork(synapseLayers);
 		}
 
-		public static void SaveNetworkAsSpecies(Network network, Simulation simulation) {
+		public static void SaveNetworkAsSpecies(Network network, Simulations simulation) {
 			List<SrSpecies> serializedSpeciesList = new List<SrSpecies>();
 
 			if(File.Exists(GetPath(simulation))) {
@@ -66,7 +64,7 @@ namespace nfs.nets.layered {
 			Debug.Log(jsonString);		
 		}
 
-		public static SrLife LoadAllSpecies(Simulation simulation) {
+		public static SrLife LoadAllSpecies(Simulations simulation) {
 			if(!File.Exists(GetPath(simulation))) {
 				Debug.LogWarning("The save file does not exists yet. Please train and save a layered network first.");
 				return null;
@@ -77,7 +75,7 @@ namespace nfs.nets.layered {
 			return JsonUtility.FromJson<SrLife>(jsonString);
 		}
 
-		private static string GetPath(Simulation simulation) {
+		private static string GetPath(Simulations simulation) {
 			return Application.persistentDataPath + simulation.ToString() + "/Layered Networks.json";
 		}
 

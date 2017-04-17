@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 namespace nfs {
 
     public enum Scenes {MainScreen, TrainForCar, Cells}
-    public enum Simulations {CarRace, Cells}
+    public enum Simulations {Car, Cells}
     public enum Panels {MainMenu, SimulationList, SimulationModes, BrowsePanel, GetReadyPanel, CreditsPanel}
 
     public class MainScreen : MonoBehaviour {
@@ -20,7 +20,7 @@ namespace nfs {
         [SerializeField] private RectTransform[] panels;
         private Stack<Panels> panelsStack = new Stack<Panels>();
         private Panels currentPanel = Panels.MainMenu;
-        private Simulations currentSim;
+        public Simulations CurrentSim {private set; get;}
 
         private void Update() {
 
@@ -58,8 +58,8 @@ namespace nfs {
         } 
 
         private string GetSimulationTrainScenePath() {
-            switch(currentSim) {
-                case Simulations.CarRace:
+            switch(CurrentSim) {
+                case Simulations.Car:
                     return ScenesPaths[Scenes.TrainForCar];
                 case Simulations.Cells:
                     return ScenesPaths[Scenes.Cells];
@@ -82,11 +82,11 @@ namespace nfs {
         }
 
         public void GotToCarRaceModes() {
-            currentSim = Simulations.CarRace;
+            CurrentSim = Simulations.Car;
             GoToNewPanel(Panels.SimulationModes);
         }
          public void GotToCellsModes() {
-            currentSim = Simulations.Cells;
+            CurrentSim = Simulations.Cells;
             GoToNewPanel(Panels.SimulationModes);
         }
 
