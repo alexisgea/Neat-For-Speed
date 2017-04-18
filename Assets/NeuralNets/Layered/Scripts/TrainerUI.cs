@@ -19,8 +19,8 @@ namespace nfs.nets.layered{
         private void Start () {
 
 			trainer = FindObjectOfType<Trainer>();
-			if(trainer == null)
-				Debug.LogError("No object Trainer found!");
+
+            Debug.Assert(trainer != null, "No object Trainer found!");
 
             trainer.NextGenerationTraining += UpdateLabels;
         }
@@ -30,7 +30,7 @@ namespace nfs.nets.layered{
 			generationTimer.text = "Time: " + (Time.unscaledTime - trainer.GenerationStartTime).ToString ("F2");
 
 			if(Input.GetButtonDown("Cancel")) {
-            	MainScreen.GoToScene(Scenes.MainScreen);
+            	MainScreen.LoadMainScreen();
         	}
 		}
 
@@ -51,8 +51,8 @@ namespace nfs.nets.layered{
 		}
 
 		public void EndTraining() {
-			//trainer.SaveBestNetwork();
-			MainScreen.GoToScene(Scenes.MainScreen);
+			trainer.SaveBestNetwork();
+			MainScreen.LoadMainScreen();
 		}
 
 

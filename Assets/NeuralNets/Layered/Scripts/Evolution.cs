@@ -20,7 +20,7 @@ namespace nfs.nets.layered {
         /// <returns>The mutated offspring.</returns>
         /// <param name="neuralNet">Neural net.</param>
         /// <param name="mutateCoef">Mutate coef.</param>
-		public static Network CreateMutatedOffspring(Network neuralNet, string newNetId, int mutateCoef,
+		public static NeuralNetwork CreateMutatedOffspring(NeuralNetwork neuralNet, string newNetId, int mutateCoef,
 													bool hiddenLayerNbMutation, float hiddenLayerNbMutationRate,
 													bool hiddenNbMutation, float hiddenMbMutationRate,
 													float synapsesMutationRate, float synapsesMutationRange) {
@@ -28,21 +28,26 @@ namespace nfs.nets.layered {
             int[] hiddenLayersSizes = neuralNet.HiddenLayersSizes;
             Matrix[] synapses = neuralNet.GetSynapsesClone();
 
+			int synapsesChanged = 0;
+			int originalSynapseNb = neuralNet.NumberOfSynapses;
+
             // TODO LATER
             // Implemenet here mutation for new input
             // have a fixe array of sensors and an array of int containing the sensor indx to read from
             // mutate this array of int
 
             // mutate number of hidden layers
-            if(hiddenLayerNbMutation && Random.value < hiddenLayerNbMutationRate)
-                hiddenLayersSizes = MutateNbOfHiddenLayer(neuralNet, hiddenLayersSizes, synapses);
+            if(hiddenLayerNbMutation && Random.value < hiddenLayerNbMutationRate){
+                hiddenLayersSizes = MutateNbOfHiddenLayer(neuralNet, hiddenLayersSizes, ref synapses);
+			}
 
             // mutated number of neurons in hidden layers
-            if(hiddenNbMutation && Random.value < hiddenMbMutationRate)
-                hiddenLayersSizes = MutateNbOfHiddenLayerNeurons(neuralNet, hiddenLayersSizes, synapses);
+            if(hiddenNbMutation && Random.value < hiddenMbMutationRate){
+                hiddenLayersSizes = MutateNbOfHiddenLayerNeurons(neuralNet, hiddenLayersSizes, ref synapses);	
+			}
 
             // mutate synapses values
-            synapses = MutateSynapsesValues(neuralNet, synapses, synapsesMutationRate, synapsesMutationRange);
+            synapses = MutateSynapsesValues(neuralNet, synapses, synapsesMutationRate, synapsesMutationRange, ref synapsesChanged);
 
             int[] layerSizes = new int[hiddenLayersSizes.Length + 2];
             layerSizes[0] = neuralNet.InputSize;
@@ -52,11 +57,20 @@ namespace nfs.nets.layered {
                 layerSizes[i] = hiddenLayersSizes[i-1];
             }
 
-            Network mutadedOffspring = new Network(layerSizes, newNetId);
-			mutadedOffspring.InsertLineage (ExtendLineage (neuralNet.Lineage, neuralNet.Id));
-            mutadedOffspring.InsertSynapses(synapses);
+            NeuralNetwork mutatedOffspring = new NeuralNetwork(layerSizes, newNetId);
+			mutatedOffspring.Ancestors = ExtendLineage (neuralNet.Ancestors, neuralNet.Id);
+			mutatedOffspring.SpeciesLineage = neuralNet.SpeciesLineage;
+            mutatedOffspring.InsertSynapses(synapses);
 
-            return mutadedOffspring;
+			synapsesChanged += Mathf.Abs(mutatedOffspring.NumberOfSynapses - originalSynapseNb);
+			float synapsesChangedRatio = (float)(synapsesChanged / mutatedOffspring.NumberOfSynapses);
+
+			if(neuralNet.Colorisation != null) { // useless says unity?
+				Color newColor = MutateColor(neuralNet.Colorisation, synapsesChangedRatio);
+				mutatedOffspring.Colorisation = newColor;
+			}
+
+            return mutatedOffspring;
         }
 
 
@@ -66,7 +80,7 @@ namespace nfs.nets.layered {
 		/// <param name="neuralNet">Neural net.</param>
 		/// <param name="hiddenLayersSizes">Hidden layers sizes.</param>
 		/// <param name="synapses">Synapses.</param>
-        private static int[] MutateNbOfHiddenLayer(Network neuralNet, int[] hiddenLayersSizes, Matrix[] synapses) {
+        private static int[] MutateNbOfHiddenLayer(NeuralNetwork neuralNet, int[] hiddenLayersSizes, ref Matrix[] synapses) {
             
 			if (Random.value < 0.5f && hiddenLayersSizes.Length > 1) { // random to get positive vs negative value
 				hiddenLayersSizes = RedimentionLayersNb(hiddenLayersSizes, -1);
@@ -93,7 +107,7 @@ namespace nfs.nets.layered {
 		/// <param name="neuralNet">Neural net.</param>
 		/// <param name="hiddenLayersSizes">Hidden layers sizes.</param>
 		/// <param name="synapses">Synapses.</param>
-        private static int[] MutateNbOfHiddenLayerNeurons(Network neuralNet, int[] hiddenLayersSizes, Matrix[] synapses) {
+        private static int[] MutateNbOfHiddenLayerNeurons(NeuralNetwork neuralNet, int[] hiddenLayersSizes, ref Matrix[] synapses) {
 
 			int layerNb = Random.Range(0, hiddenLayersSizes.Length - 1);
 			if (Random.value < 0.5f && hiddenLayersSizes[layerNb] > 1) { // random to get positive vs negative value
@@ -113,8 +127,9 @@ namespace nfs.nets.layered {
 		/// </summary>
 		/// <param name="neuralNet">Neural net.</param>
 		/// <param name="synapses">Synapses.</param>
-        private static Matrix[] MutateSynapsesValues(Network neuralNet, Matrix[] synapses,
-													float synapsesMutationRate, float synapsesMutationRange) {
+        private static Matrix[] MutateSynapsesValues(NeuralNetwork neuralNet, Matrix[] synapses,
+													float synapsesMutationRate, float synapsesMutationRange,
+													ref int synapsesChaned) {
             
 			for (int n=0; n<synapses.Length; n++) {
                 for (int i = 0; i < synapses[n].I; i++) {
@@ -122,7 +137,7 @@ namespace nfs.nets.layered {
 
                         if (Random.value < synapsesMutationRate) {
                             MutationType type = (MutationType)Random.Range(0, System.Enum.GetValues(typeof(MutationType)).Length-1);
-                            float mutatedValue = synapses[n].GetValue(i, j);;
+                            float mutatedValue = synapses[n].GetValue(i, j);
 
                             switch(type) {
                                 case MutationType.additive:
@@ -151,7 +166,10 @@ namespace nfs.nets.layered {
                                     break;
                             }
 
-                            synapses[n].SetValue(i, j, mutatedValue);  
+							synapsesChaned += 1;
+
+                            synapses[n].SetValue(i, j, mutatedValue);
+							
                         }
                     }
                 }
@@ -223,7 +241,7 @@ namespace nfs.nets.layered {
 		/// </summary>
 		/// <param name="fitnessRankings">Fitness rankings.</param>
 		/// <param name="fitnessContender">Fitness contender.</param>
-        public static Network[] RankFitnessContender (Network[] fitnessRankings, Network fitnessContender) {
+        public static NeuralNetwork[] RankFitnessContender (NeuralNetwork[] fitnessRankings, NeuralNetwork fitnessContender) {
             int last = fitnessRankings.Length-1;
 
             // first we take care of the first case of an empty array (no other contender yet)
@@ -244,7 +262,7 @@ namespace nfs.nets.layered {
                         fitnessRankings[i + 1] = null;
 
                     } else if(fitnessRankings[i].FitnessScore < fitnessContender.FitnessScore) {
-                        Network stepDown = fitnessRankings[i];
+                        NeuralNetwork stepDown = fitnessRankings[i];
                         fitnessRankings[i] = fitnessContender;
                         fitnessRankings[i + 1] = stepDown;
 
@@ -256,6 +274,28 @@ namespace nfs.nets.layered {
 
 			return fitnessRankings;
         }
+
+
+		public static Color MutateColor(Color color, float synapsesChangedRatio) {
+
+			// mutation value
+			float mutationValue = Random.value > 0.5? synapsesChangedRatio : -synapsesChangedRatio;
+
+			// select RGB
+			float selector = Random.value;
+
+			if(selector < 1f/3f) {
+				color.r = Mathf.Clamp01(color.r + mutationValue);
+			}
+			else if (selector < 2f/3f){
+				color.g = Mathf.Clamp01(color.g + mutationValue);
+			}
+			else {
+				color.b = Mathf.Clamp01(color.b + mutationValue);
+			}
+
+			return color;
+		}
 
 	}
 }

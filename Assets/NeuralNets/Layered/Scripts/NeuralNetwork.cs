@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
-using System;
+using System.Collections.Generic;
 using nfs.tools;
+using System.Linq;
 
 namespace nfs.nets.layered {
 
@@ -9,35 +10,47 @@ namespace nfs.nets.layered {
     /// It can have varying number of neurons and layers.
     /// The network always has a single bias input neuron.
     ///</summary>
-    public class Network {
+    public class NeuralNetwork {
 
-        public string Id {private set; get; }
+        public string Nickname {set; get;}
+        public string Id {private set; get;}
 		//public Queue Lineage = new Queue();
-		public string[] Lineage {private set; get;}
+        public Color Colorisation {set; get;}
+		public string[] Ancestors {set; get;}
+        // public SerializedNetwork[] SpeciesLineage {set; get;}
+        public Stack<SrNetwork> SpeciesLineage = new Stack<SrNetwork>();
 
 		/// <summary>
 		/// Gets or sets the fitness score of this neural net.
 		/// </summary>
 		/// <value>The fitness score.</value>
-        public float FitnessScore { set; get; }
+        public float FitnessScore {set; get; }
 
-        // layer properties
-        private Matrix inputNeurons;
-        private Matrix[] hiddenLayersNeurons;
-        private Matrix outputNeurons;
-        private Matrix[] synapses;
+        public string[] InputsNames {set; get;}
+        public string[] OutputsNames {set; get;}
 
         ///<summary>
         /// Get the total number of layers including input and output.
         ///</summary>
-        public int NumberOfLayers { get{ return hiddenLayersNeurons.Length + 2; } }
-        
+        public int NumberOfNeuronLayers { get{ return hiddenLayersNeurons.Length + 2; } }
+        public int NumberOfSynapseLayers { get{ return hiddenLayersNeurons.Length + 1; } }
+        public int NumberOfNeurons {get {return LayersSizes.Sum(); } }
+        public int NumberOfSynapses {
+            get {
+                int synapseNb = 0;
+                for(int i = 0; i < NumberOfSynapseLayers; i++) {
+                    synapseNb += LayersSizes[i]*LayersSizes[i+1];
+                }
+                return synapseNb;
+            }
+        }
+
         ///<summary>
         /// Get the number of neurons in each layers.
         ///</summary>
         public int[] LayersSizes {
             get {
-                int[] layersSizes = new int[NumberOfLayers];
+                int[] layersSizes = new int[NumberOfNeuronLayers];
 
                 int[] hiddenLayersSizes = HiddenLayersSizes;
 
@@ -45,7 +58,7 @@ namespace nfs.nets.layered {
 
                     if (i == 0) {
                         layersSizes[i] = InputSize;
-                    } else if (i == NumberOfLayers-1) {
+                    } else if (i == NumberOfNeuronLayers-1) {
                         layersSizes[i] = OutputSize;
                     } else {
                         layersSizes[i] = hiddenLayersSizes[i-1];
@@ -66,6 +79,7 @@ namespace nfs.nets.layered {
         ///</summary>
         public int OutputSize{ get{ return this.outputNeurons.J;} }
 
+
         ///<summary>
         /// Get the number of neurons in each hidden layers.
         ///</summary>
@@ -80,19 +94,58 @@ namespace nfs.nets.layered {
             }
         }
 
+        // layer properties
+        private Matrix inputNeurons;
+        private Matrix[] hiddenLayersNeurons;
+        private Matrix outputNeurons;
+        private Matrix[] synapses;
+
+
         ///<summary>
         /// Layered neural network constructor.
         /// Requires a given number of input, number given of output
         /// and an array for the hidden layers with each element being the size of a different hidden layer.!--
         ///</summary>
-		public Network (int[] layersSizes, string id) {
+        public NeuralNetwork (int[] layersSizes) {
+            ConstructTopology(layersSizes);
+        }
 
-            if(layersSizes == null || layersSizes.Length < 2) {
-                Debug.LogError("Cannot create a network that has less than 2 layer.");
-                return;
+		public NeuralNetwork (int[] layersSizes, string id) {
+            ConstructTopology(layersSizes);
+            Id = id;
+        }
+
+        public NeuralNetwork (int[] layersSizes, string id, Color color, string[] inputsNames, string[] outputsNames) {
+            ConstructTopology(layersSizes);
+            Id = id;
+            Colorisation = color;
+            InputsNames = inputsNames;
+            OutputsNames = outputsNames;
+        }
+
+        public NeuralNetwork (SrNetwork srNetwork) {
+            ConstructTopology(srNetwork.LayersSizes);
+            Nickname = srNetwork.Nickname;
+            Id = srNetwork.Id;
+            Colorisation = srNetwork.Colorisation;
+            Ancestors = srNetwork.Ancestors;
+            FitnessScore = srNetwork.FitnessScore;
+            InputsNames = srNetwork.InputsNames;
+            OutputsNames = srNetwork.OutputsNames;
+
+            // set synapse values
+            for(int l = 0; l < srNetwork.SynapseValues.Layers.Length; l++){
+                for(int n = 0; n < srNetwork.SynapseValues.Layers[l].Neurons.Length; n++) {
+                    synapses[l].SetLineValues(n, srNetwork.SynapseValues.Layers[l].Neurons[n].Synapes);
+                }
             }
 
-            Id = id;
+        }
+
+        private void ConstructTopology(int[] layersSizes) {
+
+            Debug.Assert(layersSizes != null && layersSizes.Length >= 2, "Cannot create a network that has less than 2 layer.");
+
             // each layer is one line of neuron
             inputNeurons = new Matrix(1, layersSizes[0]).SetToOne();
             outputNeurons = new Matrix(1, layersSizes[layersSizes.Length-1]).SetToOne();
@@ -110,17 +163,21 @@ namespace nfs.nets.layered {
             for (int i = 0; i < synapses.Length; i++) {
                 synapses[i] = new Matrix(layersSizes[i], layersSizes[i+1]).SetAsSynapse();
             }
+
         }
+        
 
         ///<summary>
         /// Creates and return a deep clone of the network.
         ///</summary>
-        public Network GetClone () {
+        public NeuralNetwork GetClone () {
 
-			Network clone = new Network(this.LayersSizes, this.Id);
-			clone.InsertLineage (this.Lineage); 
-            clone.InsertSynapses(this.GetSynapsesClone());
-            clone.FitnessScore = this.FitnessScore;
+			NeuralNetwork clone = new NeuralNetwork(LayersSizes, Id);
+            clone.Colorisation = Colorisation;
+			clone.Ancestors = Ancestors;
+            clone.SpeciesLineage.Push(Serializer.SerializeNetwork(this));
+            clone.InsertSynapses(GetSynapsesClone());
+            clone.FitnessScore = FitnessScore;
 
             return clone;
         }
@@ -170,16 +227,14 @@ namespace nfs.nets.layered {
         ///</summary>
 		public float[] PingFwd(float[] sensorsValues) {
 
-			if (sensorsValues.Length == 0) {
-				Debug.LogError("Input values are null, returning from ping forward.");
-				return null;
-			}
+            Debug.Assert(sensorsValues.Length > 0, "Input values are null.");
             
             // we set the inputs neurons values and ignore the missmatch as there is a bias neuron
             inputNeurons.SetLineValues(0, sensorsValues, true); 
 
             // we ping the network
             for (int i = 0; i < hiddenLayersNeurons.Length + 1; i++) {
+                    Debug.Assert(hiddenLayersNeurons.Length > 0, "No hidden layers, this will create bug in this loop currently.");
                     if (i == 0) {
                         hiddenLayersNeurons[0] = Matrix.Multiply(inputNeurons, synapses[0]);
                         ProcessActivation(hiddenLayersNeurons[0]);
@@ -197,17 +252,29 @@ namespace nfs.nets.layered {
         }
 
         ///<summary>
+        /// Process the inputs forward with values of 1 to update neuron values.
+        /// Useful for the visualiser.
+        ///</summary>
+		public void DummyPingFwd() {
+
+            float[] dummyValues = new float[InputSize];
+            for (int i = 0; i < InputSize; i++) {
+                dummyValues[i] = 1f;
+            }
+
+            PingFwd(dummyValues);
+        }
+
+        ///<summary>
         /// Get all values of a layer of neurons.
         ///</summary>
         public float[] GetNeuronLayerValues(int layer) {
-            if(layer >= NumberOfLayers) {
-                Debug.LogError("Neuron layer requested is not in the neural net (too high). Returning empty array.");
-                return new float[] {};
+            Debug.Assert(layer < NumberOfNeuronLayers, "Neuron layer requested is not in the neural net (too high).");
 
-            } else if (layer == 0){
+            if (layer == 0){
                 return GetInputValues();
 
-            } else if (layer == NumberOfLayers-1) {
+            } else if (layer == NumberOfNeuronLayers-1) {
                 return GetOutputValues();
 
             } else {
@@ -240,13 +307,9 @@ namespace nfs.nets.layered {
         /// Get all out synapses values of a layer of neurons.
         ///</summary>
         public float[][] GetSynapseLayerValues(int layer) {
-            if(layer >= NumberOfLayers-1) {
-                Debug.LogError("Synapse layer requested is not in the neural net (too high). Returning emtpy array of array.");
-                return new float[][]{}; // is it possible to create an array of lenght 0?
+            Debug.Assert(layer < NumberOfSynapseLayers , "Synapse layer requested is not in the neural net (too high).");
 
-            } else {
-                return synapses[layer].GetAllValues();
-            }
+            return synapses[layer].GetAllValues();
         }
 
         ///<summary>
@@ -266,13 +329,10 @@ namespace nfs.nets.layered {
         /// Get all out synapses values of a neuron.
         ///</summary>
         public float[] GetNeuronSynapsesValues(int layer, int neuron) {
-            if(layer >= NumberOfLayers-1 || neuron >= synapses[layer].J) {
-                Debug.LogError("Synapse layer or neuron requested is not in the neural net (too high). Returning empty array.");
-                return new float[]{};
+            Debug.Assert(layer < NumberOfSynapseLayers, "Synapse layer is not in the neural net (too high).");            
+            Debug.Assert(neuron < synapses[layer].I, "Neuron requested is not in the layer (too high).");
 
-            } else {
-                return synapses[layer].GetLineValues(neuron);
-            }
+            return synapses[layer].GetLineValues(neuron);
         }
 
         ///<summary>
@@ -298,47 +358,23 @@ namespace nfs.nets.layered {
         /// Replace the synapse values with new ones from an array of Matrices.
         ///</summary>
         public void InsertSynapses(Matrix[] newSynapses) {
+            Debug.Assert(synapses.Length == newSynapses.Length, "The number of synapses matrices to insert does not match the number of this network: " + newSynapses.Length + " vs " + synapses.Length  + ".");
 
-            if(synapses.Length == newSynapses.Length){
-                for (int i = 0; i < synapses.Length; i++) {
-                    synapses[i].SetAllValues(newSynapses[i]);
-                } 
+            for (int i = 0; i < synapses.Length; i++) {
+                synapses[i].SetAllValues(newSynapses[i]);
+            } 
+        }
 
-            } else {
-                Debug.LogWarning("The number of synapses matrices to insert does not match the number of this network: "
-                                + newSynapses.Length + " vs " + synapses.Length  + ", doing nothing.");
+        ///<summary>
+        /// Replace the synapse values with new ones from an array of Matrices.
+        ///</summary>
+        public void InsertSynapses(float[][][] newSynapses) {
+            Debug.Assert(synapses.Length == newSynapses.Length, "The number of synapses matrices to insert does not match the number of this network: " + newSynapses.Length + " vs " + synapses.Length  + ".");
+
+            for (int i = 0; i < synapses.Length; i++) {
+                synapses[i].SetAllValues(newSynapses[i]);
             }
         }
 
-		public void InsertLineage(string[] lineage) {
-			Lineage = lineage;
-		}
-
-        public SerializedNetwork Serialize(string nickname = "") {
-            SerializedNetwork serializedNetwork = new SerializedNetwork();
-
-            serializedNetwork.Nickname = nickname;
-            serializedNetwork.Id = this.Id;
-            serializedNetwork.Lineage = this.Lineage;
-            serializedNetwork.FitnessScore = this.FitnessScore;
-            serializedNetwork.LayersSizes = this.LayersSizes;
-            serializedNetwork.Synapsesvalues = this.GetAllSynapseLayerValues();
-
-            return serializedNetwork;
-        }
-
     }
-
-    [Serializable]
-    public class SerializedNetwork {
-
-        public string Nickname;
-        public string Id;
-        public string[] Lineage;
-        public float FitnessScore;
-        public int[] LayersSizes;
-        public float[][][] Synapsesvalues;
-
-    }
-
 }
