@@ -50,8 +50,8 @@ namespace nfs.cells {
 			// but we want a bias neuron so we will transpit one input length and thus re-initialise it
 			// output values NEEDS to be the same though, so no need to redo-it
 			inputValues = new float[3];
-			InputNames = new string[] {"sensor N"};
-			OutputNames = new string[] {"Move", "Turn"};
+			NeuralNet.InputsNames = new string[] {"sensor N"};
+			NeuralNet.OutputsNames = new string[] {"Move", "Turn"};
 		}
 
 		/// <summary>

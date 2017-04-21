@@ -11,7 +11,7 @@ namespace nfs.cells
 		/// THE Neural Net brain of this beautiful creature.
 		/// </summary>
 		/// <value>The neural net.</value>
-		public nfs.nets.layered.Network NeuralNet {set; get;}
+		public NeuralNetwork NeuralNet {set; get;}
 
 		private CellSensor sensor;
 		private Cell cell;
@@ -21,7 +21,7 @@ namespace nfs.cells
 			this.sensor = sensor;
 			this.cell = cell;
 			if (parent == null) {
-				NeuralNet = new nfs.nets.layered.Network (new int[] { 5, 5, 3 }, "id know");
+				NeuralNet = new NeuralNetwork (new int[] { 5, 5, 3 }, "id know");
 			}
 			else {
 				NeuralNet = Evolution.CreateMutatedOffspring (parent.NeuralNet, "mutated", 30, true, 0.1f, true, 0.1f, 0.6f, Random.Range (0.05f, 0.1f));
