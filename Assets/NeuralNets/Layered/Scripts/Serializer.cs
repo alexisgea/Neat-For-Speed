@@ -3,7 +3,6 @@ using System.IO;
 using System;
 using UnityEngine;
 
-
 namespace nfs.nets.layered {
 
 	public static class Serializer {

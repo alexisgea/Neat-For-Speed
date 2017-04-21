@@ -357,10 +357,13 @@ namespace nfs.nets.layered {
         ///<summary>
         /// Replace the synapse values with new ones from an array of Matrices.
         ///</summary>
-        public void InsertSynapses(Matrix[] newSynapses) {
-            Debug.Assert(synapses.Length == newSynapses.Length, "The number of synapses matrices to insert does not match the number of this network: " + newSynapses.Length + " vs " + synapses.Length  + ".");
+        public void InsertSynapses(Matrix[] newSynapses, bool ignoreMissmatch = false) {
 
-            for (int i = 0; i < synapses.Length; i++) {
+            Debug.Assert(synapses.Length == newSynapses.Length && !ignoreMissmatch,
+            "The number of synapses matrices to insert does not match the number of this network: "
+            + newSynapses.Length + " vs " + synapses.Length  + ".");
+
+            for (int i = 0; i < Mathf.Min(synapses.Length, newSynapses.Length); i++) {
                 synapses[i].SetAllValues(newSynapses[i]);
             } 
         }
@@ -368,10 +371,13 @@ namespace nfs.nets.layered {
         ///<summary>
         /// Replace the synapse values with new ones from an array of Matrices.
         ///</summary>
-        public void InsertSynapses(float[][][] newSynapses) {
-            Debug.Assert(synapses.Length == newSynapses.Length, "The number of synapses matrices to insert does not match the number of this network: " + newSynapses.Length + " vs " + synapses.Length  + ".");
+        public void InsertSynapses(float[][][] newSynapses, bool ignoreMissmatch = false) {
 
-            for (int i = 0; i < synapses.Length; i++) {
+            Debug.Assert(synapses.Length == newSynapses.Length && !ignoreMissmatch,
+            "The number of synapses matrices to insert does not match the number of this network: "
+            + newSynapses.Length + " vs " + synapses.Length  + ".");
+
+            for (int i = 0; i < Mathf.Min(synapses.Length, newSynapses.Length); i++) {
                 synapses[i].SetAllValues(newSynapses[i]);
             }
         }
