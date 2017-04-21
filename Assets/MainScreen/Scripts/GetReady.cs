@@ -4,6 +4,7 @@ using UnityEngine;
 using nfs.nets.layered;
 using System.Linq;
 using UnityEngine.UI;
+using nfs.tools;
 
 
 namespace nfs {
@@ -15,7 +16,10 @@ namespace nfs {
 		[SerializeField] private GameObject networkItemPrefab;
 		[SerializeField] private GameObject hiddenLayerItemPrefab;
 		[SerializeField] private Transform hiddenLayerItemsListView;
-		[SerializeField] private int maxNbHiddenLayer = 7;
+		private int minNbHiddenLayer = 1;
+		private int maxNbHiddenLayer = 7;
+
+		[SerializeField] private int minHiddenLayerSize = 2;
 		[SerializeField] private int maxHiddenLayerSize = 7;
 		
 		private int numberOfIntput = 3;
@@ -29,7 +33,7 @@ namespace nfs {
 		// Use this for initialization
 		void Start () {
 			LoadNetworksAndSetPanel();
-			//ChangeNumberOfHiddenLayerItem("1");
+			ChangeNumberOfHiddenLayerItem(1);
 		}
 		
 		// Update is called once per frame
@@ -70,28 +74,40 @@ namespace nfs {
 
 		}
 
+		public void RandomizeSynapses() {
+
+		}
+
 		public void CreateRandomNetwork() {
-			int[] layerSizes = new int[2 + UnityEngine.Random.Range(1,maxNbHiddenLayer)]; // we need a minimum of one layer to avoid bug with ping forward
-			layerSizes[0] = 3;
-			layerSizes[layerSizes.Length-1] = 2;
 
-			Debug.Log("layer number: " + layerSizes.Length);
+			ChangeNumberOfHiddenLayerItem(Random.Range(minNbHiddenLayer, maxNbHiddenLayer));
 
-			for(int i = 1; i < layerSizes.Length - 1; i++) {
-				layerSizes[i] = Random.Range(layerSizes[layerSizes.Length-1], maxHiddenLayerSize);
-				Debug.Log(layerSizes[i]);
+			foreach(GameObject hiddenLayerItem in hiddenLayerItems){
+				hiddenLayerItem.GetComponent<InputField>().text = Random.Range(HiddenLayerListItem.MinLayerSize, HiddenLayerListItem.MaxLayerSize).ToString();
 			}
 
-			//String.Join(",", layerSizes.Select(p=>p.ToString()).ToArray())
-			Debug.Log("layer sizes: " + string.Join(", ", layerSizes.Select(x=>x.ToString()).ToArray()));
+			// int[] layerSizes = new int[2 + UnityEngine.Random.Range(1,maxNbHiddenLayer)]; // we need a minimum of one layer to avoid bug with ping forward
+			// layerSizes[0] = 3;
+			// layerSizes[layerSizes.Length-1] = 2;
 
-			NeuralNetwork randomNetwork = new NeuralNetwork(layerSizes);
-			Serializer.PreLoadedNetwork = randomNetwork;
-			randomNetwork.DummyPingFwd();
-			visualiser.SetFocusNetwork(randomNetwork);
+			// Debug.Log("layer number: " + layerSizes.Length);
+
+			// for(int i = 1; i < layerSizes.Length - 1; i++) {
+			// 	layerSizes[i] = Random.Range(layerSizes[layerSizes.Length-1], maxHiddenLayerSize);
+			// 	Debug.Log(layerSizes[i]);
+			// }
+
+			// //String.Join(",", layerSizes.Select(p=>p.ToString()).ToArray())
+			// Debug.Log("layer sizes: " + string.Join(", ", layerSizes.Select(x=>x.ToString()).ToArray()));
+
+			// NeuralNetwork randomNetwork = new NeuralNetwork(layerSizes);
+			// Serializer.PreLoadedNetwork = randomNetwork;
+			// randomNetwork.DummyPingFwd();
+			// visualiser.SetFocusNetwork(randomNetwork);
 		}
 
 		private void UpdateNtworkDesign() {
+
 			int numberOfLayer = hiddenLayerItems.Count + 2;
 			int[] layerSizes = new int[numberOfLayer];
 			layerSizes[0] = numberOfIntput;
@@ -103,18 +119,36 @@ namespace nfs {
 			}
 			
 			NeuralNetwork newNet = new NeuralNetwork(layerSizes);
+
+			if(visualiser.Focus != null) {
+				Matrix[] synapseExtract = visualiser.Focus.GetSynapsesClone();
+				newNet.InsertSynapses(synapseExtract, true);
+			}
+
 			newNet.DummyPingFwd();
 
 			visualiser.SetFocusNetwork(newNet);
-
 		}
 
-		public void ChangeNumberOfHiddenLayerItem(InputField test) {
+		public void OnNumberOfLayerChanged(InputField input) {
+			if(input.text == "") {
+				return;
+			}
 
-			Debug.Log("get ready " + test.text);
-			int number = 1;
-			//int number = System.Convert.ToInt32(nb);
-			Debug.Assert(number >= 1, "You can't have less than 1 hidden layer.");
+			int number = System.Convert.ToInt32(input.text);
+			ChangeNumberOfHiddenLayerItem(number);
+		}
+
+		private void ChangeNumberOfHiddenLayerItem(int number) {
+
+			if(number < minNbHiddenLayer) {
+				Debug.LogWarning("You can't have less than 1 hidden layer.");
+				return;
+			}
+			else if(number > maxNbHiddenLayer) {
+				Debug.LogWarning("You can't have less than 1 hidden layer.");
+				return;
+			}
 
 			int currentNumber = hiddenLayerItems.Count;
 
@@ -127,13 +161,15 @@ namespace nfs {
 					pos.z = 0;
 					//pos.x -= 17;
 					newItem.transform.localPosition = pos;
+					newItem.GetComponent<HiddenLayerListItem>().HiddenLayerUpdated += UpdateNtworkDesign;
 					hiddenLayerItems.Add(newItem);
 				}
-
 			}
 			else if(currentNumber > number) {
 				for(int i = number; i < currentNumber; i++) {
-					hiddenLayerItems.RemoveAt(hiddenLayerItems.Count);
+					GameObject itemToRemove = hiddenLayerItems.Last();
+					hiddenLayerItems.Remove(itemToRemove);
+					Destroy(itemToRemove);
 				}
 			}
 
