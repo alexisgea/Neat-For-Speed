@@ -8,5 +8,6 @@ namespace nfs.cells
 	{
 		float GetMoveForward ();
 		float GetTurn ();
+		bool GetSplit ();
 	}
 }

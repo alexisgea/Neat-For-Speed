@@ -21,7 +21,9 @@ namespace nfs.cells
 		/// </summary>
 		public float shrinkRate = 0.5f;
 
-		public float minimumSize = 1f;
+		public float shrinkSizePenality = 0.01f;
+
+		public float minimumSize = 0.8f;
 
 		public Transform body;
 		public Collider2D cellCollider;
@@ -30,15 +32,36 @@ namespace nfs.cells
 		Rigidbody2D rb;
 		ICellInput input;
 
+		[SerializeField]
 		float size = Mathf.PI;
+		[SerializeField]
 		Vector3 initialScale;
+		[SerializeField]
+		bool wasInitialized = false;
+
+		public Cell parent;
+
+		public float Size {
+			get { return size; }
+		}
 
 		void Awake ()
 		{
 			rb = GetComponent<Rigidbody2D> ();
-			input = new PlayerCellInput ();
+			//input = new PlayerCellInput ();
+			var sensor = GetComponentInChildren<CellSensor> ();
 
-			initialScale = body.localScale;
+			if (!wasInitialized) { 
+				initialScale = body.localScale;
+				wasInitialized = true;
+			}
+			input = new NeuralCellInput (sensor, this, parent != null ? (NeuralCellInput) parent.input : null);
+			UpdateScale ();
+		}
+
+		void SetupChild (Cell parent)
+		{
+			this.parent = parent;
 		}
 				
 		void FixedUpdate ()
@@ -48,6 +71,10 @@ namespace nfs.cells
 
 			Eat ();
 			Shrink ();
+
+			if (input.GetSplit ())
+				Split ();
+			
 			UpdateScale ();
 		}
 
@@ -64,17 +91,25 @@ namespace nfs.cells
 
 		void Grow ()
 		{
-			size += 1;
+			size += 2;
 			//UpdateScale ();
 		}
 
 		void Shrink ()
 		{
-			size -= shrinkRate * Time.deltaTime;
+			size -= (shrinkRate + size * shrinkSizePenality) * Time.deltaTime;
+
 			if (size < minimumSize) {
 				Destroy (gameObject);
 			}
 			//UpdateScale ();
+		}
+
+		void Split ()
+		{
+			size *= 0.5f;
+			var child = Instantiate<Cell>(this);
+			child.SetupChild (this);
 		}
 
 		void UpdateScale ()
